@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Home, MapPin, Star, DollarSign } from 'lucide-react';
 import { properties } from '@/types/properties';
-import { PropertyCard } from '../../ui/property-card';
+import { PropertyCard } from '../../../../components/ui/property-card';
 
 export const PropertySlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

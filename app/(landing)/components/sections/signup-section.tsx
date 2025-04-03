@@ -6,7 +6,7 @@ import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
 import { FiUser, FiHome, FiMail, FiPhone } from "react-icons/fi";
-import Modal from "./../layout/Modal";
+import Modal from "../common/Modal";
 import { signinWithGoogle, signinWithMagicLink } from "@/utils/actions";
 
 // Canvas Background Component

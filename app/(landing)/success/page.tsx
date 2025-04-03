@@ -112,10 +112,10 @@ const SuccessPage = () => {
         setDebugInfo(prev => ({
           ...prev,
           redirectUrl: user_role === 'tenant' 
-            ? '/dashboard/tenant' 
+            ? '/tenant-dashboard' 
             : user_role === 'landlord' 
-              ? '/dashboard/landlord'
-              : '/dashboard/admin',
+              ? '/landlord-dashboard'
+              : '/admin-dashboard',
           session // Store the entire session object
         }));
       } catch (error: any) {
