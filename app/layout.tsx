@@ -32,9 +32,6 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://accounts.google.com" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="flex justify-end items-center p-4 gap-4 h-16 bg-black">
-          
-        </header>
         {children}
       </body>
     </html>
