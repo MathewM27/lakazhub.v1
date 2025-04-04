@@ -76,6 +76,11 @@ export const signinWithGoogle = async (
 ) => {
   "use server";
   
+  // Add specific logging for landlord flow
+  if (userType === 'landlord') {
+    console.log('[AUTH_ACTION] Starting landlord Google sign-in flow');
+  }
+  
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,16 +99,19 @@ export const signinWithGoogle = async (
     }
   );
 
-  // Try once without retrying - most errors are auth-related, not connectivity
+  // Update the query params to more explicitly handle landlord role
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
-        ...(userType && { user_role: userType })
+        // Make sure user_role is explicitly sent for landlords
+        ...(userType === 'landlord' ? { user_role: 'landlord' } : 
+           userType === 'tenant' ? { user_role: 'tenant' } : {})
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success`
+      // Add user_role to the callback URL as well for redundancy
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
     }
   });
 

@@ -6,9 +6,9 @@ import Hero from "./components/layouts/hero-section";
 import { PageWrapper } from "./components/layouts/PageWrapper";
 import Parallax from "./components/layouts/Parallax";
 import PropertiesSection from "./components/properties/PropertySelection";
-import { Footer } from '@/app/(landing)/components/navigation/footer';
+import { Footer } from './components/navigation/Footer';
 import Navigation from "./components/navigation/Navbar";
-import Link from 'next/link';
+
 import PremiumFeatures from './components/layouts/Premium';
 
 export default function Home() {

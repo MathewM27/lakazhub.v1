@@ -58,8 +58,29 @@ export async function middleware(request: NextRequest) {
       }
       
       // Get user role from metadata
-      const userRole = user.user_metadata?.user_role;
-      console.log('[MIDDLEWARE] User role:', userRole);
+      const userRole = session.user.user_metadata?.user_role;
+      console.log('[MIDDLEWARE] User role from session:', userRole);
+      
+      // Check if user is accessing the correct dashboard for their role
+      const isTenantRoute = url.pathname.startsWith('/tenant-dashboard');
+      const isLandlordRoute = url.pathname.startsWith('/landlord-dashboard');
+      const isAdminRoute = url.pathname.startsWith('/admin-dashboard');
+      
+      console.log('[MIDDLEWARE] Route types:', { isTenantRoute, isLandlordRoute, isAdminRoute });
+
+      // Add an explicit check for landlords
+      const isLandlord = userRole === 'landlord';
+      if (isLandlord) {
+        console.log('[MIDDLEWARE] Landlord detected in middleware');
+        
+        // If landlord is accessing wrong routes, redirect to landlord dashboard
+        if (!isLandlordRoute) {
+          console.log('[MIDDLEWARE] Landlord accessing non-landlord route, redirecting');
+          const redirectUrl = new URL('/landlord-dashboard', request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+      
       console.log('[MIDDLEWARE] User metadata:', JSON.stringify(user.user_metadata));
       
       if (!userRole) {
@@ -69,24 +90,21 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
       }
       
-      // Check if user is accessing the correct dashboard for their role
-      const isTenantRoute = url.pathname.startsWith('/tenant-dashboard')
-      const isLandlordRoute = url.pathname.startsWith('/landlord-dashboard')
-      const isAdminRoute = url.pathname.startsWith('/admin-dashboard')
-      
-      console.log('[MIDDLEWARE] Route types:', { isTenantRoute, isLandlordRoute, isAdminRoute });
-      
+      // Make the role redirection logic more robust
       if (
         (userRole === 'tenant' && !isTenantRoute) ||
         (userRole === 'landlord' && !isLandlordRoute) ||
         (userRole === 'admin' && !isAdminRoute)
       ) {
-        // Redirect to the correct dashboard based on role
-        const redirectPath = userRole === 'tenant' 
-          ? '/tenant-dashboard' 
-          : userRole === 'landlord' 
-            ? '/landlord-dashboard' 
-            : '/admin-dashboard'
+        // Log more explicitly
+        console.log(`[MIDDLEWARE] User with role ${userRole} accessing wrong dashboard`);
+        
+        // Create a stronger landlord redirect
+        const redirectPath = userRole === 'landlord' 
+          ? '/landlord-dashboard' 
+          : userRole === 'tenant'
+            ? '/tenant-dashboard'
+            : '/admin-dashboard';
         
         console.log('[MIDDLEWARE] User accessing wrong dashboard, redirecting to:', redirectPath);
         const redirectUrl = new URL(redirectPath, request.url)

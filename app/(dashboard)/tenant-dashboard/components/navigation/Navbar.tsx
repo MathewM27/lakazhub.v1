@@ -326,7 +326,7 @@ const Navigation = () => {
                                     <ScrollArea className="h-[40vh]">
                                         <nav className="flex flex-col space-y-1">
                                             <Link 
-                                                href="/" 
+                                                href="/tenant-dashboard" 
                                                 className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
                                                 onClick={closeSheet}
                                             >
@@ -388,7 +388,7 @@ const Navigation = () => {
                     {/* Desktop navigation */}
                     <div className="hidden items-center space-x-1 md:flex">
                         <Link 
-                            href="/" 
+                            href="/tenant-dashboard" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-black hover:bg-white"
                         >
                             <Home className="mr-2 h-4 w-4" />
