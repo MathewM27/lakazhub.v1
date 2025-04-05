@@ -14,7 +14,7 @@ import { User } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Mail, User as UserIcon, X } from "lucide-react";
 import { supabase } from "../../utils/supabase/client";
-import { useAuth } from "../auth/AuthHandler";
+import { useAuth } from "../../auth/AuthHandler";
 
 interface ProfileModalProps {
   isOpen: boolean;

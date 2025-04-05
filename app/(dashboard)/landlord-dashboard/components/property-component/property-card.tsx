@@ -68,16 +68,16 @@ export default function PropertyCard({
         // Check if any of these conversations are in the global read list
         if (window.readConversations && data) {
           // Filter out conversations that have been marked as read globally
-          const filteredData = data.filter(conv => 
+          const filteredData = data.filter((conv: { id: string }) => 
             !window.readConversations?.has(conv.id)
           );
           
           // Calculate total unread count
-          const totalUnread = filteredData.reduce((sum, conv) => sum + (conv.landlord_unread_count || 0), 0);
+          const totalUnread = filteredData.reduce((sum: number, conv: { landlord_unread_count?: number }) => sum + (conv.landlord_unread_count || 0), 0);
           setUnreadCount(totalUnread);
         } else {
           // Calculate total unread count
-          const totalUnread = data?.reduce((sum, conv) => sum + (conv.landlord_unread_count || 0), 0) || 0;
+          const totalUnread = data?.reduce((sum: number, conv: { landlord_unread_count?: number }) => sum + (conv.landlord_unread_count || 0), 0) || 0;
           setUnreadCount(totalUnread);
         }
       } catch (error) {
@@ -95,9 +95,9 @@ export default function PropertyCard({
         schema: 'public',
         table: 'property_conversations',
         filter: `property_id=eq.${property.id}`,
-      }, (payload) => {
+      }, (payload: { new: any }) => {
         const updatedConversation = payload.new;
-        supabase.auth.getUser().then(({ data }) => {
+        supabase.auth.getUser().then(({ data }: { data: { user?: { id: string } } }) => {
           if (data?.user && updatedConversation.landlord_id === data.user.id) {
             // Update unread count when a conversation is updated
             fetchUnreadCount();

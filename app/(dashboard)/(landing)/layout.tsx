@@ -13,11 +13,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'LakazHub',
-  description: 'Connecting Landlords and Tenants',
-  icons: {
-    icon: './lakaz-hub.svg',
-  }
+  title: 'LakazHub | Dashboard',
+  description: 'LakazHub dashboard portal',
 }
 
 export default function DashboardLandingLayout({
@@ -25,6 +22,5 @@ export default function DashboardLandingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Remove any <html>, <head>, or <body> tags!
   return <>{children}</>;
 }

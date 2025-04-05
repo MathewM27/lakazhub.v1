@@ -1,13 +1,33 @@
-"use client";
+'use client';
 
-import dynamic from "next/dynamic";
+import { Inter } from "next/font/google";
+import AuthHandler from "../auth/AuthHandler";
+import { ThemeProvider } from "../theme-provider";
+import { useEffect } from 'react';
+import { PropertyCache } from '../lib/utils/cache/propertyCache';
+import AuthErrorBoundary from './auth/AuthErrorBoundary';
 
-// Use dynamic import to ensure client-side rendering for authentication
-const DynamicLandlordDashboard = dynamic(
-  () => import('./landlord-dashboard'),
-  { ssr: false }
-);
+const inter = Inter({ subsets: ["latin"] });
 
-export default function ClientWrapper() {
-  return <DynamicLandlordDashboard />;
+const CacheInitializer = () => {
+  useEffect(() => {
+    PropertyCache.init();
+  }, []);
+  
+  return null;
+};
+
+export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <div className={`${inter.className} antialiased`}>
+      <ThemeProvider defaultTheme="system">
+        <AuthErrorBoundary>
+          <AuthHandler>
+            <CacheInitializer />
+            {children}
+          </AuthHandler>
+        </AuthErrorBoundary>
+      </ThemeProvider>
+    </div>
+  );
 }

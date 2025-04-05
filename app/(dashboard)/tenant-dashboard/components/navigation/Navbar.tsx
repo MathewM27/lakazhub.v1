@@ -30,7 +30,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ProfileModal from "../user/ProfileModal";
 import { supabase } from "../../utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { useAuth } from "../auth/AuthHandler";
+import { useAuth } from "../../auth/AuthHandler";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 

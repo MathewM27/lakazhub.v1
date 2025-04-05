@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from './components/auth/AuthHandler';
+import { useAuth } from './auth/AuthHandler';
 import Hero from "./components/layouts/hero-section";
 import { PageWrapper } from "./components/layouts/PageWrapper";
 import Parallax from "./components/layouts/Parallax";
@@ -11,8 +11,40 @@ import Navigation from "./components/navigation/Navbar";
 
 import PremiumFeatures from './components/layouts/Premium';
 
+// Function to render the welcome screen
+const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") => {
+  return (
+    <div className="flex flex-col h-screen bg-black text-white">
+      {/* Header with logo */}
+      <div className="w-full py-6 px-8 border-b border-zinc-800">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-blue-500">LakazHub</h1>
+            <span className="ml-2 text-sm bg-blue-500 text-black px-2 py-0.5 rounded">Tenant</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Welcome content */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub</h2>
+          <p className="text-lg mb-8">{message}</p>
+          
+          <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
+            <div className="absolute top-0 left-0 h-full bg-blue-500 animate-pulse rounded-full" style={{width: '100%'}}></div>
+          </div>
+          
+          <div className="animate-spin mx-auto rounded-full h-12 w-12 border-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-zinc-400">Preparing your tenant experience</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Home() {
-  const { isAuthenticated, user, profile, isAuthenticating } = useAuth();
+  const { isAuthenticated, user, profile, isAuthenticating, hasCorrectRole, signOut } = useAuth();
 
   useEffect(() => {
     console.log('[TENANT_DASHBOARD] Home component mounted');
@@ -20,7 +52,8 @@ export default function Home() {
       isAuthenticating, 
       isAuthenticated, 
       hasUser: !!user, 
-      hasProfile: !!profile 
+      hasProfile: !!profile,
+      hasCorrectRole
     });
     
     if (user) {
@@ -41,7 +74,45 @@ export default function Home() {
     // Log Supabase environment variables availability (not the actual values)
     console.log('[TENANT_DASHBOARD] Supabase URL defined:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.log('[TENANT_DASHBOARD] Supabase Anon Key defined:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  }, [isAuthenticating, isAuthenticated, user, profile]);
+  }, [isAuthenticating, isAuthenticated, user, profile, hasCorrectRole]);
+
+  if (isAuthenticating) {
+    return renderWelcomeScreen();
+  }
+
+  // If authenticated but role check is still pending or failed, show welcome screen first
+  if (isAuthenticated && user && !hasCorrectRole) {
+    // Check if we're still in the process of validating the role
+    const isStillValidating = profile === null;
+    
+    if (isStillValidating) {
+      return renderWelcomeScreen("Verifying your account permissions...");
+    }
+    
+    // If we've completed validation and still don't have the correct role, show access denied
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
+        <div className="text-center max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-lg border border-zinc-800">
+          <h1 className="text-2xl font-bold mb-4 text-blue-500">Access Denied</h1>
+          <p className="mb-6">You need a tenant account to access this dashboard.</p>
+          <div className="flex gap-4 justify-center">
+            <button 
+              onClick={signOut}
+              className="px-6 py-3 bg-blue-500 text-black font-medium hover:bg-blue-400 rounded-md transition-colors"
+            >
+              Sign Out
+            </button>
+            <a 
+              href="/" 
+              className="px-6 py-3 bg-zinc-800 text-white hover:bg-zinc-700 rounded-md transition-colors"
+            >
+              Return Home
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PageWrapper>

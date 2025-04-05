@@ -145,14 +145,14 @@ const Header = () => {
             // Filter out conversations that have been marked as read globally
             let filteredConversations = conversationsData;
             if (window.readConversations && conversationsData) {
-              filteredConversations = conversationsData.filter(conv => 
+              filteredConversations = conversationsData.filter((conv: { id: string }) => 
                 !window.readConversations?.has(conv.id)
               );
             }
 
             // Set unread count
             const unreadCount = filteredConversations ? 
-              filteredConversations.reduce((sum, conv) => sum + (conv.landlord_unread_count || 0), 0) : 0;
+              filteredConversations.reduce((sum: number, conv: { landlord_unread_count?: number }) => sum + (conv.landlord_unread_count || 0), 0) : 0;
             setUnreadMessagesCount(unreadCount);
             console.log('Unread count:', unreadCount);
 
@@ -206,7 +206,7 @@ const Header = () => {
                 messageCount: conv.landlord_unread_count || 0,
                 latestMessageId: lastMessage ? lastMessage.id : ''
               };
-            }).sort((a, b) => {
+            }).sort((a: MessageNotification, b: MessageNotification) => {
               // Sort by time (newest first)
               return new Date(b.time).getTime() - new Date(a.time).getTime();
             }).slice(0, 10); // Limit to 10 most recent conversations
@@ -261,7 +261,7 @@ const Header = () => {
             schema: 'public',
             table: 'property_conversations',
             filter: `landlord_id=eq.${user.id}`,
-          }, (payload) => {
+          }, (payload: { new: any }) => {
             console.log('Conversation updated:', payload);
             const updatedConversation = payload.new;
             
