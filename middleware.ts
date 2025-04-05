@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from './utils/supabase/middleware'
 import { createClient } from './utils/supabase/server'
+import { rateLimiter } from './utils/rate-limiter'
+import * as Sentry from '@sentry/nextjs'
 
 // Safe logging function that only logs in development
 const log = (message: string, data?: any) => {
@@ -25,18 +27,63 @@ const logError = (message: string, error?: any) => {
 }
 
 export async function middleware(request: NextRequest) {
-  // Check if this is a redirect from authentication
-  const url = new URL(request.url)
-  const isAuthCallback = url.pathname === '/auth/callback' || 
-                         url.searchParams.has('code') || 
-                         url.hash.includes('access_token')
+  try {
+    // Get client IP for rate limiting
+    const ip = request.headers.get('x-forwarded-for') || 
+              request.headers.get('x-real-ip') || 
+              'unknown-ip'
+    
+    // Check if this is a redirect from authentication
+    const url = new URL(request.url)
+    const isAuthCallback = url.pathname === '/auth/callback' || 
+                          url.searchParams.has('code') || 
+                          url.hash.includes('access_token')
   
   log('Request path:', url.pathname);
   log('Is auth callback:', isAuthCallback);
   
+  // Check if this is a sign-in attempt
+  const isSignInAttempt = url.pathname === '/auth/signin' || 
+                         url.pathname === '/auth/login' ||
+                         url.pathname.includes('/api/auth');
+  
+  // Apply rate limiting for authentication attempts
+  if (isSignInAttempt) {
+    log('Auth attempt detected, checking rate limits');
+    const { isLimited, resetTime } = rateLimiter.checkLimit(ip);
+    
+    if (isLimited) {
+      log('Rate limit exceeded for IP:', ip);
+      
+      // Track rate limit in Sentry
+      Sentry.captureMessage('Authentication rate limit exceeded', {
+        level: 'warning',
+        tags: { ip },
+        extra: { resetTime: resetTime?.toISOString() }
+      });
+      
+      // Return 429 Too Many Requests with information about when to retry
+      return new NextResponse(JSON.stringify({
+        error: 'Too many authentication attempts',
+        message: 'Please try again later',
+        retryAfter: resetTime
+      }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': resetTime ? Math.ceil((resetTime.getTime() - Date.now()) / 1000).toString() : '900'
+        }
+      });
+    }
+  }
+  
   // Allow auth callbacks to proceed without session checks
   if (isAuthCallback) {
     log('Auth callback detected, skipping session check');
+    
+    // Reset rate limit after successful authentication
+    rateLimiter.resetLimit(ip);
+    
     return await updateSession(request, true); // Pass true to skip checks
   }
   
@@ -179,6 +226,20 @@ export async function middleware(request: NextRequest) {
   // For all other requests, process normally
   log('Processing non-dashboard route normally');
   return await updateSession(request)
+  } catch (error) {
+    // Log and report any middleware errors
+    logError('Unhandled middleware error:', error);
+    
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: {
+        component: 'middleware'
+      }
+    });
+    
+    // Return a generic error for security
+    return NextResponse.next();
+  }
 }
 
 export const config = {

@@ -4,6 +4,7 @@ import { useEffect, useState, createContext, useContext, useCallback } from 'rea
 import { supabase, getUserProfile, createUserProfile, validateUserRole, checkAuthStatus } from '../lib/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/types/user';
+import * as Sentry from '@sentry/nextjs';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -31,6 +32,25 @@ const logError = (message: string, error?: any) => {
     } else {
       console.error(`[AUTH_HANDLER] ${message}`);
     }
+  }
+  
+  // Report errors to Sentry in all environments
+  if (error) {
+    Sentry.captureException(error, {
+      tags: {
+        component: 'AuthHandler',
+      },
+      extra: {
+        message,
+      },
+    });
+  } else {
+    Sentry.captureMessage(`[AUTH_HANDLER] ${message}`, {
+      level: 'error',
+      tags: {
+        component: 'AuthHandler',
+      },
+    });
   }
 };
 
@@ -67,6 +87,11 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const signOut = useCallback(async () => {
     try {
       logDebug('Signing out user');
+      
+      // Clear user data from Sentry when signing out
+      Sentry.setUser(null);
+      Sentry.setContext('auth', null);
+      
       await supabase.auth.signOut();
       // Clear any cached auth data
       if (isBrowser) {
@@ -370,6 +395,13 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       } catch (error) {
         logError('Auth error:', error);
         setAuthError(error instanceof Error ? error.message : 'An unknown error occurred');
+        
+        // Track authentication failures with user context
+        Sentry.setContext('auth', {
+          isAuthenticated: false,
+          hasError: true,
+          timestamp: new Date().toISOString(),
+        });
       } finally {
         // Ensure we always exit the authenticating state
         setTimeout(() => {
