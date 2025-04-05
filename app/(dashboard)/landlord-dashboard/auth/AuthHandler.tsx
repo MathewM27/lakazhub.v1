@@ -13,6 +13,27 @@ const AUTH_RETRY_DELAY = 1500; // ms
 const AUTH_MAX_RETRIES = 3;
 const AUTH_ROLE = 'landlord';
 
+// Safe logging functions that only log in development
+const logDebug = (message: string, data?: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    if (data !== undefined) {
+      console.log(`[AUTH_HANDLER] ${message}`, data);
+    } else {
+      console.log(`[AUTH_HANDLER] ${message}`);
+    }
+  }
+};
+
+const logError = (message: string, error?: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    if (error !== undefined) {
+      console.error(`[AUTH_HANDLER] ${message}`, error);
+    } else {
+      console.error(`[AUTH_HANDLER] ${message}`);
+    }
+  }
+};
+
 // Create auth context to share authentication state
 export const AuthContext = createContext<{
   isAuthenticating: boolean;
@@ -45,9 +66,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   // Memoized function to sign out the user
   const signOut = useCallback(async () => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[AUTH_HANDLER] Signing out user');
-      }
+      logDebug('Signing out user');
       await supabase.auth.signOut();
       // Clear any cached auth data
       if (isBrowser) {
@@ -148,9 +167,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       // Check if we're offline
       const isOnline = await checkNetworkConnectivity();
       if (!isOnline) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[AUTH_HANDLER] Offline mode detected, using fallback profile');
-        }
+        logDebug('Offline mode detected, using fallback profile');
         return createFallbackProfile(user);
       }
       
@@ -158,9 +175,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       const profile = await getUserProfile(user.id);
       
       if (!profile) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[AUTH_HANDLER] No profile found, creating new profile');
-        }
+        logDebug('No profile found, creating new profile');
         
         try {
           // Create a profile that matches your database schema
@@ -181,9 +196,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           }
           return createFallbackProfile(user);
         } catch (createError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('[AUTH_HANDLER] Failed to create profile:', createError);
-          }
+          logError('Failed to create profile:', createError);
           return createFallbackProfile(user);
         }
       }
@@ -192,9 +205,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       saveProfileToCache(user.id, profile);
       return profile;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[AUTH_HANDLER] Profile fetch failed:', error);
-      }
+      logError('Profile fetch failed:', error);
       return createFallbackProfile(user);
     }
   }
@@ -314,6 +325,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           if ((Date.now() - parseInt(cacheTime)) < 5 * 60 * 1000) {
             const authData = JSON.parse(cachedAuthStatus);
             if (authData.authenticated && authData.user) {
+              logDebug('Using cached auth status');
               // Set initial state from cache to prevent flashing
               setUser(authData.user);
               setIsAuthenticated(true);
@@ -322,6 +334,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           }
         }
       } catch (e) {
+        logError('Cache read error (non-critical):', e);
         // Ignore cache errors, will fall back to normal auth flow
       }
     }
@@ -330,9 +343,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   useEffect(() => {
     const handleAuth = async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[AUTH_HANDLER] Checking authentication status...');
-        }
+        logDebug('Checking authentication status...');
         
         // Use our optimized checkAuthStatus function that includes caching
         const authStatus = await checkAuthStatus();
@@ -345,34 +356,19 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           setUser(authStatus.user);
           setIsAuthenticated(true);
           
-          // Check URL parameters for role information - only in development or with secure validation
-          if (isBrowser) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roleParam = urlParams.get('role');
-            
-            // Allow role parameter with validation
-            if (roleParam === AUTH_ROLE && authStatus.user.user_metadata?.user_role !== AUTH_ROLE) {
-              await supabase.auth.updateUser({
-                data: { user_role: AUTH_ROLE }
-              });
-              
-              // Update the user object with the new metadata
-              const { data } = await supabase.auth.getUser();
-              if (data?.user) {
-                setUser(data.user);
-              }
-            }
-          }
+          // SECURITY IMPROVEMENT: No role parameter handling from client-side code
+          // Roles are now managed through secure server-side operations via middleware
+          // The middleware handles role verification with the database as the source of truth
+          logDebug('User authenticated:', authStatus.user.id);
         } else {
+          logDebug('User not authenticated');
           setUser(null);
           setIsAuthenticated(false);
           setProfile(null);
           setHasCorrectRole(false);
         }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[AUTH_HANDLER] Auth error:', error);
-        }
+        logError('Auth error:', error);
         setAuthError(error instanceof Error ? error.message : 'An unknown error occurred');
       } finally {
         // Ensure we always exit the authenticating state
@@ -387,9 +383,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: any) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[AUTH_HANDLER] Auth state changed: ${event}`);
-        }
+        logDebug(`Auth state changed: ${event}`);
         
         if (session) {
           setUser(session.user);

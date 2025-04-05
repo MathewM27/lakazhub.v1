@@ -6,7 +6,7 @@ import AuthHandler from "./auth/AuthHandler";
 import { ThemeProvider } from "./theme-provider";
 import { useEffect } from 'react';
 import { PropertyCache } from './lib/utils/cache/propertyCache';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
+import AuthErrorBoundary from './components/auth/AuthErrorBoundary';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,12 +27,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider defaultTheme="system">
-          <ErrorBoundary>
+          <AuthErrorBoundary>
             <AuthHandler>
               <CacheInitializer />
               {children}
             </AuthHandler>
-          </ErrorBoundary>
+          </AuthErrorBoundary>
         </ThemeProvider>
       </body>
     </html>
