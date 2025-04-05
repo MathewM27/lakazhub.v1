@@ -21,7 +21,7 @@ import { LoaderCircle } from "lucide-react"
 import { Property, LandlordProperty } from "../types"; // Use the shared types
 
 export default function LandlordDashboard() {
-  const { user, profile, isAuthenticating, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticating, isAuthenticated, hasCorrectRole, signOut } = useAuth();
   const [selectedProperty, setSelectedProperty] = useState<Property | undefined>(undefined);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
@@ -107,17 +107,23 @@ export default function LandlordDashboard() {
     );
   }
   
-  // Check if user has the correct role
-  if (profile && profile.user_role !== 'landlord') {
+  // Check if user has the correct role - use the hasCorrectRole flag from context
+  if (!hasCorrectRole) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4">
         <div className="text-center max-w-md w-full bg-card p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
           <p className="mb-6">You need a landlord account to access this dashboard.</p>
           <div className="flex gap-4 justify-center">
+            <button 
+              onClick={signOut}
+              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
+            >
+              Sign Out
+            </button>
             <a 
               href="/" 
-              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
+              className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/90 rounded-md transition-colors"
             >
               Return Home
             </a>
@@ -141,6 +147,19 @@ export default function LandlordDashboard() {
             <AuthDebugger />
           </div>
         )}
+        
+        {/* Session Status Banner */}
+        <div className="container mx-auto px-4 py-2">
+          <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+            <AlertTitle className="flex items-center gap-2">
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+              Session Active
+            </AlertTitle>
+            <AlertDescription>
+              Welcome back, {profile?.full_name || user?.email}. You are logged in as a landlord.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         <section className="container mx-auto px-4 py-12">
           <h2 className="text-3xl font-bold mb-8">My Properties</h2>

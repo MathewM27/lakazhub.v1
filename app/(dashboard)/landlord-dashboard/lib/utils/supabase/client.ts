@@ -284,35 +284,82 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 // Add a function to check authentication status
 export async function checkAuthStatus() {
   if (!supabase) {
-    console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+    }
     return { authenticated: false, user: null, error: 'Client not initialized' };
   }
   
   try {
+    // Check if we have a cached auth status to reduce API calls
+    if (isBrowser) {
+      const cachedAuthStatus = sessionStorage.getItem('auth_status');
+      const cacheTime = sessionStorage.getItem('auth_status_time');
+      
+      if (cachedAuthStatus && cacheTime) {
+        try {
+          const authStatus = JSON.parse(cachedAuthStatus);
+          // Use cache if it's less than 1 minute old
+          if ((Date.now() - parseInt(cacheTime)) < 60 * 1000) {
+            return authStatus;
+          }
+        } catch (e) {
+          // Invalid cache, continue with API call
+        }
+      }
+    }
+    
     const { data, error } = await supabase.auth.getSession();
     
     if (error) {
-      console.error('[SUPABASE_CLIENT] Error checking auth status:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[SUPABASE_CLIENT] Error checking auth status:', error);
+      }
       return { authenticated: false, user: null, error: error.message };
     }
     
-    if (data.session) {
-      console.log('[SUPABASE_CLIENT] User is authenticated:', data.session.user.id);
-      return { authenticated: true, user: data.session.user, error: null };
-    } else {
-      console.log('[SUPABASE_CLIENT] No active session found');
-      return { authenticated: false, user: null, error: null };
+    const result = data.session 
+      ? { authenticated: true, user: data.session.user, error: null }
+      : { authenticated: false, user: null, error: null };
+    
+    // Cache the auth status
+    if (isBrowser) {
+      sessionStorage.setItem('auth_status', JSON.stringify(result));
+      sessionStorage.setItem('auth_status_time', Date.now().toString());
     }
+    
+    return result;
   } catch (error) {
-    console.error('[SUPABASE_CLIENT] Unexpected error in checkAuthStatus:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[SUPABASE_CLIENT] Unexpected error in checkAuthStatus:', error);
+    }
     return { authenticated: false, user: null, error: String(error) };
   }
 }
 
-// Expose functions to window for debugging
-if (isBrowser) {
+// Function to validate user role server-side
+export async function validateUserRole(userId: string, requiredRole: string) {
+  if (!supabase) return false;
+  
+  try {
+    // Get user profile from database
+    const profile = await getUserProfile(userId);
+    
+    // Check if profile exists and has the required role
+    return !!profile && profile.user_role === requiredRole;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[SUPABASE_CLIENT] Error validating user role:', error);
+    }
+    return false;
+  }
+}
+
+// Expose functions to window for debugging only in development
+if (isBrowser && process.env.NODE_ENV === 'development') {
   (window as any).checkAuthStatus = checkAuthStatus;
   (window as any).getUserProfile = getUserProfile;
   (window as any).createUserProfile = createUserProfile;
   (window as any).updateUserProfile = updateUserProfile;
+  (window as any).validateUserRole = validateUserRole;
 }
