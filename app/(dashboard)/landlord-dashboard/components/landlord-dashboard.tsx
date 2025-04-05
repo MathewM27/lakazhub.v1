@@ -72,32 +72,60 @@ export default function LandlordDashboard() {
     setAvailabilityModalOpen(true);
   };
 
-  // Show loading state while authentication is being checked
-  if (isAuthenticating) {
+  // Function to render the welcome screen
+  const renderWelcomeScreen = (message = "Your landlord dashboard is loading...") => {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex flex-col h-screen bg-black text-white">
+        {/* Header with logo */}
+        <div className="w-full py-6 px-8 border-b border-zinc-800">
+          <div className="container mx-auto flex justify-between items-center">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-yellow-500">LakazHub</h1>
+              <span className="ml-2 text-sm bg-yellow-500 text-black px-2 py-0.5 rounded">Landlord</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Welcome content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          <div className="max-w-md w-full text-center">
+            <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub</h2>
+            <p className="text-lg mb-8">{message}</p>
+            
+            <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
+              <div className="absolute top-0 left-0 h-full bg-yellow-500 animate-pulse rounded-full" style={{width: '100%'}}></div>
+            </div>
+            
+            <div className="animate-spin mx-auto rounded-full h-12 w-12 border-2 border-b-2 border-yellow-500 mb-4"></div>
+            <p className="text-zinc-400">Preparing your dashboard experience</p>
+          </div>
+        </div>
       </div>
     );
+  };
+  
+  // Show a friendly welcome screen while authentication is being checked
+  if (isAuthenticating) {
+    return renderWelcomeScreen();
   }
   
   // Show login prompt if not authenticated
   if (!isAuthenticated || !user) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen p-4">
-        <div className="text-center max-w-md w-full bg-card p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold mb-4">Login Required</h1>
+      <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
+        <div className="text-center max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-lg border border-zinc-800">
+          <h1 className="text-2xl font-bold mb-4 text-yellow-500">Login Required</h1>
           <p className="mb-6">Please log in to access your landlord dashboard.</p>
           <div className="flex gap-4 justify-center">
             <a 
               href="/" 
-              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
+              className="px-6 py-3 bg-yellow-500 text-black font-medium hover:bg-yellow-400 rounded-md transition-colors"
             >
               Log In
             </a>
             <a 
               href="/" 
-              className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/90 rounded-md transition-colors"
+              className="px-6 py-3 bg-zinc-800 text-white hover:bg-zinc-700 rounded-md transition-colors"
             >
               Return Home
             </a>
@@ -107,23 +135,33 @@ export default function LandlordDashboard() {
     );
   }
   
-  // Check if user has the correct role - use the hasCorrectRole flag from context
-  if (!hasCorrectRole) {
+  // If authenticated but role check is still pending or failed, show welcome screen first
+  // This prevents the "Access Denied" screen from flashing before authentication completes
+  if (isAuthenticated && user && !hasCorrectRole) {
+    // Check if we're still in the process of validating the role
+    // We'll assume that if we have a user but profile is null, we're still loading
+    const isStillValidating = profile === null;
+    
+    if (isStillValidating) {
+      return renderWelcomeScreen("Verifying your account permissions...");
+    }
+    
+    // If we've completed validation and still don't have the correct role, show access denied
     return (
-      <div className="flex flex-col items-center justify-center h-screen p-4">
-        <div className="text-center max-w-md w-full bg-card p-6 rounded-lg shadow-lg">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+      <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
+        <div className="text-center max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-lg border border-zinc-800">
+          <h1 className="text-2xl font-bold mb-4 text-yellow-500">Access Denied</h1>
           <p className="mb-6">You need a landlord account to access this dashboard.</p>
           <div className="flex gap-4 justify-center">
             <button 
               onClick={signOut}
-              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
+              className="px-6 py-3 bg-yellow-500 text-black font-medium hover:bg-yellow-400 rounded-md transition-colors"
             >
               Sign Out
             </button>
             <a 
               href="/" 
-              className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/90 rounded-md transition-colors"
+              className="px-6 py-3 bg-zinc-800 text-white hover:bg-zinc-700 rounded-md transition-colors"
             >
               Return Home
             </a>

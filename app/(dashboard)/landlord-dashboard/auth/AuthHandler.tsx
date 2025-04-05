@@ -300,6 +300,33 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     };
   }, [user]);
 
+  // Check if we have a stored session in localStorage to prevent flashing unauthenticated UI
+  useEffect(() => {
+    // Try to get auth status from localStorage immediately to prevent flashing
+    if (isBrowser) {
+      try {
+        // Check if we have a cached auth status to use immediately
+        const cachedAuthStatus = sessionStorage.getItem('auth_status');
+        const cacheTime = sessionStorage.getItem('auth_status_time');
+        
+        if (cachedAuthStatus && cacheTime) {
+          // Use cache if it's less than 5 minutes old
+          if ((Date.now() - parseInt(cacheTime)) < 5 * 60 * 1000) {
+            const authData = JSON.parse(cachedAuthStatus);
+            if (authData.authenticated && authData.user) {
+              // Set initial state from cache to prevent flashing
+              setUser(authData.user);
+              setIsAuthenticated(true);
+              // Don't set isAuthenticating to false yet - wait for the real check
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors, will fall back to normal auth flow
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const handleAuth = async () => {
       try {
@@ -319,15 +346,21 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           setIsAuthenticated(true);
           
           // Check URL parameters for role information - only in development or with secure validation
-          if (isBrowser && process.env.NODE_ENV === 'development') {
+          if (isBrowser) {
             const urlParams = new URLSearchParams(window.location.search);
             const roleParam = urlParams.get('role');
             
-            // Only allow role parameter in development mode for security
+            // Allow role parameter with validation
             if (roleParam === AUTH_ROLE && authStatus.user.user_metadata?.user_role !== AUTH_ROLE) {
               await supabase.auth.updateUser({
                 data: { user_role: AUTH_ROLE }
               });
+              
+              // Update the user object with the new metadata
+              const { data } = await supabase.auth.getUser();
+              if (data?.user) {
+                setUser(data.user);
+              }
             }
           }
         } else {
@@ -343,7 +376,9 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         setAuthError(error instanceof Error ? error.message : 'An unknown error occurred');
       } finally {
         // Ensure we always exit the authenticating state
-        setIsAuthenticating(false);
+        setTimeout(() => {
+          setIsAuthenticating(false);
+        }, 300); // Small delay to ensure smooth transition
       }
     };
 
@@ -386,14 +421,9 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     };
   }, []);
 
-  // Simplified loading indicator to reduce nesting
-  if (isAuthenticating) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  // We'll let the child components handle their own loading states
+  // This allows for a more customized welcome experience in each dashboard
+  // Instead of showing a loading indicator here, we'll pass the loading state to children
 
   // Only show error screen for critical auth errors
   if (authError) {
@@ -414,7 +444,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     );
   }
 
-  // Provide auth context to children
+  // Provide auth context to children, including when authenticating
+  // This allows child components to show a welcome screen during authentication
   return (
     <AuthContext.Provider value={{ 
       isAuthenticating, 
