@@ -1113,7 +1113,7 @@ export default function NotificationsModal({
     if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
       return (
         <div className="flex items-center justify-center h-32">
-          <div className="animate-pulse flex space-x-2">
+          <div className="animate-pulse flex space-x-2" key="loading-pulse">
             <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
             <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
             <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
@@ -1144,7 +1144,7 @@ export default function NotificationsModal({
         {/* Loading more messages indicator */}
         {loadingMoreMessages && (
           <div className="flex justify-center py-2">
-            <div className="animate-pulse flex space-x-2">
+            <div className="animate-pulse flex space-x-2" key="loading-more-pulse">
               <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
               <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
               <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
@@ -1324,7 +1324,7 @@ export default function NotificationsModal({
             <div className="overflow-y-auto flex-1 ">
               {loading && tenants.length === 0 ? (
                 <div className="flex items-center justify-center h-48">
-                  <div className="animate-pulse flex space-x-2">
+                  <div className="animate-pulse flex space-x-2" key="mobile-loading-pulse">
                     <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
                     <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
                     <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
