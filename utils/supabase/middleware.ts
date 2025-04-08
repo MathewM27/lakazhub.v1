@@ -1,14 +1,26 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Define public paths once to avoid recomputation
+const PUBLIC_PATHS = [
+  '/',
+  '/auth',
+  '/success',
+  // Add any other public paths
+];
+
+// Optimize path checking with simple function
+const isPublicPath = (pathname: string) => {
+  return PUBLIC_PATHS.some(path => pathname.startsWith(path));
+};
+
 export async function updateSession(request: NextRequest, skipSessionCheck = false) {
-  console.log('[MIDDLEWARE_UTIL] updateSession called');
-  console.log('[MIDDLEWARE_UTIL] Request path:', request.nextUrl.pathname);
-  console.log('[MIDDLEWARE_UTIL] Skip session check:', skipSessionCheck);
-  
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  // Quick path for auth endpoints - no need for full middleware processing
+  if (skipSessionCheck || request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,59 +28,37 @@ export async function updateSession(request: NextRequest, skipSessionCheck = fal
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value); 
+            supabaseResponse.cookies.set(name, value, options);
+          });
         },
       },
     }
-  )
+  );
 
-  // If we're skipping session check (for auth callbacks), return early
-  if (skipSessionCheck) {
-    console.log('[MIDDLEWARE_UTIL] Skipping session check, returning early');
-    return supabaseResponse
+  // If public path, allow access without checking user
+  if (isPublicPath(request.nextUrl.pathname)) {
+    return supabaseResponse;
   }
 
   try {
-    console.log('[MIDDLEWARE_UTIL] Checking for user session');
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    
-    console.log('[MIDDLEWARE_UTIL] User exists:', !!user);
-    if (user) {
-      console.log('[MIDDLEWARE_UTIL] User ID:', user.id);
-      console.log('[MIDDLEWARE_UTIL] User role:', user.user_metadata?.user_role);
-    }
+    // Check session
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (
-      !user &&
-      !request.nextUrl.pathname.startsWith('/') &&
-      !request.nextUrl.pathname.startsWith('/auth') &&
-      !request.nextUrl.pathname.startsWith('/success')
-    ) {
-      // no user, potentially respond by redirecting the user to the login page
-      console.log('[MIDDLEWARE_UTIL] No user found and accessing protected route');
-      console.log('[MIDDLEWARE_UTIL] Current path:', request.nextUrl.pathname);
-      console.log('[MIDDLEWARE_UTIL] Redirecting to login page');
-      
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    } else {
-      console.log('[MIDDLEWARE_UTIL] User session valid or accessing public route');
+    // Redirect if no user and attempting to access protected route
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
     }
   } catch (error) {
-    console.error('[MIDDLEWARE_UTIL] Error in middleware session check:', error)
+    console.error('Middleware session error:', error);
+    // Continue on error to avoid blocking
   }
 
-  return supabaseResponse
+  return supabaseResponse;
 }

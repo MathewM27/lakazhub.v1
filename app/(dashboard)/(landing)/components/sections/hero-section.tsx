@@ -159,7 +159,7 @@ export const HeroSection = () => {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mt-12">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Left content column */}
           <motion.div

@@ -71,15 +71,9 @@ const signinWithMagicLink = async (
   };
 };
 
-export const signinWithGoogle = async (
-  userType?: 'tenant' | 'landlord'
-) => {
+// Optimize Google auth flow for better performance
+export async function signinWithGoogle(userType?: 'tenant' | 'landlord') {
   "use server";
-  
-  // Add specific logging for landlord flow
-  if (userType === 'landlord') {
-    console.log('[AUTH_ACTION] Starting landlord Google sign-in flow');
-  }
   
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -96,29 +90,47 @@ export const signinWithGoogle = async (
           );
         },
       },
+      // Add performance options
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        autoRefreshToken: true,
+      }
     }
   );
 
-  // Update the query params to more explicitly handle landlord role
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-        // Make sure user_role is explicitly sent for landlords
-        ...(userType === 'landlord' ? { user_role: 'landlord' } : 
-           userType === 'tenant' ? { user_role: 'tenant' } : {})
-      },
-      // Add user_role to the callback URL as well for redundancy
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
-    }
-  });
+  // Optimize query parameters
+  const queryParams: Record<string, string> = {
+    access_type: 'offline',
+    prompt: 'consent',
+  };
+  
+  // Only add user_role if it's actually provided
+  if (userType) {
+    queryParams.user_role = userType;
+  }
 
-  if (error) throw error;
-  if (data && data.url) return redirect(data.url);
-  throw new Error('No URL returned from OAuth response');
-};
+  // Build redirect URL once
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback${userType ? `?user_role=${userType}` : ''}`;
+
+  // Perform OAuth sign-in
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        queryParams,
+        redirectTo
+      }
+    });
+
+    if (error) throw error;
+    if (data?.url) return redirect(data.url);
+    throw new Error('No URL returned from OAuth response');
+  } catch (error) {
+    console.error("OAuth error:", error);
+    throw error;
+  }
+}
 
 export {
   signinWithMagicLink,

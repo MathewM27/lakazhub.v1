@@ -1,6 +1,5 @@
 /**
- * Simple in-memory rate limiter to prevent brute force attacks
- * For production, consider using a Redis-based solution for distributed environments
+ * Optimized rate limiter with lower overhead
  */
 
 interface RateLimitRecord {
@@ -12,11 +11,13 @@ interface RateLimitRecord {
 class RateLimiter {
   private static instance: RateLimiter;
   private records: Map<string, RateLimitRecord> = new Map();
+  private lastCleanup = Date.now(); // Track last cleanup
   
   // Rate limit configuration
-  private readonly MAX_ATTEMPTS = 5; // Maximum attempts within window
+  private readonly MAX_ATTEMPTS = 5;
   private readonly WINDOW_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes block
+  private readonly BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+  private readonly CLEANUP_INTERVAL = 10 * 60 * 1000; // 10 minutes
   
   private constructor() {}
   
@@ -27,18 +28,18 @@ class RateLimiter {
     return RateLimiter.instance;
   }
   
-  /**
-   * Check if an IP is rate limited
-   * @param ip The IP address to check
-   * @returns Object containing isLimited status and reset time
-   */
   public checkLimit(ip: string): { isLimited: boolean; resetTime: Date | null } {
-    this.cleanupExpiredRecords();
-    
     const now = Date.now();
+    
+    // Only clean up every CLEANUP_INTERVAL ms instead of on every request
+    if (now - this.lastCleanup > this.CLEANUP_INTERVAL) {
+      queueMicrotask(() => this.cleanupExpiredRecords(now));
+      this.lastCleanup = now;
+    }
+    
     const record = this.records.get(ip);
     
-    // If no record exists or it's expired, create a new one
+    // Fast path: no record
     if (!record) {
       this.records.set(ip, {
         count: 1,
@@ -48,10 +49,10 @@ class RateLimiter {
       return { isLimited: false, resetTime: null };
     }
     
-    // If IP is blocked, check if block period has expired
+    // Fast path: blocked
     if (record.blocked) {
+      // Check if block expired
       if (now > record.resetAt) {
-        // Block period expired, reset the record
         this.records.set(ip, {
           count: 1,
           resetAt: now + this.WINDOW_MS,
@@ -59,17 +60,11 @@ class RateLimiter {
         });
         return { isLimited: false, resetTime: null };
       }
-      
-      // Still blocked
-      return { 
-        isLimited: true, 
-        resetTime: new Date(record.resetAt)
-      };
+      return { isLimited: true, resetTime: new Date(record.resetAt) };
     }
     
-    // Check if window has expired
+    // Fast path: window expired
     if (now > record.resetAt) {
-      // Window expired, reset counter
       this.records.set(ip, {
         count: 1,
         resetAt: now + this.WINDOW_MS,
@@ -78,19 +73,14 @@ class RateLimiter {
       return { isLimited: false, resetTime: null };
     }
     
-    // Increment counter
+    // Normal case: increment and check
     record.count += 1;
     
     // Check if limit exceeded
     if (record.count > this.MAX_ATTEMPTS) {
-      // Set blocked status
       record.blocked = true;
       record.resetAt = now + this.BLOCK_DURATION_MS;
-      
-      return { 
-        isLimited: true, 
-        resetTime: new Date(record.resetAt)
-      };
+      return { isLimited: true, resetTime: new Date(record.resetAt) };
     }
     
     // Update record
@@ -99,19 +89,12 @@ class RateLimiter {
     return { isLimited: false, resetTime: null };
   }
   
-  /**
-   * Reset rate limit for an IP (e.g., after successful authentication)
-   * @param ip The IP address to reset
-   */
   public resetLimit(ip: string): void {
     this.records.delete(ip);
   }
   
-  /**
-   * Clean up expired records to prevent memory leaks
-   */
-  private cleanupExpiredRecords(): void {
-    const now = Date.now();
+  private cleanupExpiredRecords(now = Date.now()): void {
+    // Batch cleanup in a single pass to avoid multiple iterations
     for (const [ip, record] of this.records.entries()) {
       if (now > record.resetAt && !record.blocked) {
         this.records.delete(ip);
