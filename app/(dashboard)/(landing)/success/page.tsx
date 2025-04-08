@@ -5,20 +5,21 @@ import { createClient } from '@/utils/supabase/client';
 import { motion } from 'framer-motion';
 import { FaHome, FaComments, FaCalendarAlt, FaBook, FaTools, FaBuilding } from 'react-icons/fa';
 import Confetti from 'react-confetti';
+import { Session, User, UserMetadata } from '@supabase/supabase-js';
 
 // Define the type for debugInfo
 interface DebugInfo {
-  session?: any;
-  sessionError?: any;
-  user?: any;
-  user_metadata?: any;
+  session?: Session | null;
+  sessionError?: Error | null;
+  user?: User | null;
+  user_metadata?: UserMetadata;
   redirectUrl?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const SuccessPage = () => {
-  const [status, setStatus] = useState('Authenticating...');
-  const [error, setError] = useState(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
   const [showDebug, setShowDebug] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -97,13 +98,13 @@ const SuccessPage = () => {
           user_metadata
         }));
 
-        const { full_name, user_role } = user_metadata || {};
+        const { user_role } = user_metadata || {};
         
         if (!user_role) {
           throw new Error('User role not found in metadata');
         }
 
-        setStatus(`Authentication successful`);
+        setIsAuthenticating(false);
         setShowConfetti(true);
         
         // Set redirect URL based on role
@@ -118,10 +119,11 @@ const SuccessPage = () => {
                 : '/',
           session
         }));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Authentication error:', error);
-        setError(error.message);
-        setStatus(`Authentication error: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown authentication error';
+        setError(errorMessage);
+        setIsAuthenticating(false);
       }
     };
     
@@ -131,8 +133,11 @@ const SuccessPage = () => {
   const handleRedirect = () => {
     const { redirectUrl, user_metadata } = debugInfo;
     if (redirectUrl) {
-      if (user_metadata?.user_role === 'landlord') {
-        window.location.href = `${redirectUrl}?role=landlord`;
+      // Get role from metadata correctly and use user_role parameter consistently
+      const userRole = user_metadata?.user_role;
+      
+      if (userRole) {
+        window.location.href = `${redirectUrl}?user_role=${userRole}`;
       } else {
         window.location.href = redirectUrl;
       }
@@ -140,7 +145,6 @@ const SuccessPage = () => {
       window.location.href = '/';
     }
   };
-
   // Feature items for each role
   const tenantFeatures = [
     { icon: <FaHome className="text-yellow-400 text-2xl" />, title: "Curated Properties", description: "Access filtered and quality properties" },
@@ -242,7 +246,7 @@ const SuccessPage = () => {
     );
   }
 
-  if (!debugInfo.user) {
+  if (isAuthenticating || !debugInfo.user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
         <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>

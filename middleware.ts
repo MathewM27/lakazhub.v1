@@ -126,6 +126,25 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
       }
       
+      // Add this to middleware.ts after fetching user from Supabase
+      if (user && user.user_metadata?.user_role) {
+        // Check if profile exists or update it if there's a mismatch
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_role')
+          .eq('id', user.id)
+          .single();
+          
+        if (!profile || profile.user_role !== user.user_metadata.user_role) {
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            full_name: user.user_metadata.full_name || user.user_metadata.name || 'Unknown',
+            email_address: user.email || '',
+            user_role: user.user_metadata.user_role
+          });
+        }
+      }
+      
       // Get user role from metadata first
       const metadataRole = session.user.user_metadata?.user_role;
       log('User role from session metadata:', metadataRole);
