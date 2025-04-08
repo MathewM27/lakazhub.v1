@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
 import { FiUser, FiHome, FiMail, FiPhone } from "react-icons/fi";
@@ -527,7 +526,7 @@ export const SignupSection = () => {
                     Sign in
                   </button></>
                 ) : (
-                  <>Don't have an account?{' '}
+                  <>Don&apos;t have an account?{' '}
                   <button 
                     onClick={() => toggleFormMode('signup')}
                     className="font-medium text-white hover:text-white/80 underline-offset-2 hover:underline transition-all background-transparent border-none p-0"

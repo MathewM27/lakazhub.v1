@@ -148,7 +148,7 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            {navLinks.map((link, index) => (
+            {navLinks.map((link) => (
               <div key={link.href} className="relative px-1">
                 <a 
                   href={`#${link.section}`}

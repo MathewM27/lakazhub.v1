@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Home, MapPin, Star, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, MapPin, Star } from 'lucide-react';
 import { properties } from '@/types/properties';
 import { PropertyCard } from '../../ui/property-card';
 
@@ -47,11 +47,6 @@ export const PropertySlider = () => {
   }, [currentIndex, autoplayEnabled, isHovering]);
 
   // Handle mouse movement for the custom cursor
-  interface CursorPosition {
-    x: number;
-    y: number;
-  }
-
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>): void => {
     if (!sliderRef.current) return;
     const rect = sliderRef.current.getBoundingClientRect();
@@ -326,8 +321,8 @@ export const PropertySlider = () => {
                 Premium Features in Development
               </h3>
               <p className="text-white/70 text-sm md:text-base">
-                We're working to enhance your experience with premium subscription services. 
-                Soon you'll enjoy exclusive listings, virtual tours, and priority access to new properties.
+                We&apos;re working to enhance your experience with premium subscription services. 
+                Soon you&apos;ll enjoy exclusive listings, virtual tours, and priority access to new properties.
               </p>
             </div>
           </motion.div>

@@ -22,5 +22,9 @@ export default function DashboardLandingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <div className={`${geistSans.variable} ${geistMono.variable}`}>
+      {children}
+    </div>
+  );
 }

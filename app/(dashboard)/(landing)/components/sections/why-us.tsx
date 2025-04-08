@@ -2,8 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import { motion, useAnimation, useInView } from 'framer-motion';
-import { Home, Users, CheckCircle, ArrowRight, X, Check } from 'lucide-react';
-import Image from 'next/image';
+import { Home, Users, CheckCircle, ArrowRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
 // Define interface for Dot class
@@ -202,7 +201,7 @@ export const WhyUsSection = () => {
               variants={headingVariants}
               className="text-lg text-white/70 max-w-2xl mx-auto mt-6" // Changed to white text with opacity
             >
-              We're redefining the rental experience by creating a seamless connection 
+              We&apos;re redefining the rental experience by creating a seamless connection 
               between landlords and tenants.
             </motion.p>
           </motion.div>

@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Facebook, Instagram, ArrowUp, Mail } from 'lucide-react';
 
 // Custom TikTok icon since it's not in lucide-react by default
-interface TiktokIconProps extends React.SVGProps<SVGSVGElement> {}
-
-const TiktokIcon = (props: TiktokIconProps) => (
+const TiktokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     width="24"
     height="24"
@@ -114,9 +113,11 @@ export const Footer = () => {
               
               {/* Inner content with logo */}
               <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center overflow-hidden">
-                <img 
+                <Image 
                   src="/X.jpg" 
                   alt="FutureX Design Logo" 
+                  width={80}
+                  height={80}
                   className="w-full h-full object-cover"
                 />
               </div>
