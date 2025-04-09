@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   // Get all parameters at once to minimize searchParams access
   const code = searchParams.get('code');
   const error = searchParams.get('error');
-  const userRole = searchParams.get('user_role');
+  const userRoleParam = searchParams.get('user_role');
   const testCountry = searchParams.get('test_country'); // For development testing
   
   // Get client IP and country for geolocation check
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   
   try {
-    // Exchange code for session - critical path
+    // Exchange code for session
     const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
     
     if (sessionError) {
@@ -126,12 +126,54 @@ export async function GET(request: Request) {
       return errorRedirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(sessionError.message)}`);
     }
 
-    // Get session data - critical for authentication
+    // Get session data
     const { data: { session } } = await supabase.auth.getSession();
     
-    // Check if we have a valid user session
     if (!session?.user) {
       return errorRedirect(`${origin}/auth/auth-code-error?error=no_session`);
+    }
+    
+    // Check for user_role in metadata
+    let userRole = session.user.user_metadata?.user_role || 
+                  session.user.user_metadata?.role || 
+                  'tenant';
+    
+    // Fix potential legacy data by updating auth metadata if needed
+    // This ensures all future requests have consistent user_role field
+    if (session.user.user_metadata?.role && !session.user.user_metadata?.user_role) {
+      try {
+        await supabase.auth.updateUser({
+          data: { 
+            user_role: session.user.user_metadata.role,
+            // Remove the old role field to prevent confusion
+            role: null
+          }
+        });
+        // Log success but continue with the flow
+        logInBackground('Updated legacy role field to user_role');
+      } catch (updateError) {
+        // Log error but continue with the flow
+        logInBackground('Failed to update legacy role field: ' + updateError);
+      }
+    }
+    
+    // Fetch profile from database to ensure we have the correct role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_role')
+      .eq('id', session.user.id)
+      .single();
+    
+    // If profile exists, use its role as the source of truth
+    if (profile?.user_role) {
+      userRole = profile.user_role;
+      
+      // If metadata role doesn't match profile role, update metadata
+      if (session.user.user_metadata?.user_role !== userRole) {
+        await supabase.auth.updateUser({
+          data: { user_role: userRole }
+        });
+      }
     }
     
     // Log success in background (non-blocking)
@@ -194,7 +236,7 @@ export async function GET(request: Request) {
     }
     
     // Return optimized redirect
-    return successRedirect(`${baseUrl}${dashboardPath}?user_role=${userRole || 'tenant'}`);
+    return successRedirect(`${baseUrl}${dashboardPath}`);
     
   } catch (error) {
     // Log error in background, don't block response

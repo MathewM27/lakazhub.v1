@@ -131,20 +131,15 @@ const SuccessPage = () => {
   }, []);
   
   const handleRedirect = () => {
-    const { redirectUrl, user_metadata } = debugInfo;
+    const { redirectUrl } = debugInfo;
     if (redirectUrl) {
-      // Get role from metadata correctly and use user_role parameter consistently
-      const userRole = user_metadata?.user_role;
-      
-      if (userRole) {
-        window.location.href = `${redirectUrl}?user_role=${userRole}`;
-      } else {
-        window.location.href = redirectUrl;
-      }
+      // No need to pass user_role in URL, middleware will handle redirection
+      window.location.href = redirectUrl;
     } else {
       window.location.href = '/';
     }
   };
+
   // Feature items for each role
   const tenantFeatures = [
     { icon: <FaHome className="text-yellow-400 text-2xl" />, title: "Curated Properties", description: "Access filtered and quality properties" },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
-import { supabase, getUserProfile, createUserProfile, validateUserRole, checkAuthStatus } from '../lib/utils/supabase/client';
+import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '../lib/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/types/user';
 import * as Sentry from '@sentry/nextjs';
@@ -15,7 +15,7 @@ const AUTH_MAX_RETRIES = 3;
 const AUTH_ROLE = 'landlord';
 
 // Safe logging functions that only log in development
-const logDebug = (message: string, data?: any) => {
+const logDebug = (message: string, data?: unknown) => {
   if (process.env.NODE_ENV === 'development') {
     if (data !== undefined) {
       console.log(`[AUTH_HANDLER] ${message}`, data);
@@ -124,7 +124,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         signal: AbortSignal.timeout(2000) // 2 second timeout
       });
       return true;
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   };
@@ -143,7 +143,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           return JSON.parse(cachedProfile);
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Invalid cache, continue with API call
     }
     
@@ -157,7 +157,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     try {
       localStorage.setItem(`profile_${userId}`, JSON.stringify(profile));
       localStorage.setItem(`profile_time_${userId}`, Date.now().toString());
-    } catch (e) {
+    } catch (_e) {
       // Failed to cache, not critical
     }
   };
@@ -334,7 +334,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, fetchUserProfile]);
 
   // Check if we have a stored session in localStorage to prevent flashing unauthenticated UI
   useEffect(() => {
@@ -358,8 +358,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             }
           }
         }
-      } catch (e) {
-        logError('Cache read error (non-critical):', e);
+      } catch (_e) {
+        logError('Cache read error (non-critical):', _e);
         // Ignore cache errors, will fall back to normal auth flow
       }
     }

@@ -99,19 +99,19 @@ export async function signinWithGoogle(userType?: 'tenant' | 'landlord') {
     }
   );
 
-  // Optimize query parameters
+  // Create query params object with user role if present
   const queryParams: Record<string, string> = {
     access_type: 'offline',
     prompt: 'consent',
   };
   
-  // Only add user_role if it's actually provided
+  // Add user_role to queryParams if provided
   if (userType) {
     queryParams.user_role = userType;
   }
 
-  // Build redirect URL once
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback${userType ? `?user_role=${userType}` : ''}`;
+  // Build redirect URL without query parameters
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`;
 
   // Perform OAuth sign-in
   try {
@@ -119,7 +119,8 @@ export async function signinWithGoogle(userType?: 'tenant' | 'landlord') {
       provider: 'google',
       options: {
         queryParams,
-        redirectTo
+        redirectTo,
+        // Remove the 'data' property as it's not supported
       }
     });
 
