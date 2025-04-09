@@ -7,10 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+// Define an interface for the test result
+interface TestResult {
+  success: boolean;
+  message: string;
+  user?: any; // Consider creating a more specific type based on your user structure
+  profile?: any; // Consider creating a more specific type based on your profile structure
+  results?: {
+    tests: Array<{ name: string; success: boolean; details?: string }>;
+    fixes: Array<{ name: string; success: boolean; details?: string }>;
+  } | Record<string, any>; // Added this alternative type to match what testLandlordAuth returns
+}
+
 export default function AuthDebugger() {
   const { user, profile, isAuthenticated, isAuthenticating, hasCorrectRole, signOut } = useAuth();
   const [showDebug, setShowDebug] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [showCacheInfo, setShowCacheInfo] = useState(false);
 
@@ -69,7 +81,8 @@ export default function AuthDebugger() {
       if (key) {
         try {
           cacheInfo.sessionStorage[key] = sessionStorage.getItem(key);
-        } catch (e) {
+        } catch (_) {
+          // Using underscore to indicate intentionally unused parameter
           cacheInfo.sessionStorage[key] = 'Error reading value';
         }
       }
@@ -81,7 +94,8 @@ export default function AuthDebugger() {
       if (key && (key.startsWith('profile_') || key.includes('auth'))) {
         try {
           cacheInfo.localStorage[key] = localStorage.getItem(key);
-        } catch (e) {
+        } catch (_) {
+          // Using underscore to indicate intentionally unused parameter
           cacheInfo.localStorage[key] = 'Error reading value';
         }
       }
