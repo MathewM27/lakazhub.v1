@@ -173,8 +173,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     } as UserProfile;
   };
 
-  // Fetch user profile with caching and offline support
-  async function fetchUserProfile(user: User) {
+  // Memoize the fetchUserProfile function
+  const fetchUserProfile = useCallback(async (user: User) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('[AUTH_HANDLER] Fetching profile for user:', user.id);
     }
@@ -233,7 +233,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       logError('Profile fetch failed:', error);
       return createFallbackProfile(user);
     }
-  }
+  }, []); // Empty dependency array since it doesn't rely on component state
 
   // Fetch user profile when user is available
   useEffect(() => {
@@ -334,7 +334,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     return () => {
       isMounted = false;
     };
-  }, [user, fetchUserProfile]);
+  }, [user]);
 
   // Check if we have a stored session in localStorage to prevent flashing unauthenticated UI
   useEffect(() => {

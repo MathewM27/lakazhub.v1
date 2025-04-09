@@ -13,7 +13,6 @@ import OtherProperties from "../layout/other-properties"
 import { Footer } from "../navigation/footer"
 import SuccessModal from "./modals/success-modal"
 import { useAuth } from '../auth/AuthHandler';
-import AuthDebugger from './auth/AuthDebugger';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LoaderCircle } from "lucide-react"
@@ -178,26 +177,6 @@ export default function LandlordDashboard() {
 
       <div className="flex-1">
         <HeroSection />
-        
-        {/* Auth Debugger - only visible in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="container mx-auto px-4 py-4">
-            <AuthDebugger />
-          </div>
-        )}
-        
-        {/* Session Status Banner */}
-        <div className="container mx-auto px-4 py-2">
-          <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
-            <AlertTitle className="flex items-center gap-2">
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-              Session Active
-            </AlertTitle>
-            <AlertDescription>
-              Welcome back, {profile?.full_name || user?.email}. You are logged in as a landlord.
-            </AlertDescription>
-          </Alert>
-        </div>
 
         <section className="container mx-auto px-4 py-12">
           <h2 className="text-3xl font-bold mb-8">My Properties</h2>
@@ -218,8 +197,6 @@ export default function LandlordDashboard() {
 
       <Footer />
       
-     
-
       <PropertyModal
         open={detailsModalOpen}
         onOpenChangeAction={setDetailsModalOpen}
@@ -231,7 +208,7 @@ export default function LandlordDashboard() {
         open={availabilityModalOpen}
         onOpenChangeAction={setAvailabilityModalOpen}
         property={selectedProperty}
-        onUpdate={refreshProperties} // Add this to refresh properties after update
+        onUpdate={refreshProperties}
       />
       
       <NotificationModal
@@ -247,8 +224,6 @@ export default function LandlordDashboard() {
         message={successModalProps.message}
         autoClose={true}
       />
-
-     
     </div>
   );
 }
