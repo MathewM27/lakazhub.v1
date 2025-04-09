@@ -1,23 +1,24 @@
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/utils/supabase/client';
+import { useState, useCallback } from 'react';
+
 import PropertyGrid from './property-component/property-grid';
 import PropertyModal from './modals/property-modal-details';
 import AvailabilityModal from './modals/availability-modal';
 import NotificationModal from './modals/notification-modal';
 import { useToast } from '../../tenant-dashboard/hooks/use-toast';
-import Header from "../navigation/header"
-import HeroSection from "../layout/hero-section"
-import OtherProperties from "../layout/other-properties"
-import { Footer } from "../navigation/footer"
-import SuccessModal from "./modals/success-modal"
+import Header from "../navigation/header";
+import HeroSection from "../layout/hero-section";
+import OtherProperties from "../layout/other-properties";
+import { Footer } from "../navigation/footer";
+import SuccessModal from "./modals/success-modal";
 import { useAuth } from '../auth/AuthHandler';
+import Link from 'next/link'; // Import Link component
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { LoaderCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { LoaderCircle } from "lucide-react";
 
-import { Property, LandlordProperty } from "../types"; // Use the shared types
+import { Property } from "../types"; // Removed unused LandlordProperty
 
 export default function LandlordDashboard() {
   const { user, profile, isAuthenticating, isAuthenticated, hasCorrectRole, signOut } = useAuth();
@@ -26,11 +27,11 @@ export default function LandlordDashboard() {
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
   const { toast } = useToast();
-  const [successModalOpen, setSuccessModalOpen] = useState(false)
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalProps, setSuccessModalProps] = useState({
     title: "",
     message: "",
-  })
+  });
   
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
@@ -66,10 +67,7 @@ export default function LandlordDashboard() {
     // Your code to fetch updated properties
   };
   
-  const handleAvailabilityAction = (property: Property) => {
-    setSelectedProperty(property);
-    setAvailabilityModalOpen(true);
-  };
+  // Removed unused handleAvailabilityAction function since it duplicates handleAvailability
 
   // Function to render the welcome screen
   const renderWelcomeScreen = (message = "Your landlord dashboard is loading...") => {
@@ -116,18 +114,19 @@ export default function LandlordDashboard() {
           <h1 className="text-2xl font-bold mb-4 text-yellow-500">Login Required</h1>
           <p className="mb-6">Please log in to access your landlord dashboard.</p>
           <div className="flex gap-4 justify-center">
-            <a 
+            {/* Replaced <a> with <Link> */}
+            <Link 
               href="/" 
               className="px-6 py-3 bg-yellow-500 text-black font-medium hover:bg-yellow-400 rounded-md transition-colors"
             >
               Log In
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/" 
               className="px-6 py-3 bg-zinc-800 text-white hover:bg-zinc-700 rounded-md transition-colors"
             >
               Return Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -158,12 +157,13 @@ export default function LandlordDashboard() {
             >
               Sign Out
             </button>
-            <a 
+            {/* Replaced <a> with <Link> */}
+            <Link 
               href="/" 
               className="px-6 py-3 bg-zinc-800 text-white hover:bg-zinc-700 rounded-md transition-colors"
             >
               Return Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>

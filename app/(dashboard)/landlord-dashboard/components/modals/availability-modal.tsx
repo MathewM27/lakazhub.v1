@@ -12,11 +12,12 @@ import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { supabase } from "../../lib/utils/supabase/client";
 import { useToast } from "../../hooks/use-toast";
+import { Property } from "../../types";
 
 interface AvailabilityModalProps {
   open: boolean;
   onOpenChangeAction: (open: boolean) => void;
-  property?: any;
+  property?: Property; // Using the Property type instead of any
   onUpdate?: () => void; // Add callback for when updates are successful
 }
 
@@ -33,6 +34,20 @@ export default function AvailabilityModal({
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   
+  // Onboarding slides content
+  const onboardingSlides = [
+    {
+      title: "Property Availability",
+      description: "Set whether your property is currently available.",
+      icon: <Home className="h-12 w-12 mb-4" />,
+    },
+    {
+      title: "Next Available Date",
+      description: "If your property is rented, set when it will be available again.",
+      icon: <Clock className="h-12 w-12 mb-4" />,
+    }
+  ];
+  
   // Load property data when modal opens
   useEffect(() => {
     if (property && open) {
@@ -46,7 +61,7 @@ export default function AvailabilityModal({
     }
   }, [property, open]);
 
-  // Auto-advance onboarding slides (your existing code)
+  // Auto-advance onboarding slides
   useEffect(() => {
     if (!onboardingComplete && open) {
       const timer = setTimeout(() => {
@@ -59,7 +74,7 @@ export default function AvailabilityModal({
 
       return () => clearTimeout(timer);
     }
-  }, [step, onboardingComplete, open]);
+  }, [step, onboardingComplete, open, onboardingSlides.length]); // Added onboardingSlides.length dependency
 
   const handleStartForm = () => {
     setOnboardingComplete(true);
@@ -88,17 +103,23 @@ export default function AvailabilityModal({
     try {
       // Prepare the update data
       const isAvailable = availabilityStatus === "available";
-      const updateData: any = {
+      
+      // Using a proper type for the update data
+      interface PropertyUpdateData {
+        available: boolean;
+        status: 'active' | 'rented';
+        next_available_date: string | null;
+      }
+      
+      const updateData: PropertyUpdateData = {
         available: isAvailable,
-        status: isAvailable ? "active" : "rented"
+        status: isAvailable ? "active" : "rented",
+        next_available_date: null
       };
       
       // Only include next_available_date if the property is rented
       if (!isAvailable && nextAvailableDate) {
         updateData.next_available_date = nextAvailableDate.toISOString();
-      } else {
-        // Clear the date if property is available
-        updateData.next_available_date = null;
       }
       
       // Update the property in Supabase
@@ -130,20 +151,6 @@ export default function AvailabilityModal({
       setSaving(false);
     }
   };
-
-  // Onboarding slides content (your existing code)
-  const onboardingSlides = [
-    {
-      title: "Property Availability",
-      description: "Set whether your property is currently available.",
-      icon: <Home className="h-12 w-12 mb-4" />,
-    },
-    {
-      title: "Next Available Date",
-      description: "If your property is rented, set when it will be available again.",
-      icon: <Clock className="h-12 w-12 mb-4" />,
-    }
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChangeAction}>
@@ -201,7 +208,7 @@ export default function AvailabilityModal({
               <div
                 className="h-full rounded-lg bg-cover bg-center flex items-center justify-center"
                 style={{
-                  backgroundImage: `url(${property?.image || "/placeholder.svg?height=400&width=300"})`,
+                  backgroundImage: `url(${property?.images?.[0] || "/placeholder.svg?height=400&width=300"})`,
                   backgroundBlendMode: "overlay",
                   backgroundColor: "rgba(0, 0, 0, 0.4)",
                 }}
