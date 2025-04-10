@@ -98,15 +98,17 @@ export default function PropertyCard({
     // Set up real-time subscription for conversation updates
     const conversationUpdateSubscription = supabase
       .channel('property_conversations_update')
-      .on('postgres_changes', {
+      .on('postgres_changes' as any, {
         event: 'UPDATE',
         schema: 'public',
         table: 'property_conversations',
         filter: `property_id=eq.${property.id}`,
       }, (payload: { new: ConversationPayload }) => {
         const updatedConversation = payload.new;
-        supabase.auth.getUser().then(({ data }: { data: { user?: { id: string } } }) => {
-          if (data?.user && updatedConversation.landlord_id === data.user.id) {
+        
+        // Fix the type issue by properly handling the response
+        supabase.auth.getUser().then(({ data, error }) => {
+          if (!error && data?.user && updatedConversation.landlord_id === data.user.id) {
             // Update unread count when a conversation is updated
             fetchUnreadCount();
           }

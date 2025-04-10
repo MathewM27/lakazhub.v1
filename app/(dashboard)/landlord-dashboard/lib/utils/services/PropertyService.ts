@@ -221,7 +221,7 @@ export const PropertyService = {
  * @param propertyId The ID of the property to delete
  * @returns Promise with success status and error if any
  */
-export async function deleteProperty(propertyId: string): Promise<{ success: boolean; error?: any }> {
+export async function deleteProperty(propertyId: string): Promise<{ success: boolean; error?: unknown }> {
   try {
     // Step 1: Delete all images from storage
     const imageResult = await ImageStorage.deleteAllPropertyImages(propertyId);

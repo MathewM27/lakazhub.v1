@@ -13,7 +13,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 let supabaseInstance: SupabaseClient | null = null;
 
 // Create the Supabase client
-export const supabase = isBrowser ? getSupabaseClient() : null as any;
+export const supabase = isBrowser ? getSupabaseClient() : null as unknown as SupabaseClient;
 
 // Function to get or create the Supabase client
 function getSupabaseClient() {
@@ -128,7 +128,7 @@ export async function getUserProfile(userId: string) {
   }
 }
 
-export async function createUserProfile(profileData: any) {
+export async function createUserProfile(profileData: Partial<UserProfile> & { email?: string }) {
   if (!supabase) {
     console.error('[SUPABASE_CLIENT] Supabase client not initialized');
     return null;
@@ -303,7 +303,7 @@ export async function checkAuthStatus() {
           if ((Date.now() - parseInt(cacheTime)) < 60 * 1000) {
             return authStatus;
           }
-        } catch (e) {
+        } catch (_) {
           // Invalid cache, continue with API call
         }
       }
@@ -355,11 +355,21 @@ export async function validateUserRole(userId: string, requiredRole: string) {
   }
 }
 
+// Define types for window extensions
+interface WindowWithDebugFunctions extends Window {
+  checkAuthStatus: typeof checkAuthStatus;
+  getUserProfile: typeof getUserProfile;
+  createUserProfile: typeof createUserProfile;
+  updateUserProfile: typeof updateUserProfile;
+  validateUserRole: typeof validateUserRole;
+}
+
 // Expose functions to window for debugging only in development
 if (isBrowser && process.env.NODE_ENV === 'development') {
-  (window as any).checkAuthStatus = checkAuthStatus;
-  (window as any).getUserProfile = getUserProfile;
-  (window as any).createUserProfile = createUserProfile;
-  (window as any).updateUserProfile = updateUserProfile;
-  (window as any).validateUserRole = validateUserRole;
+  const windowObj = window as unknown as WindowWithDebugFunctions;
+  windowObj.checkAuthStatus = checkAuthStatus;
+  windowObj.getUserProfile = getUserProfile;
+  windowObj.createUserProfile = createUserProfile;
+  windowObj.updateUserProfile = updateUserProfile;
+  windowObj.validateUserRole = validateUserRole;
 }

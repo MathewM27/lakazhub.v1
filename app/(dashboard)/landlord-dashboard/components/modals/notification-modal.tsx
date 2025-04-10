@@ -120,7 +120,7 @@ export default function NotificationsModal({
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
-  const messageSubscriptionRef = useRef<any>(null)
+  const messageSubscriptionRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   
   // Supabase client is already imported from the client utility
   // No need to create a new instance here
@@ -363,57 +363,61 @@ export default function NotificationsModal({
     // Set up a new subscription to listen for conversation updates
     const subscription = supabase
       .channel('property_conversations_channel')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'property_conversations',
-        filter: `landlord_id=eq.${user.id}`,
-      }, (payload: ConversationPayload) => {
-        // Handle updated conversation
-        const updatedConversation = payload.new as Conversation;
-        
-        // Update the tenant list to show new unread message
-        setTenants(prev => {
-          return prev.map(tenant => {
-            if (tenant.id === updatedConversation.id) {
-              // Get the last message from the messages array
-              const messages = updatedConversation.messages || [];
-              const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-              
-              // Update this tenant's unread count and last message
-              return {
-                ...tenant,
-                unread: updatedConversation.landlord_unread_count,
-                lastMessage: lastMessage ? lastMessage.message : tenant.lastMessage,
-                time: lastMessage ? formatMessageTime(lastMessage.created_at) : tenant.time,
-              };
-            }
-            return tenant;
-          });
-        });
-        
-        // If this conversation is currently selected, update the messages
-        if (selectedTenant?.id === updatedConversation.id) {
-          // Get the messages from the updated conversation
-          const messages = updatedConversation.messages || [];
+      .on(
+        'postgres_changes' as any, // Type assertion to bypass TypeScript checking
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'property_conversations',
+          filter: `landlord_id=eq.${user.id}`,
+        }, 
+        (payload: ConversationPayload) => {
+          // Handle updated conversation
+          const updatedConversation = payload.new as Conversation;
           
-          // Check if there are new messages by comparing with current messages
-          if (selectedTenant.messages.length < messages.length) {
-            // Format the new messages
-            const formattedMessages = formatMessagesForUI(messages);
-            
-            // Update the selected tenant with the new messages
-            setSelectedTenant(prev => {
-              if (!prev) return null;
-              return {
-                ...prev,
-                messages: formattedMessages,
-                unread: updatedConversation.landlord_unread_count,
-              };
+          // Update the tenant list to show new unread message
+          setTenants(prev => {
+            return prev.map(tenant => {
+              if (tenant.id === updatedConversation.id) {
+                // Get the last message from the messages array
+                const messages = updatedConversation.messages || [];
+                const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+                
+                // Update this tenant's unread count and last message
+                return {
+                  ...tenant,
+                  unread: updatedConversation.landlord_unread_count,
+                  lastMessage: lastMessage ? lastMessage.message : tenant.lastMessage,
+                  time: lastMessage ? formatMessageTime(lastMessage.created_at) : tenant.time,
+                };
+              }
+              return tenant;
             });
+          });
+          
+          // If this conversation is currently selected, update the messages
+          if (selectedTenant?.id === updatedConversation.id) {
+            // Get the messages from the updated conversation
+            const messages = updatedConversation.messages || [];
+            
+            // Check if there are new messages by comparing with current messages
+            if (selectedTenant.messages.length < messages.length) {
+              // Format the new messages
+              const formattedMessages = formatMessagesForUI(messages);
+              
+              // Update the selected tenant with the new messages
+              setSelectedTenant(prev => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  messages: formattedMessages,
+                  unread: updatedConversation.landlord_unread_count,
+                };
+              });
+            }
           }
         }
-      })
+      )
       .subscribe();
     
     messageSubscriptionRef.current = subscription;
