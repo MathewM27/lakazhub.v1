@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Message, Conversation } from "../../types/index";
+import { Conversation } from "../../types/index";  
 
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 import { Send, RefreshCw, Check, Trash2, X } from "lucide-react"
@@ -24,6 +24,25 @@ import {
 } from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { v4 as uuidv4 } from 'uuid';
+
+// Define proper type for user
+interface User {
+  id: string;
+  user_metadata?: {
+    full_name?: string;
+  };
+  [key: string]: any; 
+}
+
+// Define message type for clarity
+interface MessageType {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+}
 
 // Define types for better TypeScript support
 interface UIMessage {
@@ -50,9 +69,18 @@ interface Tenant {
 interface NotificationsModalProps {
   open: boolean
   onOpenChangeAction: (open: boolean) => void
-  property?: any
-  initialConversationId?: string // New prop
+  property?: {
+    id: string;
+    name?: string;
+    [key: string]: any;
+  }
+  initialConversationId?: string
 }
+interface ConversationPayload {
+  new: Conversation;
+  old: Conversation;
+}
+
 
 // Add this new cache outside the component to persist between renders
 const messagesCache = new Map<
@@ -77,7 +105,7 @@ export default function NotificationsModal({
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [messageText, setMessageText] = useState("")
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -122,7 +150,7 @@ export default function NotificationsModal({
 
       // Otherwise show date
       return format(date, "MMM d")
-    } catch (e) {
+    } catch (_error) { // Use underscore to indicate intentionally unused variable
       return "Unknown"
     }
   }, [])
@@ -206,7 +234,7 @@ export default function NotificationsModal({
       
       // Format the messages for UI display
       return formatMessagesForUI(data);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching messages:", error);
       toast({
         title: "Error loading messages",
@@ -215,7 +243,7 @@ export default function NotificationsModal({
       });
       return [];
     }
-  }, [user?.id, formatMessageTime, formatMessagesForUI, toast]);
+  }, [user?.id, property?.id, formatMessageTime, formatMessagesForUI, toast]);
 
   // Function to load more messages when scrolling up
   const loadMoreMessages = useCallback(async () => {
@@ -296,14 +324,14 @@ export default function NotificationsModal({
     if ((selectedTenant?.messages ?? []).length > 0 && !userHasScrolledUp) {
       scrollToBottom()
     }
-  }, [selectedTenant?.messages, scrollToBottom, userHasScrolledUp])
+  }, [selectedTenant?.messages, scrollToBottom, userHasScrolledUp, selectedTenant?.messages?.length]);
 
   // Auto-scroll to bottom of message area when new messages arrive
   useEffect(() => {
     if ((selectedTenant?.messages ?? []).length > 0 && !userHasScrolledUp) {
       scrollToBottom("smooth")
     }
-  }, [selectedTenant?.messages, scrollToBottom, userHasScrolledUp])
+  }, [selectedTenant?.messages, scrollToBottom, userHasScrolledUp, selectedTenant?.messages?.length]);
 
   // Get the current user
   useEffect(() => {
@@ -340,7 +368,7 @@ export default function NotificationsModal({
         schema: 'public',
         table: 'property_conversations',
         filter: `landlord_id=eq.${user.id}`,
-      }, (payload: { new: any; old: any }) => {
+      }, (payload: ConversationPayload) => {
         // Handle updated conversation
         const updatedConversation = payload.new as Conversation;
         
@@ -666,13 +694,14 @@ export default function NotificationsModal({
         cachedData.timestamp = Date.now();
         messagesCache.set(cacheKey, cachedData);
       }
-    } catch (error: any) {
-      console.error("Error fetching conversations:", error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error refreshing data:", error);
       toast({
-        title: "Error loading conversations",
-        description: error.message || "Could not load tenant conversations",
+        title: "Error refreshing",
+        description: errorMessage || "Could not refresh conversations and messages",
         variant: "destructive",
-      });
+      })
     } finally {
       setLoading(false);
     }
@@ -713,11 +742,12 @@ export default function NotificationsModal({
       setTimeout(() => {
         setRefreshStatus("idle")
       }, 3000)
-    } catch (error: any) {
-      console.error("Error refreshing data:", error)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error refreshing data:", error);
       toast({
         title: "Error refreshing",
-        description: error.message || "Could not refresh conversations and messages",
+        description: errorMessage || "Could not refresh conversations and messages",
         variant: "destructive",
       })
       setRefreshStatus("idle")
@@ -855,11 +885,12 @@ export default function NotificationsModal({
       }
 
       setLastRefreshAt(new Date());
-    } catch (error: any) {
-      console.error("Error sending message:", error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error refreshing data:", error);
       toast({
-        title: "Error sending message",
-        description: error.message || "Your message could not be sent",
+        title: "Error refreshing",
+        description: errorMessage || "Could not refresh conversations and messages",
         variant: "destructive",
       });
       
@@ -918,11 +949,12 @@ export default function NotificationsModal({
         title: "Conversation archived",
         description: "The conversation has been archived",
       })
-    } catch (error: any) {
-      console.error("Error archiving conversation:", error)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("Error refreshing data:", error);
       toast({
-        title: "Error archiving conversation",
-        description: error.message || "Could not archive the conversation",
+        title: "Error refreshing",
+        description: errorMessage || "Could not refresh conversations and messages",
         variant: "destructive",
       })
     } finally {
@@ -1031,7 +1063,7 @@ export default function NotificationsModal({
     } catch (error) {
       console.error('Error in markMessagesAsRead:', error);
     }
-  }, [user?.id, property?.id]);
+  }, [user?.id, property?.id, formatMessageTime, formatMessagesForUI, toast]);
 
   // When modal is opened with initialConversationId, mark those messages as read
   useEffect(() => {
@@ -1581,6 +1613,10 @@ export default function NotificationsModal({
   )
 }
 
-function toast({ title, description, variant }: { title: string; description: string; variant: string }) {
+function toast({ title, description, variant }: { 
+  title: string; 
+  description: string; 
+  variant: "default" | "destructive" | string 
+}): void {
   console.log(`[${variant.toUpperCase()}] ${title}: ${description}`);
 }
