@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { FormData } from "../types"
@@ -21,6 +22,9 @@ const ROOM_CATEGORIES = [
   { id: "bathroom", displayName: "Bathroom", limit: 1, description: "Main bathroom" },
   { id: "other", displayName: "Other Photos", limit: 10, description: "Additional property photos", allowMultiple: true }
 ]
+
+// Default placeholder image for cases where image URL might be undefined
+const PLACEHOLDER_IMAGE = "/placeholder-image.jpg"
 
 export default function PhotosTab({
   formData,
@@ -163,6 +167,11 @@ export default function PhotosTab({
     return Math.round((filledCategories / ROOM_CATEGORIES.length) * 100)
   }
 
+  // Check if url is blob URL
+  const isBlobUrl = (url: string | undefined): boolean => {
+    return !!url && url.startsWith('blob:')
+  }
+
   return (
     <div className="grid gap-6 py-4">
       <div>
@@ -191,6 +200,7 @@ export default function PhotosTab({
         {ROOM_CATEGORIES.map((category) => {
           const images = imagesByCategory[category.id] || []
           const hasImage = images.length > 0
+          const imageUrl = hasImage && images[0]?.url ? images[0].url : PLACEHOLDER_IMAGE
           
           return (
             <div 
@@ -218,15 +228,17 @@ export default function PhotosTab({
                 {hasImage ? (
                   // Display the first image if we have one
                   <div className="w-full h-full relative">
-                    <img 
-                      src={images[0]?.url} 
+                    <Image 
+                      src={imageUrl}
                       alt={category.displayName}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized={isBlobUrl(imageUrl)}
                     />
                     
                     {/* Image count badge for Other category only */}
                     {category.id === "other" && images.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded-full">
+                      <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded-full z-10">
                         {images.length} photos
                       </div>
                     )}
@@ -236,11 +248,11 @@ export default function PhotosTab({
                       onClick={(e) => {
                         e.stopPropagation()
                         const imageIndex = formData.images.findIndex(img => 
-                          img.type === category.id && img.url === images[0].url
+                          img.type === category.id && img.url === images[0]?.url
                         )
                         if (imageIndex !== -1) handleRemoveImage(imageIndex)
                       }}
-                      className="absolute right-2 top-2 bg-black/70 text-white rounded-full p-1 hover:bg-black/90 transition-colors"
+                      className="absolute right-2 top-2 bg-black/70 text-white rounded-full p-1 hover:bg-black/90 transition-colors z-10"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -311,26 +323,31 @@ export default function PhotosTab({
         <div className="mt-4">
           <Label className="mb-2 block">Other Photos Gallery</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {imagesByCategory["other"].map((image, index) => (
-              <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden">
-                <img 
-                  src={image.url} 
-                  alt={`Other ${index + 1}`} 
-                  className="w-full h-full object-cover"
-                />
-                <button 
-                  onClick={() => {
-                    const imageIndex = formData.images.findIndex(img => 
-                      img.type === "other" && img.url === image.url
-                    )
-                    if (imageIndex !== -1) handleRemoveImage(imageIndex)
-                  }}
-                  className="absolute right-1 top-1 bg-black/70 text-white rounded-full p-1 hover:bg-black/90"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+            {imagesByCategory["other"].map((image, index) => {
+              const galleryImageUrl = image.url || PLACEHOLDER_IMAGE;
+              return (
+                <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden">
+                  <Image 
+                    src={galleryImageUrl}
+                    alt={`Other ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    unoptimized={isBlobUrl(galleryImageUrl)}
+                  />
+                  <button 
+                    onClick={() => {
+                      const imageIndex = formData.images.findIndex(img => 
+                        img.type === "other" && img.url === image.url
+                      )
+                      if (imageIndex !== -1) handleRemoveImage(imageIndex)
+                    }}
+                    className="absolute right-1 top-1 bg-black/70 text-white rounded-full p-1 hover:bg-black/90 z-10"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

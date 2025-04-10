@@ -1,16 +1,21 @@
-import { useState, useEffect } from "react" // Ensure useEffect is imported
+import { useState, useEffect } from "react" 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import PropertyOnboarding from "./property-modal/PropertyOnboarding"
 import PropertyFormTabs from "./property-modal/PropertyFormTabs"
 import { supabase } from "../../lib/utils/supabase/client"
 import { useToast } from "../../hooks/use-toast"
+import { FormData, PropertyData } from "./property-modal/types" 
 
-import { FormData } from "./property-modal/types" // Import the FormData type
+// Define a proper type for the property object that extends PropertyData
+interface Property extends PropertyData {
+  [key: string]: any; // For any additional properties not explicitly defined
+}
+
 interface PropertyDetailsModalProps {
-  open: boolean
-  onOpenChangeAction: (open: boolean) => void
-  property?: any
-  onSuccess?: () => void
+  open: boolean;
+  onOpenChangeAction: (open: boolean) => void;
+  property?: Partial<Property>;
+  onSuccess?: () => void;
 }
 
 export default function PropertyModal({ 
@@ -32,6 +37,36 @@ export default function PropertyModal({
 
   const handleStartForm = () => {
     setOnboardingComplete(true)
+  }
+
+  // Convert the property to PropertyData type for the form tabs
+  const getPropertyDataForForm = (): PropertyData | undefined => {
+    if (!property) return undefined;
+    
+    return {
+      id: property.id || '',
+      name: property.name || '',
+      location: property.location || '',
+      property_type: property.property_type || '',
+      bedrooms: property.bedrooms || 0,
+      bathrooms: property.bathrooms || 0,
+      description: property.description || '',
+      monthly_rent: property.monthly_rent || 0,
+      security_deposit: property.security_deposit || 0,
+      utilities: property.utilities || {
+        water: false,
+        electricity: false,
+        internet: false,
+        gas: false,
+        trash: false,
+        cable: false,
+      },
+      images: property.images || [],
+      available: property.available ?? true,
+      landlord_id: property.landlord_id || '',
+      updated_at: property.updated_at || new Date().toISOString(),
+      status: property.status || 'active'
+    };
   }
 
   const handleSubmit = async (formData: FormData, imageUrls: string[]) => {
@@ -70,12 +105,10 @@ export default function PropertyModal({
         status: 'active' as const
       }
       
-      let result
-      
       try {
         if (property?.id) {
           // Update existing property
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('properties')
             .update(propertyData)
             .eq('id', property.id)
@@ -83,17 +116,15 @@ export default function PropertyModal({
             .single()
             
           if (error) throw error
-          result = data
         } else {
           // Create new property
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('properties')
             .insert([propertyData])
             .select()
             .single()
             
           if (error) throw error
-          result = data
         }
         
         // Success notification
@@ -152,13 +183,11 @@ export default function PropertyModal({
           <PropertyOnboarding onComplete={handleStartForm} />
         ) : (
           <PropertyFormTabs 
-            property={property} 
+            property={getPropertyDataForForm()} 
             onSubmit={handleSubmit} 
             isSubmitting={isSubmitting} 
           />
         )}
-        
-        
       </DialogContent>
     </Dialog>
   )

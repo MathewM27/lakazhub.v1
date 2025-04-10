@@ -22,7 +22,7 @@ export default function PricingTab({
   isUploading
 }: PricingTabProps) {
   // Handle form input changes
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     onChange({
       [field]: value
     })
