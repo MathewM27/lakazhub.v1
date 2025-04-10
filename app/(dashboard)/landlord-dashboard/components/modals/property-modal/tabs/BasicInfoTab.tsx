@@ -5,15 +5,26 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// Define a more specific type for the form data
+interface PropertyFormData {
+  name: string;
+  location: string;
+  type: string;
+  bedrooms: string;
+  bathrooms: string;
+  description: string;
+  [key: string]: string; // Allow for additional string fields
+}
+
 interface BasicInfoTabProps {
-  formData: any
-  onChange: (formData: any) => void
-  onNext: () => void
+  formData: PropertyFormData;
+  onChange: (formData: PropertyFormData) => void;
+  onNext: () => void;
 }
 
 export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTabProps) {
   // Handle form input changes
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     onChange({
       ...formData,
       [field]: value

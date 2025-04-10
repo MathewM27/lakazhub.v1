@@ -1,8 +1,8 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { FormData, ROOM_TYPES } from "../types"
-import { ImagePlus, X, UploadCloud, Camera, Info } from "lucide-react"
+import { FormData } from "../types"
+import { X, Camera, Info } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PhotosTabProps {
@@ -191,7 +191,6 @@ export default function PhotosTab({
         {ROOM_CATEGORIES.map((category) => {
           const images = imagesByCategory[category.id] || []
           const hasImage = images.length > 0
-          const remainingSlots = getCategoryRemainingSlots(category.id)
           
           return (
             <div 
