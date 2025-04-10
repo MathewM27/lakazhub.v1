@@ -1,5 +1,4 @@
 import { Property } from "../../../types/index";
-import { supabase } from '../supabase/client';
 
 // Define cache structure to include ETags
 interface CacheData {
@@ -119,7 +118,6 @@ export class PropertyCache {
     }
     
     // Remove older property details
-    const now = Date.now();
     const propertyIds = Object.keys(this.cache.propertyDetails);
     
     // Sort by timestamp (oldest first)

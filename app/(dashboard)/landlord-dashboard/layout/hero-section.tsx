@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { HiOutlineHome, HiOutlineClipboardCheck } from 'react-icons/hi';
 import { FiCheck, FiArrowRight } from 'react-icons/fi';
 import { FiMapPin } from 'react-icons/fi';
 
@@ -24,7 +23,118 @@ const HeroSection = () => {
 
   // Animation for the line pattern background
   useEffect(() => {
-    // ...existing code...
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas dimensions
+    const setCanvasDimensions = () => {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    };
+    
+    setCanvasDimensions();
+    window.addEventListener('resize', setCanvasDimensions);
+    
+    // Store canvas width and height to avoid null checks
+    let canvasWidth = canvas.width;
+    let canvasHeight = canvas.height;
+    
+    // Update dimensions on resize
+    const handleResize = () => {
+      setCanvasDimensions();
+      canvasWidth = canvas.width;
+      canvasHeight = canvas.height;
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Create Particle class that implements ParticleProps
+    class Particle implements ParticleProps {
+      x: number;
+      y: number;
+      size: number;
+      speedX: number;
+      speedY: number;
+      
+      constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+      }
+      
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        if (this.x < 0 || this.x > canvasWidth) {
+          this.speedX = -this.speedX;
+        }
+        
+        if (this.y < 0 || this.y > canvasHeight) {
+          this.speedY = -this.speedY;
+        }
+      }
+      
+      draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // Create particles
+    const particles: Particle[] = [];
+    const particleCount = 50;
+    
+    for (let i = 0; i < particleCount; i++) {
+      const x = Math.random() * canvasWidth;
+      const y = Math.random() * canvasHeight;
+      particles.push(new Particle(x, y));
+    }
+    
+    // Animation loop
+    const animate = () => {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      
+      // Update and draw particles
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw(ctx);
+      });
+      
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 100) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance/100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      window.removeEventListener('resize', setCanvasDimensions);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Features animation variants

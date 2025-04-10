@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { 
-  BarChart3,
   TrendingUp,
   Users,
   Sparkles,
@@ -96,7 +95,7 @@ export default function OtherProperties() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Unlock advanced insights and promotional tools to maximize your rental properties' potential
+              Unlock advanced insights and promotional tools to maximize your rental properties&apos; potential
             </motion.p>
           </motion.div>
 

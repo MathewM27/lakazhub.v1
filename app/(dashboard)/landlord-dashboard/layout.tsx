@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   description: 'Manage your rental properties',
 }
 
-const inter = Inter({ subsets: ["latin"] });
 
 export default function LandlordDashboardLayout({
   children,
