@@ -3,7 +3,7 @@
 import { Property } from "../../types";
 import { usePropertyImages } from "../../hooks/usePropertyImages";
 import { motion } from "framer-motion";
-import { Info, Calendar, Bell, Bath, Bed, MapPin, ChevronRight, Star, Home, Building, MoreVertical } from "lucide-react";
+import { Calendar, Bell, Bath, Bed, MapPin, ChevronRight, Home, Building, MoreVertical } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
@@ -22,6 +22,14 @@ interface PropertyCardProps {
   onNotificationsAction: (property: Property) => void; // Update to pass property
   onDeleteAction: (propertyId: string) => void;
   isDeleting?: boolean;
+}
+
+// Define the type for conversation payload
+interface ConversationPayload {
+  landlord_id: string;
+  property_id: string;
+  landlord_unread_count?: number;
+  is_archived: boolean;
 }
 
 // Add type definition for window.readConversations
@@ -95,7 +103,7 @@ export default function PropertyCard({
         schema: 'public',
         table: 'property_conversations',
         filter: `property_id=eq.${property.id}`,
-      }, (payload: { new: any }) => {
+      }, (payload: { new: ConversationPayload }) => {
         const updatedConversation = payload.new;
         supabase.auth.getUser().then(({ data }: { data: { user?: { id: string } } }) => {
           if (data?.user && updatedConversation.landlord_id === data.user.id) {
@@ -175,10 +183,11 @@ export default function PropertyCard({
 
 
   const formatDate = (dateString?: string | null) => {
-  if (!dateString) return null;
+    if (!dateString) return null;
     try {
       return format(new Date(dateString), "MMM d, yyyy");
-    } catch (e) {
+    } catch (error) {
+      console.error("Error formatting date:", error);
       return null;
     }
   };

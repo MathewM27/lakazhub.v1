@@ -5,7 +5,6 @@ import { Property } from "../../types";
 import { motion } from "framer-motion";
 import { Plus, Home } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
-import { usePropertyImages } from "../../hooks/usePropertyImages";
 import { useProperties } from "../../hooks/useProperties";
 import { deleteProperty } from "../../lib/utils/services/PropertyService";
 import { useToast } from "../../hooks/use-toast";
@@ -14,14 +13,12 @@ import NotificationsModal from "../modals/notification-modal";
 interface PropertyGridProps {
   onPropertyDetailsAction: (property: Property) => void;
   onAvailabilityAction: (property: Property) => void;
-  onNotificationsAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
 }
 
 export default function PropertyGrid({ 
   onPropertyDetailsAction, 
   onAvailabilityAction, 
-  onNotificationsAction, 
   onAddNewPropertyAction 
 }: PropertyGridProps) {
   const [activeFilter, setActiveFilter] = useState('all');
@@ -279,7 +276,11 @@ export default function PropertyGrid({
       <NotificationsModal 
         open={notificationModalOpen}
         onOpenChangeAction={setNotificationModalOpen}
-        property={selectedProperty}
+        property={selectedProperty ? {
+          ...selectedProperty,
+          id: selectedProperty.id,
+          name: selectedProperty.name
+        } : undefined}
       />
     </section>
   );

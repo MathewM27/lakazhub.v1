@@ -184,7 +184,6 @@ export default function LandlordDashboard() {
           <PropertyGrid 
             onPropertyDetailsAction={handlePropertyDetails}
             onAvailabilityAction={handleAvailability}
-            onNotificationsAction={handleNotifications}
             onAddNewPropertyAction={handleAddNewProperty}
           />
         </section>
