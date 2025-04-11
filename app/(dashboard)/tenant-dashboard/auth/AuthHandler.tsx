@@ -6,6 +6,9 @@ import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
 
+import { useRouter } from 'next/navigation';
+import { categorizeAuthError, AuthErrorType } from '../utils/errorHandling';
+
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
@@ -76,6 +79,7 @@ export const AuthContext = createContext<{
 export const useAuth = () => useContext(AuthContext);
 
 export default function AuthHandler({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true); // Added initial loading state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -334,7 +338,28 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         setProfile(null);
       } catch (error) {
         console.error('[AUTH_HANDLER] Auth error:', error);
-        setAuthError(error instanceof Error ? error.message : 'An unknown error occurred');
+        
+        // Enhanced error handling with categorization
+        const errorType = categorizeAuthError(error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        
+        // Set more user-friendly error messages based on error type
+        if (errorType === AuthErrorType.SESSION_MISSING) {
+          setAuthError('Authentication required: Please sign in to access this page.');
+        } else if (errorType === AuthErrorType.SESSION_EXPIRED) {
+          setAuthError('Your session has expired. Please sign in again.');
+        } else {
+          setAuthError(errorMessage);
+        }
+        
+        // Track authentication failures with user context
+        Sentry.setContext('auth', {
+          isAuthenticated: false,
+          hasError: true,
+          errorType: errorType,
+          timestamp: new Date().toISOString(),
+        });
+        
         setIsAuthenticated(false);
         setUser(null);
       } finally {
@@ -417,17 +442,55 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
   // Only show error screen for critical auth errors
   if (authError) {
+    // Special handling for session missing error
+    const isSessionMissing = authError.includes('Auth session missing') || 
+                            authError.includes('AuthSessionMissingError') ||
+                            authError.includes('Authentication required');
+    
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-          <strong>Authentication Error:</strong> {authError}
-          <div className="mt-4">
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Return to Home
-            </button>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="max-w-md w-full p-6 bg-white shadow-lg rounded-lg border border-gray-200">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="p-3 rounded-full bg-red-100">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            
+            <h2 className="text-xl font-semibold text-gray-900">
+              {isSessionMissing ? 'Authentication Required' : 'Authentication Error'}
+            </h2>
+            
+            <p className="text-gray-600">
+              {isSessionMissing 
+                ? 'Your session has expired or you need to sign in to access this page.' 
+                : authError}
+            </p>
+            
+            <div className="flex flex-col space-y-2 w-full mt-2">
+              <button 
+                onClick={() => router.push('/auth/login?returnUrl=' + encodeURIComponent(window.location.pathname))}
+                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+              >
+                Sign In
+              </button>
+              
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Return to Home
+              </button>
+              
+              {!isSessionMissing && (
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="w-full py-2 px-4 border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium rounded-md transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,10 @@ import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '..
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
+import { logDebug, logError, categorizeAuthError, AuthErrorType } from '@/utils/auth/errorHandling';
+import { SessionManager } from '@/utils/auth/sessionManager';
+import AuthLoadingScreen from '@/components/auth/AuthLoadingScreen';
+import { useRouter } from 'next/navigation';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -13,46 +17,7 @@ const isBrowser = typeof window !== 'undefined';
 const AUTH_RETRY_DELAY = 1500; // ms
 const AUTH_MAX_RETRIES = 3;
 const AUTH_ROLE = 'landlord';
-
-// Safe logging functions that only log in development
-const logDebug = (message: string, data?: unknown) => {
-  if (process.env.NODE_ENV === 'development') {
-    if (data !== undefined) {
-      console.log(`[AUTH_HANDLER] ${message}`, data);
-    } else {
-      console.log(`[AUTH_HANDLER] ${message}`);
-    }
-  }
-};
-
-const logError = (message: string, error?: any) => {
-  if (process.env.NODE_ENV === 'development') {
-    if (error !== undefined) {
-      console.error(`[AUTH_HANDLER] ${message}`, error);
-    } else {
-      console.error(`[AUTH_HANDLER] ${message}`);
-    }
-  }
-  
-  // Report errors to Sentry in all environments
-  if (error) {
-    Sentry.captureException(error, {
-      tags: {
-        component: 'AuthHandler',
-      },
-      extra: {
-        message,
-      },
-    });
-  } else {
-    Sentry.captureMessage(`[AUTH_HANDLER] ${message}`, {
-      level: 'error',
-      tags: {
-        component: 'AuthHandler',
-      },
-    });
-  }
-};
+const PREFIX = 'AUTH_HANDLER';
 
 // Create auth context to share authentication state
 export const AuthContext = createContext<{
@@ -63,6 +28,7 @@ export const AuthContext = createContext<{
   authError: string | null;
   hasCorrectRole: boolean;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }>({
   isAuthenticating: true,
   isAuthenticated: false,
@@ -70,7 +36,8 @@ export const AuthContext = createContext<{
   profile: null,
   authError: null,
   hasCorrectRole: false,
-  signOut: async () => {/* Default empty implementation */}
+  signOut: async () => {/* Default empty implementation */},
+  refreshSession: async () => {/* Default empty implementation */}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -82,11 +49,61 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasCorrectRole, setHasCorrectRole] = useState(false);
+  const [sessionManager, setSessionManager] = useState<SessionManager | null>(null);
+  const router = useRouter();
+
+  // Handle session expiration
+  const handleSessionExpired = useCallback(() => {
+    logDebug(PREFIX, 'Session expired, redirecting to login');
+    router.push('/auth/login?reason=expired');
+  }, [router]);
+
+  // Initialize session manager
+  useEffect(() => {
+    if (isBrowser) {
+      const manager = new SessionManager(supabase, handleSessionExpired);
+      setSessionManager(manager);
+      
+      manager.initialize().then(initialized => {
+        logDebug(PREFIX, `Session manager initialized: ${initialized}`);
+      });
+      
+      // Set up auth listener
+      const cleanupListener = manager.setupAuthListener();
+      
+      return () => {
+        manager.cleanup();
+        cleanupListener();
+      };
+    }
+  }, [handleSessionExpired]);
+
+  // Function to refresh session manually
+  const refreshSession = useCallback(async () => {
+    try {
+      logDebug(PREFIX, 'Manually refreshing session');
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data?.session) {
+        logDebug(PREFIX, 'Session refreshed successfully');
+        return; // Just return without a value to match Promise<void>
+      }
+      
+      // No need to return anything for Promise<void>
+    } catch (error) {
+      logError(PREFIX, 'Failed to refresh session manually', error);
+      // No return value needed
+    }
+  }, []);
 
   // Memoized function to sign out the user
   const signOut = useCallback(async () => {
     try {
-      logDebug('Signing out user');
+      logDebug(PREFIX, 'Signing out user');
       
       // Clear user data from Sentry when signing out
       Sentry.setUser(null);
@@ -100,9 +117,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         localStorage.removeItem('profile_cache');
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[AUTH_HANDLER] Error signing out:', error);
-      }
+      logError(PREFIX, 'Error signing out', error);
     }
   }, []);
 
@@ -175,24 +190,20 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
   // Memoize the fetchUserProfile function
   const fetchUserProfile = useCallback(async (user: User) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[AUTH_HANDLER] Fetching profile for user:', user.id);
-    }
+    logDebug(PREFIX, 'Fetching profile for user:', user.id);
     
     try {
       // Check if we have a cached profile first
       const cachedProfile = getProfileFromCache(user.id);
       if (cachedProfile) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[AUTH_HANDLER] Using cached profile');
-        }
+        logDebug(PREFIX, 'Using cached profile');
         return cachedProfile;
       }
       
       // Check if we're offline
       const isOnline = await checkNetworkConnectivity();
       if (!isOnline) {
-        logDebug('Offline mode detected, using fallback profile');
+        logDebug(PREFIX, 'Offline mode detected, using fallback profile');
         return createFallbackProfile(user);
       }
       
@@ -200,7 +211,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       const profile = await getUserProfile(user.id);
       
       if (!profile) {
-        logDebug('No profile found, creating new profile');
+        logDebug(PREFIX, 'No profile found, creating new profile');
         
         try {
           // Create a profile that matches your database schema
@@ -221,7 +232,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           }
           return createFallbackProfile(user);
         } catch (createError) {
-          logError('Failed to create profile:', createError);
+          logError(PREFIX, 'Failed to create profile:', createError);
           return createFallbackProfile(user);
         }
       }
@@ -230,7 +241,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       saveProfileToCache(user.id, profile);
       return profile;
     } catch (error) {
-      logError('Profile fetch failed:', error);
+      logError(PREFIX, 'Profile fetch failed:', error);
       return createFallbackProfile(user);
     }
   }, []); // Empty dependency array since it doesn't rely on component state
@@ -275,9 +286,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
                   saveProfileToCache(user.id, updatedProfile);
                 }
               } catch (updateError) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.error('[AUTH_HANDLER] Failed to update profile role:', updateError);
-                }
+                logError(PREFIX, 'Failed to update profile role:', updateError);
               }
             }
           } else if (retryCount < AUTH_MAX_RETRIES) {
@@ -285,9 +294,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             retryCount++;
             const backoffDelay = AUTH_RETRY_DELAY * Math.pow(1.5, retryCount - 1);
             
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`[AUTH_HANDLER] Retry ${retryCount}/${AUTH_MAX_RETRIES} in ${backoffDelay}ms`);
-            }
+            logDebug(PREFIX, `Retry ${retryCount}/${AUTH_MAX_RETRIES} in ${backoffDelay}ms`);
             
             setTimeout(fetchUserProfileEffect, backoffDelay);
           } else {
@@ -307,9 +314,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           }
         }
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[AUTH_HANDLER] Error in profile effect:', error);
-        }
+        logError(PREFIX, 'Error in profile effect:', error);
         
         if (isMounted && retryCount < AUTH_MAX_RETRIES) {
           retryCount++;
@@ -334,7 +339,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, fetchUserProfile]);
 
   // Check if we have a stored session in localStorage to prevent flashing unauthenticated UI
   useEffect(() => {
@@ -350,7 +355,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           if ((Date.now() - parseInt(cacheTime)) < 5 * 60 * 1000) {
             const authData = JSON.parse(cachedAuthStatus);
             if (authData.authenticated && authData.user) {
-              logDebug('Using cached auth status');
+              logDebug(PREFIX, 'Using cached auth status');
               // Set initial state from cache to prevent flashing
               setUser(authData.user);
               setIsAuthenticated(true);
@@ -359,7 +364,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           }
         }
       } catch (_e) {
-        logError('Cache read error (non-critical):', _e);
+        logError(PREFIX, 'Cache read error (non-critical)', _e);
         // Ignore cache errors, will fall back to normal auth flow
       }
     }
@@ -368,40 +373,86 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   useEffect(() => {
     const handleAuth = async () => {
       try {
-        logDebug('Checking authentication status...');
+        logDebug(PREFIX, 'Checking authentication status...');
         
-        // Use our optimized checkAuthStatus function that includes caching
-        const authStatus = await checkAuthStatus();
+        // Use getSession() since it's the correct method in Supabase v2+ for checking current session
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (authStatus.error) {
-          throw new Error(authStatus.error);
+        if (sessionError) {
+          throw sessionError;
         }
         
-        if (authStatus.authenticated && authStatus.user) {
-          setUser(authStatus.user);
+        // Also get user data which is compatible with Supabase v2+
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          throw userError;
+        }
+        
+        if (sessionData.session && userData.user) {
+          setUser(userData.user);
           setIsAuthenticated(true);
+          
+          // Cache the auth status
+          if (isBrowser) {
+            sessionStorage.setItem('auth_status', JSON.stringify({ 
+              authenticated: true, 
+              user: userData.user
+            }));
+            sessionStorage.setItem('auth_status_time', Date.now().toString());
+          }
           
           // SECURITY IMPROVEMENT: No role parameter handling from client-side code
           // Roles are now managed through secure server-side operations via middleware
           // The middleware handles role verification with the database as the source of truth
-          logDebug('User authenticated:', authStatus.user.id);
+          logDebug(PREFIX, 'User authenticated:', userData.user.id);
         } else {
-          logDebug('User not authenticated');
+          logDebug(PREFIX, 'User not authenticated');
           setUser(null);
           setIsAuthenticated(false);
           setProfile(null);
           setHasCorrectRole(false);
         }
       } catch (error) {
-        logError('Auth error:', error);
-        setAuthError(error instanceof Error ? error.message : 'An unknown error occurred');
+        logError(PREFIX, 'Auth error:', error);
+        
+        // Enhanced error handling
+        const errorType = categorizeAuthError(error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        
+        // Set more user-friendly error messages based on error type
+        if (errorType === AuthErrorType.SESSION_MISSING) {
+          setAuthError('Authentication required: Please sign in to access this page.');
+        } else if (errorType === AuthErrorType.SESSION_EXPIRED) {
+          setAuthError('Your session has expired. Please sign in again.');
+        } else {
+          setAuthError(errorMessage);
+        }
         
         // Track authentication failures with user context
         Sentry.setContext('auth', {
           isAuthenticated: false,
           hasError: true,
+          errorType: errorType,
           timestamp: new Date().toISOString(),
         });
+        
+        // Handle specific error types with appropriate actions
+        if (errorType === AuthErrorType.SESSION_EXPIRED) {
+          // Attempt to refresh the session using try-catch
+          try {
+            logDebug(PREFIX, 'Attempting to refresh expired session');
+            await refreshSession();
+            // If we get here, refresh was successful
+            logDebug(PREFIX, 'Session refreshed successfully after expiration');
+          } catch (refreshError) {
+            // If refresh fails or throws an error, we'll show the error UI instead of redirecting
+            logError(PREFIX, 'Failed to refresh expired session', refreshError);
+          }
+        } else if (errorType === AuthErrorType.SESSION_MISSING) {
+          // Just show the error UI, which has login buttons
+          logDebug(PREFIX, 'No session found, showing authentication required screen');
+        }
       } finally {
         // Ensure we always exit the authenticating state
         setTimeout(() => {
@@ -414,8 +465,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: any) => {
-        logDebug(`Auth state changed: ${event}`);
+      (event: string, session: any) => {
+        logDebug(PREFIX, `Auth state changed: ${event}`);
         
         if (session) {
           setUser(session.user);
@@ -445,33 +496,71 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
-
-  // We'll let the child components handle their own loading states
-  // This allows for a more customized welcome experience in each dashboard
-  // Instead of showing a loading indicator here, we'll pass the loading state to children
+  }, [refreshSession, router]);
 
   // Only show error screen for critical auth errors
   if (authError) {
+    // Special handling for session missing error
+    const isSessionMissing = authError.includes('Auth session missing') || 
+                            authError.includes('AuthSessionMissingError') ||
+                            authError.includes('Authentication required');
+    
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-          <strong>Authentication Error:</strong> {authError}
-          <div className="mt-4">
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Return to Home
-            </button>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="max-w-md w-full p-6 bg-white shadow-lg rounded-lg border border-gray-200">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="p-3 rounded-full bg-red-100">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            
+            <h2 className="text-xl font-semibold text-gray-900">
+              {isSessionMissing ? 'Authentication Required' : 'Authentication Error'}
+            </h2>
+            
+            <p className="text-gray-600">
+              {isSessionMissing 
+                ? 'Your session has expired or you need to sign in to access this page.' 
+                : authError}
+            </p>
+            
+            <div className="flex flex-col space-y-2 w-full mt-2">
+              <button 
+                onClick={() => router.push('/auth/login?returnUrl=' + encodeURIComponent(window.location.pathname))}
+                className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors"
+              >
+                Sign In
+              </button>
+              
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
+              >
+                Return to Home
+              </button>
+              
+              {!isSessionMissing && (
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="w-full py-2 px-4 border border-gray-300 hover:bg-gray-100 text-gray-700 font-medium rounded-md transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Provide auth context to children, including when authenticating
-  // This allows child components to show a welcome screen during authentication
+  // Show unified loading UI during authentication
+  if (isAuthenticating) {
+    return <AuthLoadingScreen userType="landlord" />;
+  }
+
+  // Provide auth context to children
   return (
     <AuthContext.Provider value={{ 
       isAuthenticating, 
@@ -480,7 +569,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       profile, 
       authError, 
       hasCorrectRole,
-      signOut
+      signOut,
+      refreshSession
     }}>
       {children}
     </AuthContext.Provider>
