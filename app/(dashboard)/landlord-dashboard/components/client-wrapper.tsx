@@ -5,7 +5,7 @@ import AuthHandler from "../auth/AuthHandler";
 import { ThemeProvider } from "../theme-provider";
 import { useEffect } from 'react';
 import { PropertyCache } from '../lib/utils/cache/propertyCache';
-import AuthErrorBoundary from './auth/AuthErrorBoundary';
+import AuthErrorBoundary from '../auth/AuthErrorBoundary';
 
 const inter = Inter({ subsets: ["latin"] });
 

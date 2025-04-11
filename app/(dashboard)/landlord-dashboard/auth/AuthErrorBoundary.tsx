@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
-import { useAuth } from '../../auth/AuthHandler';
+import { useAuth } from '../auth/AuthHandler';
 
 // Define the error boundary props and state types
 type ErrorBoundaryProps = {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthHandler';
-import AuthDebugger from '../auth/AuthDebugger';
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoaderCircle } from "lucide-react";
 import Link from 'next/link'; // Import Link component
@@ -117,12 +117,7 @@ export default function TenantDashboard() {
       </header>
       
       <div className="flex-1 container mx-auto px-4 py-8">
-        {/* Auth Debugger - only visible in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-6">
-            <AuthDebugger />
-          </div>
-        )}
+        
         
         {/* Session Status Banner */}
         <div className="mb-6">
