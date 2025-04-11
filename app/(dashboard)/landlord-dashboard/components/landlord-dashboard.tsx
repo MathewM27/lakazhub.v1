@@ -15,8 +15,7 @@ import SuccessModal from "./modals/success-modal";
 import { useAuth } from '../auth/AuthHandler';
 import Link from 'next/link'; // Import Link component
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { LoaderCircle } from "lucide-react";
+
 
 import { Property } from "../types"; // Removed unused LandlordProperty
 

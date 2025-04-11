@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
-import { supabase, getUserProfile, createUserProfile } from '../utils/supabase/client';
+import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '../utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
-import { setupSessionRefresh } from '../utils/session-refresh';
-import { logDebug, logError } from '../utils/logging'; // Import logging functions
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -14,9 +12,47 @@ const isBrowser = typeof window !== 'undefined';
 // Constants for authentication
 const AUTH_RETRY_DELAY = 1500; // ms
 const AUTH_MAX_RETRIES = 3;
-const AUTH_ROLE = 'tenant'; // Explicitly define the expected role
-const AUTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const PROFILE_CACHE_PREFIX = 'tenant_profile_';
+const AUTH_ROLE = 'tenant';
+
+// Safe logging functions that only log in development
+const logDebug = (message: string, data?: unknown) => {
+  if (process.env.NODE_ENV === 'development') {
+    if (data !== undefined) {
+      console.log(`[AUTH_HANDLER] ${message}`, data);
+    } else {
+      console.log(`[AUTH_HANDLER] ${message}`);
+    }
+  }
+};
+
+const logError = (message: string, error?: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    if (error !== undefined) {
+      console.error(`[AUTH_HANDLER] ${message}`, error);
+    } else {
+      console.error(`[AUTH_HANDLER] ${message}`);
+    }
+  }
+  
+  // Report errors to Sentry in all environments
+  if (error) {
+    Sentry.captureException(error, {
+      tags: {
+        component: 'AuthHandler',
+      },
+      extra: {
+        message,
+      },
+    });
+  } else {
+    Sentry.captureMessage(`[AUTH_HANDLER] ${message}`, {
+      level: 'error',
+      tags: {
+        component: 'AuthHandler',
+      },
+    });
+  }
+};
 
 // Create auth context to share authentication state
 export const AuthContext = createContext<{
@@ -25,7 +61,7 @@ export const AuthContext = createContext<{
   user: User | null;
   profile: UserProfile | null;
   authError: string | null;
-  hasCorrectRole: boolean; // Add this
+  hasCorrectRole: boolean;
   signOut: () => Promise<void>;
 }>({
   isAuthenticating: true,
@@ -33,7 +69,7 @@ export const AuthContext = createContext<{
   user: null,
   profile: null,
   authError: null,
-  hasCorrectRole: false, // Add this
+  hasCorrectRole: false,
   signOut: async () => {/* Default empty implementation */}
 });
 
@@ -41,127 +77,35 @@ export const useAuth = () => useContext(AuthContext);
 
 export default function AuthHandler({ children }: { children: React.ReactNode }) {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Added initial loading state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasCorrectRole, setHasCorrectRole] = useState(false);
 
-  async function fetchUserProfile(user: User) {
-    logDebug('Fetching profile for user:', user.id);
-    
+  // Memoized function to sign out the user
+  const signOut = useCallback(async () => {
     try {
-      // Check if we have a cached profile first
-      const cachedProfile = getProfileFromCache(user.id);
-      if (cachedProfile) {
-        logDebug('Using cached profile');
-        return cachedProfile;
+      logDebug('Signing out user');
+      
+      // Clear user data from Sentry when signing out
+      Sentry.setUser(null);
+      Sentry.setContext('auth', null);
+      
+      await supabase.auth.signOut();
+      // Clear any cached auth data
+      if (isBrowser) {
+        sessionStorage.removeItem('auth_status');
+        sessionStorage.removeItem('auth_status_time');
+        localStorage.removeItem('profile_cache');
       }
-      
-      // Check if we're offline
-      const isOnline = await checkNetworkConnectivity();
-      if (!isOnline) {
-        logDebug('Offline mode detected, using fallback profile');
-        return createFallbackProfile(user);
-      }
-      
-      // Try to get existing profile
-      const profile = await getUserProfile(user.id);
-      
-      if (!profile) {
-        logDebug('No profile found, creating new profile');
-        
-        try {
-          // Create a profile that matches your database schema
-          const profileData = {
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || '',
-            user_role: user.user_metadata?.user_role || AUTH_ROLE,
-            phone_number: user.user_metadata?.phone_number
-          };
-          
-          const newProfile = await createUserProfile(profileData);
-          
-          if (newProfile) {
-            // Cache the new profile
-            saveProfileToCache(user.id, newProfile);
-            return newProfile;
-          }
-          return createFallbackProfile(user);
-        } catch (createError) {
-          logError('Failed to create profile:', createError);
-          return createFallbackProfile(user);
-        }
-      }
-      
-      // Cache the profile for future use
-      saveProfileToCache(user.id, profile);
-      return profile;
     } catch (error) {
-      logError('Profile fetch failed:', error);
-      return createFallbackProfile(user);
-    }
-  }
-
-  // Get profile from cache if available
-  const getProfileFromCache = (userId: string): UserProfile | null => {
-    if (!isBrowser) return null;
-    
-    try {
-      const cachedProfile = localStorage.getItem(`${PROFILE_CACHE_PREFIX}${userId}`);
-      const cacheTime = localStorage.getItem(`${PROFILE_CACHE_PREFIX}${userId}_time`);
-      
-      if (cachedProfile && cacheTime) {
-        // Use cache if it's less than 5 minutes old
-        if ((Date.now() - parseInt(cacheTime)) < AUTH_CACHE_TTL) {
-          logDebug('Using cached profile');
-          return JSON.parse(cachedProfile);
-        }
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[AUTH_HANDLER] Error signing out:', error);
       }
-    } catch (e) {
-      // Invalid cache, continue with API call
-      logDebug('Cache read error (non-critical)');
     }
-    
-    return null;
-  };
-
-  // Save profile to cache
-  const saveProfileToCache = (userId: string, profile: UserProfile) => {
-    if (!isBrowser || !profile) return;
-    
-    try {
-      localStorage.setItem(`${PROFILE_CACHE_PREFIX}${userId}`, JSON.stringify(profile));
-      localStorage.setItem(`${PROFILE_CACHE_PREFIX}${userId}_time`, Date.now().toString());
-      logDebug('Profile saved to cache');
-    } catch (e) {
-      logDebug('Failed to cache profile (non-critical)');
-    }
-  };
-
-  // Clear cache on sign out
-  const clearProfileCache = (userId?: string) => {
-    if (!isBrowser) return;
-    
-    try {
-      if (userId) {
-        localStorage.removeItem(`${PROFILE_CACHE_PREFIX}${userId}`);
-        localStorage.removeItem(`${PROFILE_CACHE_PREFIX}${userId}_time`);
-      } else {
-        // If no userId provided, clear all tenant profile caches
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith(PROFILE_CACHE_PREFIX)) {
-            localStorage.removeItem(key);
-          }
-        }
-      }
-      logDebug('Profile cache cleared');
-    } catch (e) {
-      logDebug('Failed to clear cache (non-critical)');
-    }
-  };
+  }, []);
 
   // Function to detect if we're offline
   const checkNetworkConnectivity = async (): Promise<boolean> => {
@@ -170,7 +114,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     try {
       // Try to use navigator.onLine first as it's more efficient
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        logDebug('Offline detected via navigator.onLine');
         return false;
       }
       
@@ -182,9 +125,42 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         signal: AbortSignal.timeout(2000) // 2 second timeout
       });
       return true;
-    } catch (e) {
+    } catch (_e) {
       logDebug('Offline detected via fetch failure');
       return false;
+    }
+  };
+
+  // Get profile from cache if available
+  const getProfileFromCache = (userId: string): UserProfile | null => {
+    if (!isBrowser) return null;
+    
+    try {
+      const cachedProfile = localStorage.getItem(`profile_${userId}`);
+      const cacheTime = localStorage.getItem(`profile_time_${userId}`);
+      
+      if (cachedProfile && cacheTime) {
+        // Use cache if it's less than 5 minutes old
+        if ((Date.now() - parseInt(cacheTime)) < 5 * 60 * 1000) {
+          return JSON.parse(cachedProfile);
+        }
+      }
+    } catch (_e) {
+      // Invalid cache, continue with API call
+    }
+    
+    return null;
+  };
+
+  // Save profile to cache
+  const saveProfileToCache = (userId: string, profile: UserProfile) => {
+    if (!isBrowser || !profile) return;
+    
+    try {
+      localStorage.setItem(`profile_${userId}`, JSON.stringify(profile));
+      localStorage.setItem(`profile_time_${userId}`, Date.now().toString());
+    } catch (_e) {
+      // Failed to cache, not critical
     }
   };
 
@@ -219,7 +195,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
       try {
         console.log('[AUTH_HANDLER] Calling fetchUserProfile function');
-        const userProfile = await fetchUserProfile(user);
+        const userProfile = await getUserProfile(user.id);
         
         if (isMounted) {
           if (userProfile) {
@@ -312,22 +288,10 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           return; // Exit early if we found a session
         }
         
-        // 2. Check for tokens in URL (both in search params and hash fragment)
-        console.log('[AUTH_HANDLER] No existing session, checking URL for tokens');
+        // 2. Check for tokens in URL parameters (for redirect-based auth)
         const url = new URL(window.location.href);
-        
-        // Check query parameters (used by some OAuth flows)
-        let accessToken = url.searchParams.get('access_token');
-        let refreshToken = url.searchParams.get('refresh_token');
-        
-        // Also check hash fragment (used by SPA redirects)
-        if (!accessToken || !refreshToken) {
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          accessToken = accessToken || hashParams.get('access_token');
-          refreshToken = refreshToken || hashParams.get('refresh_token');
-        }
-        
-        // Also check for code (used by PKCE flow)
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
         const code = url.searchParams.get('code');
         
         console.log('[AUTH_HANDLER] Tokens in URL:', { 
@@ -377,6 +341,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         // Ensure we always exit the authenticating state
         console.log('[AUTH_HANDLER] Exiting authenticating state');
         setIsAuthenticating(false);
+        setInitialLoading(false);
       }
     };
 
@@ -406,103 +371,49 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           
           // If we have a user but no profile, trigger profile fetch
           if (session?.user && !profile) {
-            console.log('[AUTH_HANDLER] User authenticated but no profile, will trigger profile fetch');
+            // This will trigger the profile fetch in the profile effect
           }
         } else if (event === 'SIGNED_OUT') {
-          console.log('[AUTH_HANDLER] Sign out event detected');
+          console.log('[AUTH_HANDLER] User signed out');
           setUser(null);
           setProfile(null);
           setIsAuthenticated(false);
-        } else {
-          // For other events, just update the user state
-          setUser(session?.user || null);
-          setIsAuthenticated(!!session?.user);
+          setHasCorrectRole(false);
         }
-        
-        setIsAuthenticating(false);
       }
     );
 
-    // Clean up subscription
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    // Try to get auth status from localStorage immediately to prevent flashing
-    if (isBrowser) {
-      try {
-        // Check if we have a cached auth status to use immediately
-        const cachedAuthStatus = sessionStorage.getItem('auth_status');
-        const cacheTime = sessionStorage.getItem('auth_status_time');
-        
-        if (cachedAuthStatus && cacheTime) {
-          // Use cache if it's less than 5 minutes old
-          if ((Date.now() - parseInt(cacheTime)) < AUTH_CACHE_TTL) {
-            const authData = JSON.parse(cachedAuthStatus);
-            if (authData.authenticated && authData.user) {
-              logDebug('Using cached auth status');
-              // Set initial state from cache to prevent flashing
-              setUser(authData.user);
-              setIsAuthenticated(true);
-              // Don't set isAuthenticating to false yet - wait for the real check
-            }
-          }
-        }
-      } catch (e) {
-        logError('Cache read error (non-critical):', e);
-        // Ignore cache errors, will fall back to normal auth flow
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    // Set up session refresh mechanism for better session recovery
-    const cleanupRefresh = setupSessionRefresh();
-    
-    return () => {
-      cleanupRefresh();
-    };
-  }, []);
-
-  // Update your signOut function
-
-  const signOut = useCallback(async () => {
-    try {
-      logDebug('Signing out user');
-      
-      // Clear user data from Sentry when signing out
-      Sentry.setUser(null);
-      Sentry.setContext('auth', null);
-      
-      await supabase.auth.signOut();
-      
-      // Clear any cached auth data
-      if (isBrowser) {
-        sessionStorage.removeItem('auth_status');
-        sessionStorage.removeItem('auth_status_time');
-        
-        // Clear profile cache
-        if (user) {
-          clearProfileCache(user.id);
-        } else {
-          clearProfileCache(); // Clear all if no specific user
-        }
-      }
-    } catch (error) {
-      logError('Error signing out:', error);
-    }
-  }, [user]);
-
-  // Simplified loading indicator to reduce nesting
-  if (isAuthenticating) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+  // Loading UI Component to show while authentication is in progress
+  const LoadingUI = (
+    <div className="flex flex-col h-screen bg-black text-white">
+      <div className="w-full py-6 px-8 border-b border-zinc-800">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-blue-500">LakazHub</h1>
+            <span className="ml-2 text-sm bg-blue-500 text-black px-2 py-0.5 rounded">Tenant</span>
+          </div>
+        </div>
       </div>
-    );
-  }
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub</h2>
+          <p className="text-lg mb-8">Preparing your tenant experience</p>
+          
+          <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
+            <div className="absolute top-0 left-0 h-full bg-blue-500 animate-pulse rounded-full" style={{width: '100%'}}></div>
+          </div>
+          
+          <div className="animate-spin mx-auto rounded-full h-12 w-12 border-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-zinc-400">Preparing your tenant experience</p>
+        </div>
+      </div>
+    </div>
+  );
 
   // Only show error screen for critical auth errors
   if (authError) {
@@ -510,19 +421,32 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       <div className="flex items-center justify-center min-h-screen">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
           <strong>Authentication Error:</strong> {authError}
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              Return to Home
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Provide auth context to all child components
+  // Show loading UI during initial authentication
+  if (initialLoading || isAuthenticating) {
+    return LoadingUI;
+  }
+
+  // Provide auth context to children
   return (
     <AuthContext.Provider value={{ 
       isAuthenticating, 
-      isAuthenticated,
+      isAuthenticated, 
       user, 
-      profile,
-      authError,
+      profile, 
+      authError, 
       hasCorrectRole,
       signOut
     }}>

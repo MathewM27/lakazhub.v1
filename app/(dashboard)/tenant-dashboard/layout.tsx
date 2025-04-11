@@ -1,9 +1,10 @@
-import type { Metadata } from 'next'
-import ClientAuthWrapper from './components/client-auth-wrapper'
+import type { Metadata } from 'next';
+import ClientWrapper from './client-wrapper';
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: 'LakazHub | Tenant Dashboard',
-  description: 'Manage your rental properties as a tenant',
+  description: 'Find and manage your rental properties',
 }
 
 export default function TenantDashboardLayout({
@@ -11,9 +12,5 @@ export default function TenantDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <ClientAuthWrapper>
-      {children}
-    </ClientAuthWrapper>
-  );
+  return <ClientWrapper>{children}</ClientWrapper>;
 }

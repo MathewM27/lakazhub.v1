@@ -71,9 +71,15 @@ const signinWithMagicLink = async (
   };
 };
 
-// Optimize Google auth flow for better performance
-export async function signinWithGoogle(userType?: 'tenant' | 'landlord') {
+export const signinWithGoogle = async (
+  userType?: 'tenant' | 'landlord'
+) => {
   "use server";
+  
+  // Add specific logging for landlord flow
+  if (userType === 'landlord') {
+    console.log('[AUTH_ACTION] Starting landlord Google sign-in flow');
+  }
   
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -90,48 +96,29 @@ export async function signinWithGoogle(userType?: 'tenant' | 'landlord') {
           );
         },
       },
-      // Add performance options
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: true,
-        autoRefreshToken: true,
-      }
     }
   );
 
-  // Create query params object with user role if present
-  const queryParams: Record<string, string> = {
-    access_type: 'offline',
-    prompt: 'consent',
-  };
-  
-  // Add user_role to queryParams if provided
-  if (userType) {
-    queryParams.user_role = userType;
-  }
+  // Update the query params to more explicitly handle landlord role
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+       
+        ...(userType === 'landlord' ? { user_role: 'landlord' } : 
+           userType === 'tenant' ? { user_role: 'tenant' } : {})
+      },
+      // Add user_role to the callback URL as well for redundancy
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
+    }
+  });
 
-  // Build redirect URL without query parameters
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`;
-
-  // Perform OAuth sign-in
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        queryParams,
-        redirectTo,
-        // Remove the 'data' property as it's not supported
-      }
-    });
-
-    if (error) throw error;
-    if (data?.url) return redirect(data.url);
-    throw new Error('No URL returned from OAuth response');
-  } catch (error) {
-    console.error("OAuth error:", error);
-    throw error;
-  }
-}
+  if (error) throw error;
+  if (data && data.url) return redirect(data.url);
+  throw new Error('No URL returned from OAuth response');
+};
 
 export {
   signinWithMagicLink,
