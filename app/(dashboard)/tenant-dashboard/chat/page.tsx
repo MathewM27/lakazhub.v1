@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/lib/utils";
 import Navigation from "../components/navigation/Navbar";
 import { supabase } from "../utils/supabase/client";
 import { useToast } from "../hooks/use-toast";
@@ -22,7 +22,7 @@ import {
   Property,
   Profile,
   RealtimePayload
-} from '@/types/chat';
+} from '@/utils/types/chat';
 
 // We're now using the types from our centralized type definitions
 

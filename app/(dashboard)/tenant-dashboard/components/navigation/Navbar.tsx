@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/lib/utils";
 import { cva } from "class-variance-authority";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ProfileModal from "../user/ProfileModal";

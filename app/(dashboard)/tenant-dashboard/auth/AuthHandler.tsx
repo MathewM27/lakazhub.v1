@@ -3,7 +3,7 @@
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import { supabase, getUserProfile, createUserProfile } from '../utils/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { UserProfile } from '@/types/user';
+import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
 import { setupSessionRefresh } from '../utils/session-refresh';
 import { logDebug, logError } from '../utils/logging'; // Import logging functions

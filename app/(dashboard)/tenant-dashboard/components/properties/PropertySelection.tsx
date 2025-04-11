@@ -12,7 +12,7 @@ import Preferences from './Preferences';
 import RecentlyAdded from './RecentlyAdded';
 import AvailableProperties from './AvailableProperties';
 import RentedProperties from './RentedProperties';
-import { Property } from '@/types/property'; 
+import { Property } from '@/utils/types/property'; 
 
 // Constants - Modified for better performance
 const CACHE_KEY = 'property_cache';

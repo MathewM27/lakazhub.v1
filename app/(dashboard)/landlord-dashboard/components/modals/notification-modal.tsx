@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { cn } from "@/lib/utils"
+import { cn } from "@/utils/lib/utils"
 import { v4 as uuidv4 } from 'uuid';
 
 // Define proper type for user

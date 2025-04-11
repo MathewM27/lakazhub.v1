@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "../../../utils/supabase/client"
 import { useToast } from "../../../hooks/use-toast"
 import { format, formatDistanceToNow } from "date-fns"
-import { cn } from "@/lib/utils"
+import { cn } from "@/utils/lib/utils"
 
 // Define types for better TypeScript support
 interface Message {

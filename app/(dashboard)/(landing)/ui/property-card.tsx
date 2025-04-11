@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Property } from '@/types/property';
+import { Property } from '@/utils/types/property';
 import { Bed, Bath, Square, Home } from 'lucide-react';
 
 interface PropertyCardProps {

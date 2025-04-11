@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Home, MapPin, Star } from 'lucide-react';
-import { properties } from '@/types/properties';
+import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../../ui/property-card';
 
 export const PropertySlider = () => {

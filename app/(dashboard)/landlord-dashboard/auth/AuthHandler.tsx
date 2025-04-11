@@ -3,7 +3,7 @@
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '../lib/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { UserProfile } from '@/types/user';
+import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
 
 // Check if we're in a browser environment

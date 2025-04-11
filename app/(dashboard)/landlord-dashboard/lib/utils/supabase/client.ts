@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { UserProfile } from '@/types/user';
+import { UserProfile } from '@/utils/types/user';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 // Check if we're in a browser environment to avoid server-side errors
