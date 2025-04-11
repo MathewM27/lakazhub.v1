@@ -2,7 +2,7 @@
 
 import { Inter } from "next/font/google";
 import AuthHandler from "./auth/AuthHandler";
-import AuthErrorBoundary from './auth/common/AuthErrorBoundary';
+import AuthErrorBoundary from './auth/AuthErrorBoundary';
 
 const inter = Inter({ subsets: ["latin"] });
 
