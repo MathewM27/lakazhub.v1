@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import { motion } from "framer-motion";
-import { FiUser, FiHome, FiMail, FiPhone } from "react-icons/fi";
+import { FiUser, FiHome, FiMail, FiPhone, FiArrowRight } from "react-icons/fi";
 import Modal from "./../layout/Modal";
 import { signinWithGoogle, signinWithMagicLink } from "@/utils/actions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Canvas Background Component
 const CanvasBackground = () => {
@@ -148,7 +149,7 @@ export const SignupSection = () => {
     }));
   };
 
-  const handleToggle = (type: "tenant" | "landlord") => {
+  const handleUserTypeChange = (type: "tenant" | "landlord") => {
     setUserType(type);
   };
 
@@ -169,8 +170,8 @@ export const SignupSection = () => {
         userType
       );
       setModalMessage(formMode === "signup" 
-        ? "Magic link sent! Check your email to complete signup." 
-        : "Magic link sent! Check your email to sign in.");
+        ? `Magic link sent! Check your email to complete signup as a ${userType}.` 
+        : `Magic link sent! Check your email to sign in as a ${userType}.`);
       setIsModalOpen(true);
     } catch (error) {
       console.error("Error sending magic link:", error);
@@ -266,17 +267,17 @@ export const SignupSection = () => {
         className="container mx-auto relative z-10"
       >
         <div className="grid md:grid-cols-2 gap-8 items-stretch max-w-6xl mx-auto backdrop-blur-sm bg-white/5 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-          {/* Left Image Column */}
+          {/* Left Column - Role Visual */}
           <div className="relative order-2 md:order-1 h-full min-h-[450px] flex items-center justify-center p-8 bg-gradient-to-br from-white/10 to-transparent">
             <div className="relative w-full h-full rounded-xl overflow-hidden border border-white/20">
-              {/* Image background instead of solid black */}
+              {/* Image based on selected role */}
               <div className="absolute inset-0 z-0 rounded-xl">
                 <Image
-                  src="/home5.png"
-                  alt="Home background"
+                  src={userType === "tenant" ? "/home5.png" : "/bg1.jpg"}
+                  alt={userType === "tenant" ? "Tenant" : "Landlord"}
                   fill
                   priority
-                  className="object-cover"
+                  className="object-cover transition-all duration-700"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
@@ -284,40 +285,13 @@ export const SignupSection = () => {
               {/* Dark overlay for better text visibility */}
               <div className="absolute inset-0 bg-black/70 z-1 rounded-xl"></div>
               
-              {/* Animated circles - keep these as they add depth */}
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  opacity: [0.4, 0.3, 0.4]
-                }}
-                transition={{ 
-                  duration: 8, 
-                  repeat: Infinity,
-                  repeatType: "reverse" 
-                }}
-                className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5 z-1"
-              ></motion.div>
-              
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.2, 0.3]
-                }}
-                transition={{ 
-                  duration: 10, 
-                  repeat: Infinity,
-                  repeatType: "reverse" 
-                }}
-                className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-white/5 z-1"
-              ></motion.div>
-
               {/* Canvas particle animation */}
               <CanvasBackground />
               
-              {/* Gradient overlay for better text visibility - adjust opacity if needed */}
+              {/* Gradient overlay for better text visibility */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70 z-5 rounded-xl"></div>
               
-              {/* Overlay content - rest of the code remains the same */}
+              {/* Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-6 text-center">
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -325,11 +299,11 @@ export const SignupSection = () => {
                   transition={{ duration: 0.5, delay: 0.5 }}
                   className="mb-6"
                 >
-                  <div className="w-16 h-16 mx-auto rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
                     {userType === 'tenant' ? (
-                      <FiUser className="w-7 h-7 text-white" />
+                      <FiUser className="w-9 h-9 text-white" />
                     ) : (
-                      <FiHome className="w-7 h-7 text-white" />
+                      <FiHome className="w-9 h-9 text-white" />
                     )}
                   </div>
                 </motion.div>
@@ -347,12 +321,20 @@ export const SignupSection = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.7 }}
-                  className="text-white/80 mb-6 max-w-sm"
+                  className="text-white/80 mb-8 max-w-sm"
                 >
                   {userType === 'tenant' 
                     ? 'Discover perfect rentals with virtual tours, secure payments, and streamlined applications.' 
                     : 'Manage listings, screen tenants, collect rent, and handle maintenance requests all in one place.'}
                 </motion.p>
+
+                {/* Display current role with highlight */}
+                <div className="flex items-center justify-center gap-2 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg p-3">
+                  <div className={`w-3 h-3 rounded-full ${userType === 'tenant' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
+                  <p className="text-sm text-white">
+                    {formMode === "signup" ? `Signing up` : `Signing in`} as a <span className="font-bold">{userType === 'tenant' ? 'Tenant' : 'Landlord'}</span>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -375,32 +357,31 @@ export const SignupSection = () => {
                 </motion.div>
               )}
 
-              {formMode === "signup" && (
-                <motion.div variants={itemVariants} className="flex justify-center gap-4 mb-6">
-                  <button
-                    onClick={() => handleToggle('tenant')}
-                    className={`px-5 py-2 flex items-center gap-2 rounded-lg border transition-all duration-300 ${
-                      userType === 'tenant' 
-                        ? 'bg-white text-black border-white' 
-                        : 'border-white/20 text-white/70 hover:border-white/40'
-                    }`}
-                  >
-                    <FiUser className="w-4 h-4" />
-                    <span>Tenant</span>
-                  </button>
-                  <button
-                    onClick={() => handleToggle('landlord')}
-                    className={`px-5 py-2 flex items-center gap-2 rounded-lg border transition-all duration-300 ${
-                      userType === 'landlord' 
-                        ? 'bg-white text-black border-white' 
-                        : 'border-white/20 text-white/70 hover:border-white/40'
-                    }`}
-                  >
-                    <FiHome className="w-4 h-4" />
-                    <span>Landlord</span>
-                  </button>
-                </motion.div>
-              )}
+              {/* Role Selection Tabs */}
+              <motion.div variants={itemVariants} className="mb-6">
+                <Tabs 
+                  value={userType} 
+                  onValueChange={(value) => handleUserTypeChange(value as "tenant" | "landlord")}
+                  className="w-full"
+                >
+                  <TabsList className="grid grid-cols-2 w-full bg-white/10 p-1">
+                    <TabsTrigger 
+                      value="tenant" 
+                      className={`flex items-center gap-2 ${userType === "tenant" ? "bg-white text-black" : "bg-transparent text-white"}`}
+                    >
+                      <FiUser className="w-4 h-4" />
+                      <span>Tenant</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="landlord"
+                      className={`flex items-center gap-2 ${userType === "landlord" ? "bg-white text-black" : "bg-transparent text-white"}`}
+                    >
+                      <FiHome className="w-4 h-4" />
+                      <span>Landlord</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </motion.div>
 
               <form onSubmit={handleSendMagicLink} className="space-y-4">
                 {formMode === "signup" && (
@@ -459,10 +440,46 @@ export const SignupSection = () => {
                   variants={itemVariants}
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-white text-black py-3 px-4 rounded-lg hover:bg-white/90 transition-all duration-300 font-medium disabled:opacity-50"
+                  className={`w-full py-3 px-4 rounded-lg transition-all duration-300 font-medium disabled:opacity-50 flex items-center justify-center gap-2
+                    ${userType === "tenant" ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-amber-500 hover:bg-amber-600 text-black"}`}
                 >
-                  {isLoading ? "Sending..." : formMode === "signup" ? "Sign Up with Magic Link" : "Sign In with Magic Link"}
+                  {isLoading ? "Sending..." : (
+                    <>
+                      {formMode === "signup" ? `Sign Up as ${userType === 'tenant' ? 'Tenant' : 'Landlord'}` : `Sign In as ${userType === 'tenant' ? 'Tenant' : 'Landlord'}`}
+                      <FiArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </motion.button>
+
+                {/* Toggle link between Sign in/Sign up */}
+                <motion.div 
+                  variants={itemVariants}
+                  className="text-center mt-4 text-white/70"
+                >
+                  {formMode === "signup" ? (
+                    <p>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => toggleFormMode("signin")}
+                        className={`font-medium hover:underline ${userType === "tenant" ? "text-blue-400" : "text-amber-400"}`}
+                      >
+                        Sign in
+                      </button>
+                    </p>
+                  ) : (
+                    <p>
+                      Don't have an account?{" "}
+                      <button
+                        type="button"
+                        onClick={() => toggleFormMode("signup")}
+                        className={`font-medium hover:underline ${userType === "tenant" ? "text-blue-400" : "text-amber-400"}`}
+                      >
+                        Sign up
+                      </button>
+                    </p>
+                  )}
+                </motion.div>
               </form>
 
               <motion.div variants={itemVariants} className="relative mt-6 mb-6">
@@ -477,63 +494,38 @@ export const SignupSection = () => {
               <motion.div variants={itemVariants}>
                 <button
                   onClick={async () => {
-                    const startTime = performance.now();
                     try {
-                      // First show a role selection modal if we're in signin mode
-                      if (formMode === "signin" && !userType) {
-                        setError("Please select if you are a Tenant or Landlord to continue");
-                        return;
-                      }
-                      
-                      // Show loading state
                       setIsGoogleLoading(true);
-                      
-                      // Pass the userType to the signinWithGoogle function
                       await signinWithGoogle(userType);
                     } catch (error) {
-                      const endTime = performance.now();
-                      console.error(`Google sign-in failed after ${Math.round(endTime - startTime)}ms`, error);
+                      console.error('Failed to sign in with Google:', error);
                       setError('Failed to sign in with Google. Please try again.');
                     } finally {
-                      // In case the redirect doesn't happen and the component is still mounted
                       setIsGoogleLoading(false);
                     }
                   }}
                   disabled={isGoogleLoading}
-                  className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-white/20 rounded-lg hover:bg-white/5 transition-all duration-300 disabled:opacity-70"
+                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-70
+                    ${userType === "tenant" 
+                      ? "bg-white/10 hover:bg-white/15 text-white border border-blue-500/30" 
+                      : "bg-white/10 hover:bg-white/15 text-white border border-amber-500/30"}`}
                 >
                   {isGoogleLoading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <div className={`w-5 h-5 border-2 border-t-transparent rounded-full animate-spin ${userType === "tenant" ? "border-blue-500" : "border-amber-500"}`}></div>
                       <span>Connecting to Google...</span>
                     </>
                   ) : (
                     <>
                       <FcGoogle className="w-5 h-5" />
-                      <span>Continue with Google</span>
+                      <span>{formMode === "signup" ? `Sign up with Google as ${userType}` : `Sign in with Google as ${userType}`}</span>
                     </>
                   )}
                 </button>
               </motion.div>
 
               <motion.p variants={itemVariants} className="text-center text-sm text-white/60 mt-6">
-                {formMode === "signup" ? (
-                  <>Already have an account?{' '}
-                  <button 
-                    onClick={() => toggleFormMode('signin')}
-                    className="font-medium text-white hover:text-white/80 underline-offset-2 hover:underline transition-all background-transparent border-none p-0"
-                  >
-                    Sign in
-                  </button></>
-                ) : (
-                  <>Don&apos;t have an account?{' '}
-                  <button 
-                    onClick={() => toggleFormMode('signup')}
-                    className="font-medium text-white hover:text-white/80 underline-offset-2 hover:underline transition-all background-transparent border-none p-0"
-                  >
-                    Sign up
-                  </button></>
-                )}
+                By continuing, you agree to our <a href="#" className="text-white hover:underline">Terms of Service</a> and <a href="#" className="text-white hover:underline">Privacy Policy</a>.
               </motion.p>
             </motion.div>
           </div>
