@@ -74,10 +74,7 @@ export async function getUserProfile(userId: string) {
         return null; // Return null instead of throwing an error
       }
       
-      // For other errors, log and throw
-      console.error('[SUPABASE_CLIENT] Error fetching user profile:', JSON.stringify(error));
-      console.error('[SUPABASE_CLIENT] Error code:', error.code);
-      console.error('[SUPABASE_CLIENT] Error details:', error.details);
+
       
       // If we got a 406 error, try a different approach
       if (error.code === '406') {
@@ -117,10 +114,9 @@ export async function getUserProfile(userId: string) {
   } catch (error) {
     // If we're offline, return null instead of continuously retrying
     if (error instanceof Error && 
-        (error.message.includes('fetch failed') || 
-         error.message.includes('Failed to fetch') ||
-         error.message.includes('network'))) {
-      console.log('[SUPABASE_CLIENT] Network error when fetching profile - likely offline');
+      (error.message.includes('fetch failed') || 
+       error.message.includes('Failed to fetch') ||
+       error.message.includes('network'))) {
       return null;
     }
     console.error('[SUPABASE_CLIENT] Unexpected error in getUserProfile:', error);
