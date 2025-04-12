@@ -150,13 +150,13 @@ export default function PropertyFormTabs({
               // Import ImageStorage here to ensure it's available
               const { ImageStorage } = await import('../../../lib/utils/imageStorage');
               
-              // Upload files with compression enabled
+              // Upload files without compression
               const urls = await ImageStorage.uploadImages(
                 propertyId, 
                 files,
                 { 
                   roomType: roomType,
-                  compress: true, // Ensure compression is enabled
+                  compress: false, // Disable compression completely
                   onProgress: (progress: number) => {
                     setUploadProgress(Math.floor(progress));
                   }
