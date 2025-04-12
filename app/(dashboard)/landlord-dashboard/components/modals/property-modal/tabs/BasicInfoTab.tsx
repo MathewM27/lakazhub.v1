@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormData } from "../types" // Import the FormData type
 
 interface BasicInfoTabProps {
-  formData: FormData; // Use the imported FormData type
+  formData: FormData; 
   onChange: (formData: Partial<FormData>) => void;
   onNext: () => void;
 }
