@@ -276,67 +276,28 @@ export class PropertyAPI {
         throw new Error('Not authenticated');
       }
       
-      // Get property name for folder structure
-      const { data: propertyData, error: propertyError } = await supabase
-        .from('properties')
-        .select('name')
-        .eq('id', propertyId)
-        .single();
-        
-      if (propertyError) {
-        console.error('Error fetching property name:', propertyError);
-        throw new Error('Could not fetch property name for folder organization');
+      // Create form data
+      const formData = new FormData();
+      
+      // Add all files
+      files.forEach((file, index) => {
+        formData.append(`images`, file);
+      });
+      
+      const response = await fetch(`${this.API_URL}/api/properties/${propertyId}/images`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to upload images');
       }
       
-      // Import ImageStorage class
-      const { ImageStorage } = await import('../imageStorage');
-      
-      // Group files by their room type category
-      const filesByCategory: Record<string, File[]> = {};
-      
-      // Extract file categories from the file names or metadata
-      for (const file of files) {
-        const metadata = file.name.split('__');
-        const category = metadata.length > 1 ? metadata[0].toLowerCase() : 'other';
-        
-        if (!filesByCategory[category]) {
-          filesByCategory[category] = [];
-        }
-        filesByCategory[category].push(file);
-      }
-      
-      let allUploadedUrls: string[] = [];
-      
-      // Upload each category of files
-      for (const [category, categoryFiles] of Object.entries(filesByCategory)) {
-        if (categoryFiles.length === 0) continue;
-        
-        const uploadedUrls = await ImageStorage.uploadImages(
-          propertyId,
-          categoryFiles,
-          { 
-            roomType: category,
-            propertyName: propertyData.name,
-            compress: true
-          }
-        );
-        
-        allUploadedUrls = [...allUploadedUrls, ...uploadedUrls];
-      }
-      
-      // Update the property with the image URLs
-      const { error: updateError } = await supabase
-        .from('properties')
-        .update({ 
-          images: allUploadedUrls,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', propertyId);
-      
-      if (updateError) {
-        console.error('Error updating property with image URLs:', updateError);
-        throw new Error('Failed to update property with image URLs');
-      }
+      const data = await response.json();
       
       // Invalidate both caches
       if (this.cache.properties) {
@@ -347,7 +308,7 @@ export class PropertyAPI {
         this.cache.propertyDetails[propertyId].timestamp = 0;
       }
       
-      return { images: allUploadedUrls };
+      return data.images;
     } catch (error) {
       console.error('Error uploading images:', error);
       throw error;

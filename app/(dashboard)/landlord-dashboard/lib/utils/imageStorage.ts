@@ -9,6 +9,13 @@ interface ImageDimensions {
   height: number;
 }
 
+// Define an interface for storage item data
+interface StorageItem {
+  id: string;
+  name: string;
+  // Add other properties you might need
+}
+
 export class ImageStorage {
   private static BUCKET_NAME = 'property-images';
   private static MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -27,7 +34,15 @@ export class ImageStorage {
    * Validate an image file before upload
    */
   static validateImage(file: File): { valid: boolean; error?: string } {
-    // Your existing validation code
+    // Implementation of file validation logic
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      return { valid: false, error: 'Invalid file type' };
+    }
+    
+    if (file.size > this.MAX_FILE_SIZE) {
+      return { valid: false, error: 'File too large' };
+    }
+    
     return { valid: true };
   }
   
@@ -35,8 +50,17 @@ export class ImageStorage {
    * Get dimensions of an image file
    */
   static async getImageDimensions(file: File): Promise<ImageDimensions> {
-    // Your existing code
-    return { width: 0, height: 0 };
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ 
+          width: img.naturalWidth, 
+          height: img.naturalHeight 
+        });
+        URL.revokeObjectURL(img.src);
+      };
+      img.src = URL.createObjectURL(file);
+    });
   }
   
   /**
@@ -83,7 +107,7 @@ export class ImageStorage {
       const folderPath = `${sanitizedPropertyId}/${sanitizedRoomType}`;
       
       // Upload each file with progress tracking
-      let totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
       let uploadedSize = 0;
       
       for (let i = 0; i < files.length; i++) {
@@ -118,7 +142,7 @@ export class ImageStorage {
         
         try {
           // Upload the file - no bucket creation attempts
-          let { data, error } = await supabase.storage
+          const { data, error } = await supabase.storage
             .from(this.BUCKET_NAME)
             .upload(filePath, file, {
               cacheControl: '3600',
@@ -145,22 +169,30 @@ export class ImageStorage {
                 console.error(`Retry upload failed: ${retryUpload.error.message}`);
                 throw retryUpload.error;
               } else {
-                data = retryUpload.data;
+                // Use retryUpload.data instead
+                const { data: publicUrlData } = supabase.storage
+                  .from(this.BUCKET_NAME)
+                  .getPublicUrl(retryUpload.data?.path || newFilePath);
+                
+                if (publicUrlData?.publicUrl) {
+                  console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
+                  uploadedUrls.push(publicUrlData.publicUrl);
+                }
               }
             } else {
               console.error(`Upload error: ${error.message}`);
               throw error;
             }
-          }
-          
-          // Get the public URL
-          const { data: publicUrlData } = supabase.storage
-            .from(this.BUCKET_NAME)
-            .getPublicUrl(data?.path || filePath);
-            
-          if (publicUrlData?.publicUrl) {
-            console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
-            uploadedUrls.push(publicUrlData.publicUrl);
+          } else {
+            // Get the public URL
+            const { data: publicUrlData } = supabase.storage
+              .from(this.BUCKET_NAME)
+              .getPublicUrl(data?.path || filePath);
+              
+            if (publicUrlData?.publicUrl) {
+              console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
+              uploadedUrls.push(publicUrlData.publicUrl);
+            }
           }
         } catch (uploadError) {
           console.error(`Error uploading file ${i+1}:`, uploadError);
@@ -223,7 +255,7 @@ export class ImageStorage {
   /**
    * Delete all images for a property
    */
-  static async deleteAllPropertyImages(propertyId: string): Promise<{ success: boolean; error?: any }> {
+  static async deleteAllPropertyImages(propertyId: string): Promise<{ success: boolean; error?: unknown }> {
     try {
       // Get list of all files in the property folder
       const { data, error } = await supabase.storage
@@ -241,9 +273,9 @@ export class ImageStorage {
       }
       
       // Get paths of all property's image files
-      const filesToDelete: string[] = data
-        .filter((item: { id: string }) => !item.id.endsWith('/')) // Filter out folders
-        .map((item: { name: string }) => `${propertyId}/${item.name}`);
+      const filesToDelete = data
+        .filter((item: StorageItem) => !item.id.endsWith('/')) // Filter out folders
+        .map((item: StorageItem) => `${propertyId}/${item.name}`);
         
       // Delete in batches to stay within API limits
       const batchSize = 100;
@@ -286,14 +318,39 @@ export class ImageStorage {
   /**
    * Get an optimized URL for the image
    */
-  static getOptimizedUrl(url: string, options: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'jpg';
-    resize?: 'cover' | 'contain' | 'fill';
-  } = {}): string {
+  static getOptimizedUrl(
+    url: string, 
+    options: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: 'webp' | 'jpg';
+      resize?: 'cover' | 'contain' | 'fill';
+    }
+  ): string {
     // This would integrate with a CDN or image optimization service
+    // A simple implementation might look like this:
+    try {
+      const urlObj = new URL(url);
+      
+      // Only apply transformations if using a compatible service
+      if (urlObj.hostname.includes('your-cdn-service.com')) {
+        const params = new URLSearchParams();
+        
+        if (options.width) params.append('w', options.width.toString());
+        if (options.height) params.append('h', options.height.toString());
+        if (options.quality) params.append('q', options.quality.toString());
+        if (options.format) params.append('fm', options.format);
+        if (options.resize) params.append('fit', options.resize);
+        
+        urlObj.search = params.toString();
+        return urlObj.toString();
+      }
+    } catch (e) {
+      // If URL parsing fails, return original
+      console.warn('Failed to optimize URL:', e);
+    }
+    
     // For now, just return the original URL
     return url;
   }
@@ -310,9 +367,9 @@ export class ImageStorage {
       upsert?: boolean;
     } = {},
     maxRetries: number = 3
-  ): Promise<any> {
+  ): Promise<unknown> {
     let attempt = 0;
-    let lastError: any = null;
+    let lastError: Error | null = null;
     
     while (attempt < maxRetries) {
       try {
@@ -331,7 +388,7 @@ export class ImageStorage {
           return result;
         }
         
-        lastError = result.error;
+        lastError = new Error(result.error.message);
         
         // If error is not about resource existing, don't retry
         if (!result.error.message?.includes('already exists')) {
@@ -339,11 +396,12 @@ export class ImageStorage {
         }
         
         console.warn(`Upload collision detected (attempt ${attempt+1}), retrying with new name`);
-      } catch (error: any) {
-        lastError = error;
+      } catch (error) {
+        const err = error as Error;
+        lastError = err;
         
         // If it's a different error that's not "already exists", don't retry
-        if (!error.message?.includes('already exists')) {
+        if (!err.message?.includes('already exists')) {
           throw error;
         }
       }
@@ -357,9 +415,12 @@ export class ImageStorage {
   /**
    * Compress an image to reduce file size
    */
-  static async compressImage(file: File, maxSizeMB = 1): Promise<File | null> {
+  static async compressImage(file: File, _maxSizeMB = 1): Promise<File | null> {
     // Implement compression with a library like browser-image-compression
-    // For now, just return the original file
+    // For a basic implementation without a compression library,
+    // we're just returning the original file
+    // The maxSizeMB parameter is kept for future implementation
+    // and prefixed with underscore to indicate it's intentionally unused
     return file;
   }
 }
