@@ -104,35 +104,92 @@ export const PropertyService = {
    * Create a new property
    */
   createProperty: async (propertyData: Omit<Property, 'id'>): Promise<Property> => {
+    console.log('PropertyService: Creating new property');
+    console.log('Property data:', JSON.stringify(propertyData, null, 2));
+    
     try {
-      // Get auth session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
+      // Try direct API approach first
+      try {
+        // Get auth session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Not authenticated');
+        }
+        
+        console.log(`Creating property for user: ${session.user.id}`);
+        
+        // Ensure images array is present
+        if (!propertyData.images) {
+          console.warn('No images array in property data, initializing empty array');
+          propertyData.images = [];
+        }
+        
+        console.log(`Inserting property with ${propertyData.images.length} image URLs`);
+        console.log('Image URLs to save:', propertyData.images);
+        
+        // Make the request
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/properties`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(propertyData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create property');
+        }
+        
+        const result = await response.json();
+        const newProperty = result.data;
+        
+        console.log('Property created successfully:', newProperty);
+        
+        // Invalidate properties cache since we added a new one
+        PropertyCache.setProperties([], undefined);
+        
+        return newProperty;
+      } catch (apiError) {
+        console.warn('API approach failed, falling back to direct Supabase:', apiError);
+        
+        // Fallback to direct Supabase approach
+        // Check auth status
+        const { data: authData } = await supabase.auth.getUser();
+        if (!authData?.user) {
+          console.error('Authentication required');
+          throw new Error('Authentication required');
+        }
+        
+        console.log(`Creating property for user: ${authData.user.id}`);
+        
+        // Ensure images array is present
+        if (!propertyData.images) {
+          console.warn('No images array in property data, initializing empty array');
+          propertyData.images = [];
+        }
+        
+        console.log(`Inserting property with ${propertyData.images.length} image URLs`);
+        console.log('Image URLs to save:', propertyData.images);
+        
+        const { data, error } = await supabase
+          .from('properties')
+          .insert({
+            ...propertyData,
+            landlord_id: authData.user.id
+          })
+          .select('*')
+          .single();
+        
+        if (error) {
+          console.error('Error creating property:', error);
+          throw new Error(`Failed to create property: ${error.message}`);
+        }
+        
+        console.log('Property created successfully:', data);
+        return data;
       }
-      
-      // Make the request
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/properties`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(propertyData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create property');
-      }
-      
-      const result = await response.json();
-      const newProperty = result.data;
-      
-      // Invalidate properties cache since we added a new one
-      PropertyCache.setProperties([], undefined);
-      
-      return newProperty;
     } catch (error) {
       console.error('Error creating property:', error);
       throw error;
@@ -143,36 +200,74 @@ export const PropertyService = {
    * Update an existing property
    */
   updateProperty: async (id: string, propertyData: Partial<Property>): Promise<Property> => {
+    console.log(`PropertyService: Updating property ${id}`);
+    console.log('Update data:', JSON.stringify(propertyData, null, 2));
+    
     try {
-      // Get auth session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
+      // Try API approach first
+      try {
+        // Get auth session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Not authenticated');
+        }
+        
+        // Ensure images array is handled properly if present
+        if (propertyData.images) {
+          console.log(`Updating property with ${propertyData.images.length} image URLs`);
+          console.log('Image URLs to save:', propertyData.images);
+        }
+        
+        // Make the request
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/properties/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(propertyData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update property');
+        }
+        
+        const result = await response.json();
+        const updatedProperty = result.data;
+        
+        console.log('Property updated successfully:', updatedProperty);
+        
+        // Invalidate caches since data changed
+        PropertyCache.invalidatePropertyCache(id);
+        PropertyCache.setProperties([], undefined);
+        
+        return updatedProperty;
+      } catch (apiError) {
+        console.warn('API approach failed, falling back to direct Supabase:', apiError);
+        
+        // Fallback to direct Supabase approach
+        // Ensure images array is handled properly if present
+        if (propertyData.images) {
+          console.log(`Updating property with ${propertyData.images.length} image URLs`);
+          console.log('Image URLs to save:', propertyData.images);
+        }
+        
+        const { data, error } = await supabase
+          .from('properties')
+          .update(propertyData)
+          .eq('id', id)
+          .select('*')
+          .single();
+        
+        if (error) {
+          console.error('Error updating property:', error);
+          throw new Error(`Failed to update property: ${error.message}`);
+        }
+        
+        console.log('Property updated successfully:', data);
+        return data;
       }
-      
-      // Make the request
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/properties/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(propertyData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update property');
-      }
-      
-      const result = await response.json();
-      const updatedProperty = result.data;
-      
-      // Invalidate caches since data changed
-      PropertyCache.invalidatePropertyCache(id);
-      PropertyCache.setProperties([], undefined);
-      
-      return updatedProperty;
     } catch (error) {
       console.error(`Error updating property ${id}:`, error);
       throw error;

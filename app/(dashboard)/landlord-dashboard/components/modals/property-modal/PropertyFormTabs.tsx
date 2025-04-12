@@ -82,75 +82,138 @@ export default function PropertyFormTabs({
     try {
       setUploadingImages(true)
       
-      // Filter images that need to be uploaded (have File objects)
-      const imagesToUpload = formData.images.filter(img => img.file)
+      console.log('Starting property submission process');
+      console.log('Form data:', JSON.stringify(formData, null, 2));
+      
+      // Fix: We need to treat the images differently since JSON.stringify doesn't handle File objects properly
+      // The images are showing up as empty objects in the logs but they are valid File objects
+      const imagesToUpload = formData.images
+        .filter(img => img.file instanceof File || (typeof img.file === 'object' && img.file !== null))
+        .map(img => ({
+          file: img.file as File,
+          type: img.type
+        }));
+      
+      console.log(`Found ${imagesToUpload.length} images to upload`, 
+        imagesToUpload.map(img => `${img.type}: ${(img.file as File).name}`));
       
       // Get existing image URLs that don't need uploading
       const existingImageUrls = formData.images
-        .filter(img => img.url && !img.file)
-        .map(img => img.url as string)
+        .filter(img => img.url && typeof img.url === 'string' && img.url.startsWith('http'))
+        .map(img => img.url as string);
+      
+      console.log(`Existing image URLs: ${existingImageUrls.length}`);
       
       // If we have new images to upload
-      let uploadedImageUrls: string[] = []
+      let uploadedImageUrls: string[] = [];
       if (imagesToUpload.length > 0) {
-        // Group images by type
-        const imagesByType = ROOM_TYPES.reduce((acc, roomType) => {
-          acc[roomType] = imagesToUpload
-            .filter(img => img.type === roomType)
-            .map(img => img.file as File)
-          return acc
-        }, {} as Record<string, File[]>)
+        console.log('Preparing to upload new images');
+        
+        // Fix: Create a proper mapping of image types to files
+        const imagesByType: Record<string, File[]> = {};
+        
+        // Initialize image categories
+        formData.images.forEach(img => {
+          const type = img.type;
+          if (!imagesByType[type]) {
+            imagesByType[type] = [];
+          }
+        });
+        
+        // Add files to their respective categories
+        imagesToUpload.forEach(img => {
+          if (img.file instanceof File) {
+            imagesByType[img.type].push(img.file);
+          }
+        });
+        
+        console.log('Images grouped by room type:', 
+          Object.entries(imagesByType).map(([type, files]) => 
+            `${type}: ${files.length} files ${files.length > 0 ? `(${files[0]?.name || 'unnamed'})` : ''}`
+          )
+        );
         
         // Generate a property ID for storage
-        const propertyId = property?.id || `new-property-${Date.now()}`
+        const propertyId = property?.id || `new-property-${Date.now()}`;
+        console.log(`Using property ID for storage: ${propertyId}`);
         
-        // Upload each group
+        // Upload each group of images
         for (const [roomType, files] of Object.entries(imagesByType)) {
           if (files.length > 0) {
             try {
               // Update progress
-              setUploadProgress(prev => prev + 10)
+              setUploadProgress(prev => prev + 10);
               
-              // Upload the files for this room type
+              console.log(`Uploading ${files.length} files for room type: ${roomType}`);
+              console.log('File objects:', files.map(f => `${f.name} (${f.size} bytes)`));
+              
+              // Import ImageStorage here to ensure it's available
+              const { ImageStorage } = await import('../../../lib/utils/imageStorage');
+              
+              // Upload files with compression enabled
               const urls = await ImageStorage.uploadImages(
-                `${propertyId}/${roomType.toLowerCase().replace(/\s+/g, '-')}`, 
+                propertyId, 
                 files,
                 { 
+                  roomType: roomType,
+                  compress: true, // Ensure compression is enabled
                   onProgress: (progress: number) => {
-                    setUploadProgress(Math.floor(progress))
+                    setUploadProgress(Math.floor(progress));
                   }
                 }
-              )
+              );
               
-              uploadedImageUrls = [...uploadedImageUrls, ...urls]
+              console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
+              uploadedImageUrls = [...uploadedImageUrls, ...urls];
             } catch (error) {
-              console.error(`Error uploading ${roomType} images:`, error)
+              console.error(`Error uploading ${roomType} images:`, error);
+              
+              // Show more specific error message
+              let errorMessage = "Failed to upload some images. Please try again.";
+              if (error instanceof Error) {
+                errorMessage = error.message || errorMessage;
+              }
+              
               toast({
                 title: `${roomType} Upload Error`,
-                description: "Failed to upload some images. Please try again.",
+                description: errorMessage,
                 variant: "destructive"
-              })
+              });
             }
           }
         }
       }
       
+      // Check if we have any successful uploads before proceeding
+      if (imagesToUpload.length > 0 && uploadedImageUrls.length === 0) {
+        // All uploads failed, but we'll still create the property
+        console.warn("All image uploads failed, continuing with property creation without images");
+        toast({
+          title: "Image Upload Warning",
+          description: "Images couldn't be uploaded due to size limitations. Please try with smaller images (under 2MB) or resize them before uploading.",
+          variant: "default"
+        });
+      }
+      
       // Combine existing and newly uploaded URLs
-      const allImageUrls = [...existingImageUrls, ...uploadedImageUrls]
+      const allImageUrls = [...existingImageUrls, ...uploadedImageUrls];
+      console.log(`Total image URLs to save to property: ${allImageUrls.length}`);
+      console.log('URLs:', allImageUrls);
       
       // Submit the form with all image URLs
-      await onSubmit(formData, allImageUrls)
+      await onSubmit(formData, allImageUrls);
+      console.log('Property submission complete');
       
     } catch (error) {
-      console.error("Error in form submission:", error)
+      console.error("Error in form submission:", error);
       toast({
         title: "Submission Error",
         description: "Failed to submit property. Please try again.",
         variant: "destructive" 
-      })
+      });
     } finally {
-      setUploadingImages(false)
-      setUploadProgress(0)
+      setUploadingImages(false);
+      setUploadProgress(0);
     }
   }
   
