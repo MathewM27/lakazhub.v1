@@ -72,6 +72,7 @@ export class ImageStorage {
     files: File[], 
     options: { 
       roomType?: string;
+      propertyName?: string;
       compress?: boolean;
       onProgress?: UploadProgressCallback;
     } = {}
@@ -94,17 +95,40 @@ export class ImageStorage {
     
     this.uploadThrottleMap.set(userId, now);
 
-    console.log(`Starting upload for property ${propertyId} with room type: ${options.roomType || 'unknown'}`);
+    // Get property name for better organization
+    let propertyName = options.propertyName || '';
+    if (!propertyName) {
+      try {
+        const { data: property } = await supabase
+          .from('properties')
+          .select('name')
+          .eq('id', propertyId)
+          .single();
+        
+        if (property?.name) {
+          propertyName = property.name;
+        }
+      } catch (error) {
+        console.warn('Failed to get property name, using ID instead:', error);
+      }
+    }
+    
+    // Sanitize property name for folder use
+    const sanitizedPropertyName = propertyName 
+      ? propertyName.replace(/[^\w-]/g, '-').toLowerCase()
+      : `property-${propertyId}`;
+
+    console.log(`Starting upload for ${sanitizedPropertyName} with room type: ${options.roomType || 'unknown'}`);
     console.log(`Number of files: ${files.length}`);
     
     const uploadedUrls: string[] = [];
     const { compress = true, onProgress, roomType = 'unknown' } = options;
     
     try {
-      // Create folder path with property ID and room type
+      // Create folder path with property name and room type
       const sanitizedPropertyId = propertyId.replace(/[^\w-]/g, ''); // Only allow safe characters
       const sanitizedRoomType = roomType.toLowerCase().replace(/[^\w-]/g, '-');
-      const folderPath = `${sanitizedPropertyId}/${sanitizedRoomType}`;
+      const folderPath = `${sanitizedPropertyName}/${sanitizedPropertyId}/${sanitizedRoomType}`;
       
       // Upload each file with progress tracking
       const totalSize = files.reduce((sum, file) => sum + file.size, 0);
@@ -141,53 +165,22 @@ export class ImageStorage {
         const filePath = `${folderPath}/${fileName}`;
         
         try {
-          // Upload the file - no bucket creation attempts
-          const { data, error } = await supabase.storage
-            .from(this.BUCKET_NAME)
-            .upload(filePath, file, {
+          // Upload the file with retry mechanism
+          const result = await this.uploadWithRetry(
+            filePath,
+            file,
+            {
               cacheControl: '3600',
-              contentType: file.type, // Explicit content type
-              upsert: false // Don't overwrite files with same name
-            });
-            
-          if (error) {
-            // If file already exists, try with a different name
-            if (error.message?.includes('already exists')) {
-              const newFileName = `${timestamp}-${randomId}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
-              const newFilePath = `${folderPath}/${newFileName}`;
-              
-              console.log(`File collision, retrying with new name: ${newFilePath}`);
-              
-              const retryUpload = await supabase.storage
-                .from(this.BUCKET_NAME)
-                .upload(newFilePath, file, {
-                  cacheControl: '3600',
-                  upsert: false
-                });
-                
-              if (retryUpload.error) {
-                console.error(`Retry upload failed: ${retryUpload.error.message}`);
-                throw retryUpload.error;
-              } else {
-                // Use retryUpload.data instead
-                const { data: publicUrlData } = supabase.storage
-                  .from(this.BUCKET_NAME)
-                  .getPublicUrl(retryUpload.data?.path || newFilePath);
-                
-                if (publicUrlData?.publicUrl) {
-                  console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
-                  uploadedUrls.push(publicUrlData.publicUrl);
-                }
-              }
-            } else {
-              console.error(`Upload error: ${error.message}`);
-              throw error;
+              contentType: file.type,
+              upsert: false
             }
-          } else {
+          );
+          
+          if (result && typeof result === 'object' && !("error" in result)) {
             // Get the public URL
             const { data: publicUrlData } = supabase.storage
               .from(this.BUCKET_NAME)
-              .getPublicUrl(data?.path || filePath);
+              .getPublicUrl((result as any).data?.path || filePath);
               
             if (publicUrlData?.publicUrl) {
               console.log(`File uploaded successfully: ${publicUrlData.publicUrl}`);
@@ -415,12 +408,91 @@ export class ImageStorage {
   /**
    * Compress an image to reduce file size
    */
-  static async compressImage(file: File, _maxSizeMB = 1): Promise<File | null> {
-    // Implement compression with a library like browser-image-compression
-    // For a basic implementation without a compression library,
-    // we're just returning the original file
-    // The maxSizeMB parameter is kept for future implementation
-    // and prefixed with underscore to indicate it's intentionally unused
-    return file;
+  static async compressImage(file: File, maxSizeMB = 1): Promise<File | null> {
+    try {
+      // Create a canvas element for image processing
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file; // Fall back to original file if no context
+      
+      // Load the image
+      const img = new Image();
+      const loadPromise = new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = URL.createObjectURL(file);
+      });
+      
+      await loadPromise;
+      
+      // Original dimensions
+      let { width, height } = img;
+      
+      // Calculate target size to maintain aspect ratio
+      const aspectRatio = width / height;
+      
+      // Target max dimension (maintain aspect ratio)
+      const MAX_DIMENSION = 1920; // Resize if larger than this
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width > height) {
+          width = MAX_DIMENSION;
+          height = Math.round(MAX_DIMENSION / aspectRatio);
+        } else {
+          height = MAX_DIMENSION;
+          width = Math.round(MAX_DIMENSION * aspectRatio);
+        }
+      }
+      
+      // Set canvas size
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Draw image with smoothing
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Clean up the object URL
+      URL.revokeObjectURL(img.src);
+      
+      // Start with high quality
+      let quality = 0.9;
+      let compressedBlob: Blob | null = null;
+      
+      // Try with progressively lower quality until we get under the size limit
+      // or hit a minimum quality threshold
+      while (quality >= 0.5) {
+        const blob = await new Promise<Blob | null>(resolve => {
+          canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+        });
+        
+        if (!blob) break;
+        
+        compressedBlob = blob;
+        
+        // If size is under limit, we're done
+        if (blob.size <= maxSizeMB * 1024 * 1024) {
+          break;
+        }
+        
+        // Reduce quality for next iteration
+        quality -= 0.1;
+      }
+      
+      if (!compressedBlob) return file;
+      
+      // Convert blob back to File object with original name
+      const compressedFile = new File(
+        [compressedBlob], 
+        file.name.replace(/\.\w+$/, '.jpg'), // Change extension to jpg
+        { 
+          type: 'image/jpeg',
+          lastModified: file.lastModified 
+        }
+      );
+      
+      return compressedFile;
+    } catch (error) {
+      console.error('Image compression failed:', error);
+      return file; // Return original file if compression fails
+    }
   }
 }

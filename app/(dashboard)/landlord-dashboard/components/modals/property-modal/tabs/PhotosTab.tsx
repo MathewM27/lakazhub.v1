@@ -1,9 +1,9 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { FormData } from "../types"
-import { X, Camera, Info } from "lucide-react"
+import { X, Camera, Info, Loader2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PhotosTabProps {
@@ -34,6 +34,19 @@ export default function PhotosTab({
 }: PhotosTabProps) {
   const [dragOver, setDragOver] = useState<string | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({})
+  
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      // Revoke all blob URLs to prevent memory leaks
+      formData.images.forEach(img => {
+        if (img.url && isBlobUrl(img.url)) {
+          URL.revokeObjectURL(img.url);
+        }
+      });
+    };
+  }, []);
   
   // Group images by category
   const imagesByCategory = ROOM_CATEGORIES.reduce((acc, category) => {
@@ -42,69 +55,98 @@ export default function PhotosTab({
   }, {} as Record<string, typeof formData.images>)
 
   // Add a file to a specific category
-  const handleFileSelected = (category: string, files: FileList | null) => {
+  const handleFileSelected = async (category: string, files: FileList | null) => {
     if (!files || files.length === 0) return
 
-    // Convert FileList to array and filter for images only
-    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
-    if (imageFiles.length === 0) return
+    // Show loading indicator for this category
+    setIsLoading(prev => ({ ...prev, [category]: true }));
 
-    // Find category config
-    const categoryConfig = ROOM_CATEGORIES.find(c => c.id === category)
-    if (!categoryConfig) return
+    try {
+      // Convert FileList to array and filter for images only
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+      if (imageFiles.length === 0) {
+        setIsLoading(prev => ({ ...prev, [category]: false }));
+        return;
+      }
 
-    // Get current images of this category
-    const currentImages = formData.images.filter(img => img.type === category)
-    
-    // Check if we exceed limits
-    const limit = categoryConfig.limit
-    let newImagesToAdd = imageFiles
-    
-    // If not a multiple category, replace existing images or limit to remaining slots
-    if (!categoryConfig.allowMultiple) {
-      // If we already have an image and it's not a multiple category, remove the old one
-      if (currentImages.length >= limit) {
-        // Remove existing images of this category
-        const updatedImages = formData.images.filter(img => img.type !== category)
-        
-        // Create new image for this category
-        const newImage = {
-          file: imageFiles[0],
-          type: category,
-          url: URL.createObjectURL(imageFiles[0])
+      // Find category config
+      const categoryConfig = ROOM_CATEGORIES.find(c => c.id === category)
+      if (!categoryConfig) {
+        setIsLoading(prev => ({ ...prev, [category]: false }));
+        return;
+      }
+
+      // Get current images of this category
+      const currentImages = formData.images.filter(img => img.type === category)
+      
+      // Check if we exceed limits
+      const limit = categoryConfig.limit
+      let newImagesToAdd = imageFiles
+      
+      // If not a multiple category, replace existing images or limit to remaining slots
+      if (!categoryConfig.allowMultiple) {
+        // If we already have an image and it's not a multiple category, remove the old one
+        if (currentImages.length >= limit) {
+          // Remove existing images of this category
+          const updatedImages = formData.images.filter(img => img.type !== category)
+          
+          // Create new image for this category with blob URL for preview
+          const newImage = {
+            file: imageFiles[0],
+            type: category,
+            url: URL.createObjectURL(imageFiles[0])
+          }
+          
+          onChange({
+            images: [...updatedImages, newImage]
+          })
+          
+          setIsLoading(prev => ({ ...prev, [category]: false }));
+          return
         }
         
-        onChange({
-          images: [...updatedImages, newImage]
-        })
-        return
+        // Limit to remaining slots
+        newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
+      } else {
+        // For multiple categories, limit to remaining slots
+        newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
       }
-      
-      // Limit to remaining slots
-      newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
-    } else {
-      // For multiple categories, limit to remaining slots
-      newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
+
+      // Process each image file to create object URLs for preview
+      const processedImages = await Promise.all(
+        newImagesToAdd.map(async (file) => {
+          // Add category to the file name for organizational purposes
+          const renamedFile = new File(
+            [file], 
+            `${category}__${file.name}`, 
+            { type: file.type }
+          );
+          
+          // Create blob URL for preview
+          return {
+            file: renamedFile,
+            type: category,
+            url: URL.createObjectURL(file)
+          };
+        })
+      );
+
+      // Update form data with new images
+      onChange({
+        images: [...formData.images, ...processedImages]
+      });
+    } catch (error) {
+      console.error("Error processing image files:", error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, [category]: false }));
     }
-
-    // Create new images to add
-    const newImages = newImagesToAdd.map(file => ({
-      file,
-      type: category,
-      url: URL.createObjectURL(file)
-    }))
-
-    // Update form data with new images
-    onChange({
-      images: [...formData.images, ...newImages]
-    })
   }
 
   const handleRemoveImage = (index: number) => {
     const newImages = [...formData.images]
     
     // If the image has a URL created with createObjectURL, revoke it
-    if (newImages[index].url && !newImages[index].url.startsWith('http')) {
+    if (newImages[index].url && isBlobUrl(newImages[index].url)) {
       URL.revokeObjectURL(newImages[index].url as string)
     }
     
@@ -201,6 +243,7 @@ export default function PhotosTab({
           const images = imagesByCategory[category.id] || []
           const hasImage = images.length > 0
           const imageUrl = hasImage && images[0]?.url ? images[0].url : PLACEHOLDER_IMAGE
+          const loading = isLoading[category.id] || false;
           
           return (
             <div 
@@ -215,16 +258,19 @@ export default function PhotosTab({
             >
               {/* Upload area or image display */}
               <div 
-                className={`
-                  relative aspect-video cursor-pointer 
-                  flex flex-col items-center justify-center
-                  ${hasImage ? 'p-0' : 'p-4'}
-                `}
+                className="relative cursor-pointer flex flex-col items-center justify-center"
+                style={{ aspectRatio: '16 / 9' }} // Ensure the parent has a height
                 onClick={() => fileInputRefs.current[category.id]?.click()}
                 onDragOver={(e) => handleDragOver(e, category.id)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, category.id)}
               >
+                {loading ? (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  </div>
+                ) : null}
+                
                 {hasImage ? (
                   // Display the first image if we have one
                   <div className="w-full h-full relative">
@@ -233,7 +279,8 @@ export default function PhotosTab({
                       alt={category.displayName}
                       fill
                       className="object-cover"
-                      unoptimized={isBlobUrl(imageUrl)}
+                      unoptimized={isBlobUrl(imageUrl)} // Ensure blob URLs are handled
+                      onError={(e) => console.error("Image failed to load:", imageUrl, e)} // Debugging
                     />
                     
                     {/* Image count badge for Other category only */}
