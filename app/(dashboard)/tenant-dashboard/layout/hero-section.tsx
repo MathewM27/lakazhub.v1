@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiArrowRight, FiCheck, FiHeart, FiMapPin } from "react-icons/fi";
+import { FiArrowRight, FiCheck, FiSearch, FiMapPin } from "react-icons/fi";
 import Image from "next/image";
 
 const HeroSection = () => {
@@ -24,9 +24,9 @@ const HeroSection = () => {
   }, []);
 
   const quickFeatures = [
-    { text: 'Manage multiple properties', icon: FiCheck },
-    { text: 'Control your listings', icon: FiCheck },
-    { text: 'Screen potential tenants', icon: FiCheck }
+    { text: 'Access curated listings', icon: FiCheck },
+    { text: 'Contact landlords directly', icon: FiCheck },
+    { text: 'Schedule viewings easily', icon: FiCheck }
   ];
 
   return (
@@ -75,10 +75,10 @@ const HeroSection = () => {
               >
                 <div>
                   <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
-                    Manage Your Properties
+                    Find Your Perfect Rental
                   </h1>
                   <p className="mt-4 text-lg text-white/70 max-w-2xl">
-                    List, manage and connect with qualified tenants in one seamless platform.
+                    Browse through a selection of quality-verified properties and connect directly with owners.
                   </p>
                 </div>
 
@@ -102,23 +102,23 @@ const HeroSection = () => {
                   ))}
                 </div>
                 
-                {/* CTA Button - using amber for landlord theme */}
+                {/* CTA Button - consistent with landlord dashboard */}
                 <div 
                   className={`pt-4 transition-all duration-500 delay-700 ease-out ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
                 >
                   <Link 
-                    href="/add-property"
-                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg hover:bg-amber-400 transition-all font-medium group"
+                    href="/properties"
+                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg hover:bg-white/90 transition-all font-medium group"
                   >
-                    <span>Add Property</span>
+                    <span>Browse Properties</span>
                     <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
               </div>
               
-              {/* Right column - Property management card */}
+              {/* Right column - Featured property card */}
               <div 
                 className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out mt-6 md:mt-0 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
@@ -127,7 +127,7 @@ const HeroSection = () => {
                 <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
                   <div className="absolute inset-0 z-10">
                     <Image 
-                      src="/bg1.jpg" 
+                      src="/home5.png" 
                       alt="Featured Property"
                       fill
                       className="object-cover"
@@ -135,17 +135,16 @@ const HeroSection = () => {
                   </div>
                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
                   
-                  {/* Available indicator with green dot - replacing New Listing badge */}
+                  {/* Property tag - positioned at top-left */}
                   <div className="absolute top-4 left-4 z-30">
-                    <div className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/20 flex items-center">
-                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
-                      <span>Available</span>
+                    <div className="bg-blue-500/80 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-blue-400/30">
+                      New Listing
                     </div>
                   </div>
                   
-                  {/* Heart icon - replacing search icon */}
+                  {/* Search indicator - positioned at top-right, similar to the connection indicator in landlord dashboard */}
                   <div className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-sm rounded-full z-30">
-                    <FiHeart className="h-4 w-4 text-amber-400" />
+                    <FiSearch className="h-4 w-4 text-blue-400" />
                   </div>
                   
                   {/* Small decorative elements at corners - consistent with landlord dashboard */}
