@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 export default {
   darkMode: ["class"],
@@ -96,6 +97,12 @@ export default {
       animation: {
         'spin-slow': 'spin 3s linear infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fadeIn': 'fadeIn 0.8s ease-out forwards',
+        'fadeInUp': 'fadeInUp 0.5s ease-out forwards',
+        'slowZoom': 'slowZoom 10s infinite linear',
+        'float': 'float 5s ease-in-out infinite',
+        'fade-in': 'fadeIn 0.7s ease-out forwards',
+        'slide-up': 'slideUp 0.5s ease-out forwards',
       },
       transitionProperty: {
         'height': 'height',
@@ -140,13 +147,36 @@ export default {
         'auto-fill-sm': 'repeat(auto-fill, minmax(320px, 1fr))',
         'auto-fill-md': 'repeat(auto-fill, minmax(384px, 1fr))',
       },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slowZoom: {
+          '0%': { transform: 'scale(1.25)' },
+          '50%': { transform: 'scale(1.3)' },
+          '100%': { transform: 'scale(1.25)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(15px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
     }
   },
   plugins: [
     require("tailwindcss-animate"),
     require('@tailwindcss/aspect-ratio'),
     require('@tailwindcss/typography'),
-    function({ addComponents, theme }: { addComponents: any, theme: any }) {
+    function({ addComponents, theme }: { addComponents: Function, theme: Function }) {
       addComponents({
         '.touch-safe': {
           minHeight: theme('minHeight.touch-target'),
@@ -157,5 +187,23 @@ export default {
         },
       });
     },
+    plugin(({ addUtilities }) => {
+      const newUtilities: Record<string, Record<string, string>> = {};
+      for (let i = 1; i <= 10; i++) {
+        newUtilities[`.animation-delay-${i*100}`] = {
+          'animation-delay': `${i*0.1}s`,
+        };
+      }
+      addUtilities(newUtilities);
+    }),
+    plugin(({ addUtilities }) => {
+      const delayUtilities: Record<string, Record<string, string>> = {};
+      for (let i = 1; i <= 10; i++) {
+        delayUtilities[`.delay-${i*100}`] = {
+          'animation-delay': `${i*0.1}s`,
+        };
+      }
+      addUtilities(delayUtilities);
+    })
   ],
 } satisfies Config;
