@@ -197,38 +197,28 @@ const Navigation = () => {
         // Close the sheet if on mobile
         closeSheet();
         
-        // Mark messages as read if needed
+        // Mark messages as read if needed - but do this in the background
         if (unreadMessagesCount > 0 && user?.id) {
             try {
-                // Get all conversations for the current tenant
-                const { data: conversationsData, error: conversationsError } = await supabase
-                    .from('property_conversations')
-                    .select('id')
-                    .eq('tenant_id', user.id)
-                    .gt('tenant_unread_count', 0);
-                    
-                if (conversationsError) throw conversationsError;
-                
-                if (conversationsData && conversationsData.length > 0) {
-                    // Mark all conversations as read
-                    for (const conv of conversationsData) {
-                        await supabase.rpc('mark_conversation_messages_read', {
-                            p_conversation_id: conv.id
-                        });
-                    }
-                }
-                
-                // Clear unread count in UI immediately
-                setUnreadMessagesCount(0);
-                
-                // Navigate to chat page with loading overlay
+                // Instead of waiting for the endpoint to respond, just navigate immediately
+                // and let this run in the background
                 router.push('/tenant-dashboard/chat');
                 
-                // Keep loading state for at least 500ms for better UX
+                // In the background, mark messages as read
+                supabase.rpc('mark_tenant_conversations_read', {
+                    tenant_id: user.id
+                }).then(() => {
+                    // Clear unread count in UI 
+                    setUnreadMessagesCount(0);
+                }).catch((error: unknown) => {
+                    console.error('Error marking messages as read:', error);
+                });
+                
+                // Keep loading state for minimal time for better UX
                 setTimeout(() => {
                     setIsNavigating(false);
-                }, 500);
-            } catch (error) {
+                }, 250);
+            } catch (error: unknown) {
                 console.error('Error handling message link click:', error);
                 setIsNavigating(false);
             }
@@ -236,10 +226,10 @@ const Navigation = () => {
             // Just navigate without marking anything as read
             router.push('/tenant-dashboard/chat');
             
-            // Keep loading state for at least 300ms for better UX
+            // Keep loading state for minimal time for better UX
             setTimeout(() => {
                 setIsNavigating(false);
-            }, 300);
+            }, 250);
         }
     };
 
@@ -253,7 +243,7 @@ const Navigation = () => {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            window.location.href = '/login'; // Redirect to login page
+            window.location.href = 'http://localhost:3000/login'; // Update to use full URL
         } catch (err) {
             console.error('Error logging out:', err);
         }
@@ -372,7 +362,7 @@ const Navigation = () => {
                             </Sheet>
                         </div>
                         
-                        <Link href="/" className="group flex items-center">
+                        <Link href="http://localhost:3000/" className="group flex items-center">
                             <span className="text-2xl font-bold tracking-tight transition-colors text-white">
                                 Lakaz<span className="opacity-70">Hub</span>
                             </span>
@@ -388,16 +378,22 @@ const Navigation = () => {
                     {/* Desktop navigation */}
                     <div className="hidden items-center space-x-1 md:flex">
                         <Link 
-                            href="/tenant-dashboard" 
+                            href="http://localhost:3000/tenant-dashboard" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-black hover:bg-white"
                         >
                             <Home className="mr-2 h-4 w-4" />
                             <span>Home</span>
                         </Link>
-                        <button 
-                            onClick={handleMessageLinkClick}
-                            disabled={isNavigating}
-                            className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-black hover:bg-white relative"
+
+                        {/* Optimize message button with prefetch */}
+                        <Link 
+                            href="/tenant-dashboard/chat"
+                            prefetch={true}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleMessageLinkClick();
+                            }}
+                            className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-black hover:bg-white relative cursor-pointer"
                         >
                             {isNavigating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -408,7 +404,7 @@ const Navigation = () => {
                             {unreadMessagesCount > 0 && !isNavigating && (
                                 <div className="absolute top-1 right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
                             )}
-                        </button>
+                        </Link>
 
                         {/* Notifications Dropdown */}
                         <DropdownMenu>
@@ -579,7 +575,7 @@ const Navigation = () => {
             {/* Add full-screen loading overlay during navigation */}
             {isNavigating && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
-                    <div className="animate-spin h-10 w-10 border-4 border-white/30 border-t-white rounded-full mb-4"></div>
+                    <div className="animate-spin h-10 w-10 border-4 border-white/30 border-t-white rounded-full mb-2"></div>
                     <div className="text-white font-medium">Loading messages...</div>
                 </div>
             )}

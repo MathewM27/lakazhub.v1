@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { MessageCircle, Home, Send, RefreshCw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,11 @@ import {
   RealtimePayload
 } from '@/utils/types/chat';
 
-// We're now using the types from our centralized type definitions
+// Create a simple cache for conversations
+const conversationsCache = new Map<string, { data: ConversationWithExtras[], timestamp: number }>();
+
+// Define TTL for cache (5 minutes)
+const CACHE_TTL = 5 * 60 * 1000;
 
 export default function ChatPage() {
   const [selectedConversation, setSelectedConversation] = useState<ConversationWithExtras | null>(null);
@@ -120,352 +124,301 @@ export default function ChatPage() {
     fetchUser();
   }, [toast]);
 
-  // Fetch all conversations
-  useEffect(() => {
+  // Add a new loading state indicator specifically for initial page load
+  const [initialPageLoad, setInitialPageLoad] = useState(true);
+  
+  // Add a state to track if we've prefetched data
+  const [hasPrefetched, setHasPrefetched] = useState(false);
+
+  // Optimize conversation fetching with caching
+  const fetchConversations = useCallback(async () => {
     if (!user?.id) {
       console.log('[CHAT_PAGE] No user ID available, skipping conversation fetch');
       return;
     }
-    console.log('[CHAT_PAGE] User authenticated:', user);
     
-    const fetchConversations = async () => {
-      setLoading(true);
-      console.log('[CHAT_PAGE] Fetching conversations for user:', user?.id);
+    console.log('[CHAT_PAGE] User authenticated:', user);
+    setLoading(true);
+    
+    try {
+      // Check cache first
+      const cacheKey = `conversations-${user.id}`;
+      const cachedData = conversationsCache.get(cacheKey);
+      const now = Date.now();
       
-      try {
-        // Step 1: Get all conversations for the current tenant
-        console.log('[CHAT_PAGE] User ID for query:', user.id);
+      // Use cached data if available and not expired
+      if (cachedData && (now - cachedData.timestamp < CACHE_TTL)) {
+        console.log('[CHAT_PAGE] Using cached conversations data');
+        setConversations(cachedData.data);
+        groupConversationsByLandlord(cachedData.data);
+        setLoading(false);
+        setRefreshing(false);
+        setLastRefreshed(new Date(cachedData.timestamp));
+        setInitialPageLoad(false);
+        return;
+      }
+      
+      // Get current session for auth token
+      const { data: authSession } = await supabase.auth.getSession();
+      if (!authSession.session) {
+        console.error('[CHAT_PAGE] No active session when fetching conversations');
+        throw new Error('No active session');
+      }
+      
+      // First check if the property table has column 'image' or 'images'
+      const { data: propertiesColumns, error: columnsError } = await supabase
+        .from('properties')
+        .select('*')
+        .limit(1);
         
-        // Get current session for auth token
-        const { data: authSession } = await supabase.auth.getSession();
-        if (!authSession.session) {
-          console.error('[CHAT_PAGE] No active session when fetching conversations');
-          throw new Error('No active session');
-        }
-        
-        // Use direct API approach with proper authentication
-        const authHeaders = {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          'Authorization': `Bearer ${authSession.session.access_token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Prefer': 'return=representation'
+      if (columnsError) {
+        console.error('[CHAT_PAGE] Error checking property columns:', columnsError);
+        throw columnsError;
+      }
+      
+      // Determine the image column name from the first property
+      const hasImageColumn = propertiesColumns && propertiesColumns.length > 0 && 
+        (Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') || 
+         Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'images'));
+      
+      // Default to using 'images' if the column can't be determined
+      const imageColumnName = propertiesColumns && propertiesColumns.length > 0 && 
+        Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') ? 'image' : 'images';
+      
+      console.log(`[CHAT_PAGE] Using property image column name: ${imageColumnName}`);
+      
+      // Use a more efficient query approach - get all data in one query
+      // Dynamically construct the query based on the column name
+      const { data, error } = await supabase
+        .from('property_conversations')
+        .select(`
+          id,
+          property_id,
+          tenant_id,
+          landlord_id,
+          last_message_text,
+          last_message_at,
+          tenant_unread_count,
+          messages,
+          properties:property_id (id, name, ${imageColumnName}, location)
+        `)
+        .eq('tenant_id', user.id)
+        .order('last_message_at', { ascending: false });
+      
+      if (error) {
+        console.error('[CHAT_PAGE] Query error details:', error);
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        console.log('[CHAT_PAGE] No conversations found for user:', user.id);
+        setConversations([]);
+        setLandlordGroups([]);
+        setLoading(false);
+        setRefreshing(false);
+        setLastRefreshed(new Date());
+        setInitialPageLoad(false);
+        return;
+      }
+      
+      // Get all unique landlord IDs for a single profile query
+      const landlordIds: string[] = [...new Set((data as { landlord_id: string }[]).map((conv) => conv.landlord_id))];
+      
+      // Get landlord profiles in a single query
+      const { data: landlordsData, error: landlordsError } = await supabase
+        .from('profiles')
+        .select('id, full_name, profile_photo, user_role, email_address')
+        .in('id', landlordIds);
+      
+      if (landlordsError) {
+        console.error('[CHAT_PAGE] Landlord profiles query error:', landlordsError);
+        throw landlordsError;
+      }
+      
+      // Create lookup map for landlords
+      const landlordsMap = landlordsData.reduce((acc: Record<string, any>, landlord: Profile) => {
+        acc[landlord.id] = landlord;
+        return acc;
+      }, {});
+      
+      // Structure the conversations with all necessary data
+      const conversationsWithExtras = data.map((conv: any) => {
+        const property = conv.properties || { 
+          id: conv.property_id,
+          name: 'Unknown Property',
+          location: 'Unknown Location'
         };
         
-        // First, try direct API call
-        // Include messages in the query to get them directly - messages is a JSONB array in the table
-        const conversationsUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/property_conversations?tenant_id=eq.${user.id}&select=*,messages&order=updated_at.desc`;
-        
-        console.log('[CHAT_PAGE] Fetching conversations with URL:', conversationsUrl);
-        
-        let conversationsData: any[] = [];
-        let conversationsError = null;
-        
-        try {
-          const response = await fetch(conversationsUrl, {
-            method: 'GET',
-            headers: authHeaders
-          });
-          
-          if (response.ok) {
-            conversationsData = await response.json();
-            console.log('[CHAT_PAGE] Conversations fetched successfully via direct API:', conversationsData.length);
-          } else {
-            console.error('[CHAT_PAGE] Direct API conversations fetch failed:', response.status, await response.text());
-            
-            // Fall back to regular supabase query
-            // Note: messages is a JSONB array in the property_conversations table, not a separate table
-            const { data, error } = await supabase
-              .from('property_conversations')
-              .select('*')
-              .eq('tenant_id', user.id)
-              .order('updated_at', { ascending: false });
-              
-            if (error) {
-              console.error('[CHAT_PAGE] Fallback conversations query failed:', error);
-              conversationsError = error;
-            } else {
-              conversationsData = data || [];
-              console.log('[CHAT_PAGE] Conversations fetched via fallback:', conversationsData.length);
-            }
-          }
-        } catch (error) {
-          console.error('[CHAT_PAGE] Exception fetching conversations:', error);
-          conversationsError = error as any;
+        // Map the image property correctly based on which column exists
+        if (property && !property.image && property[imageColumnName]) {
+          property.image = property[imageColumnName];
         }
         
-        if (conversationsError) throw conversationsError;
+        const landlord = landlordsMap[conv.landlord_id] || {
+          id: conv.landlord_id,
+          full_name: 'Unknown Landlord'
+        };
         
+        // Get the last message
+        let lastMessage = null;
+        if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
+          // Sort to get the latest message (may already be sorted, but just in case)
+          const sortedMessages = [...conv.messages].sort((a, b) => {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+          lastMessage = sortedMessages[0];
+        }
+        
+        return {
+          ...conv,
+          property,
+          landlord,
+          tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
+          last_message: lastMessage,
+          last_message_time: lastMessage ? formatMessageTime(lastMessage.created_at) : 
+                            conv.last_message_at ? formatMessageTime(conv.last_message_at) : '',
+          unread_count: conv.tenant_unread_count || 0,
+          messages: conv.messages || []
+        };
+      });
+      
+      // Update cache
+      conversationsCache.set(cacheKey, { 
+        data: conversationsWithExtras, 
+        timestamp: now 
+      });
+      
+      setConversations(conversationsWithExtras);
+      groupConversationsByLandlord(conversationsWithExtras);
+    } catch (error: unknown) {
+      console.error('[CHAT_PAGE] Error loading conversations:', error);
+      
+      // Log more detailed error information
+      if (error && typeof error === 'object' && 'message' in error) {
+        console.error('[CHAT_PAGE] Error message:', (error as Error).message);
+      }
+      
+      // Try a fallback approach with simpler queries
+      try {
+        console.log('[CHAT_PAGE] Trying fallback approach...');
+        
+        // First, get the conversations
+        const { data: conversationsData } = await supabase
+          .from('property_conversations')
+          .select('id, property_id, tenant_id, landlord_id, last_message_text, last_message_at, tenant_unread_count, messages')
+          .eq('tenant_id', user.id)
+          .order('last_message_at', { ascending: false });
+          
         if (!conversationsData || conversationsData.length === 0) {
-          console.log('[CHAT_PAGE] No conversations found for user:', user.id);
           setConversations([]);
           setLandlordGroups([]);
-          setLoading(false);
-          setRefreshing(false);
-          setLastRefreshed(new Date());
+          console.log('[CHAT_PAGE] No conversations found in fallback query');
           return;
         }
         
-        console.log('[CHAT_PAGE] Found conversations:', conversationsData);
-        
-        // Step 2: Get all property IDs from conversations
-        const propertyIds = [...new Set(conversationsData.map((conv: any) => conv.property_id))];
-        console.log('[CHAT_PAGE] Property IDs:', propertyIds);
-        
-        // Step 3: Get all landlord IDs from conversations
-        const landlordIds = [...new Set(conversationsData.map((conv: any) => conv.landlord_id))];
-        console.log('[CHAT_PAGE] Landlord IDs:', landlordIds);
-        
-        // Step 4: Fetch all properties in one query
-        const { data: propertiesData, error: propertiesError } = await supabase
+        // Then, get the properties separately
+        const propertyIds: string[] = [...new Set((conversationsData as { property_id: string }[]).map((conv) => conv.property_id))];
+        const { data: propertiesData } = await supabase
           .from('properties')
           .select('*')
           .in('id', propertyIds);
-          
-        if (propertiesError) throw propertiesError;
         
-        // Step 5: Fetch all landlord profiles in one query
-        console.log('[CHAT_PAGE] Fetching landlord profiles for IDs:', landlordIds);
-        
-        // Get current session for auth token - reuse the auth session from above
-        if (!authSession.session) {
-          console.error('[CHAT_PAGE] No active session when fetching landlord profiles');
-          throw new Error('No active session');
-        }
-        
-        // Use direct API call with proper headers to avoid 406 errors
-        const profileHeaders = {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-          'Authorization': `Bearer ${authSession.session.access_token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Prefer': 'return=representation'
-        };
-        
-        // Build the query string for the IN condition - using the proper format for the 'in' operator
-        const profilesUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=id,full_name,profile_photo,user_role,email_address&id=in.(${landlordIds.join(',')})`;
-        
-        console.log('[CHAT_PAGE] Fetching profiles with URL:', profilesUrl);
-        
-        let landlordsData: any[] = [];
-        try {
-          const response = await fetch(profilesUrl, {
-            method: 'GET',
-            headers: profileHeaders
+        // Create properties map
+        const propertiesMap: Record<string, any> = {};
+        if (propertiesData) {
+          propertiesData.forEach((property: any) => {
+            propertiesMap[property.id] = property;
           });
-          
-          if (response.ok) {
-            landlordsData = await response.json();
-            console.log('[CHAT_PAGE] Landlord profiles fetched successfully:', landlordsData.length);
-          } else {
-            console.error('[CHAT_PAGE] Error fetching landlord profiles:', response.status, await response.text());
-            // Fall back to regular supabase query as a backup
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('id, full_name, profile_photo, user_role, email_address')
-              .in('id', landlordIds);
-              
-            if (error) {
-              console.error('[CHAT_PAGE] Fallback profile query failed:', error);
-              throw error;
-            }
-            
-            landlordsData = data || [];
-          }
-        } catch (error) {
-          console.error('[CHAT_PAGE] Exception fetching landlord profiles:', error);
-          throw error;
         }
         
-        // Create lookup maps for faster access
-        const propertiesMap: Record<string, Property> = propertiesData.reduce((acc: Record<string, Property>, property: Property) => {
-          acc[property.id] = property;
-          return acc;
-        }, {});
+        // Get landlord profiles
+        const landlordIds: string[] = [...new Set((conversationsData as { landlord_id: string }[]).map((conv) => conv.landlord_id))];
+        const { data: landlordsData } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_photo, user_role')
+          .in('id', landlordIds);
+          
+        // Create landlords map
+        const landlordsMap: Record<string, any> = {};
+        if (landlordsData) {
+          landlordsData.forEach((landlord: any) => {
+            landlordsMap[landlord.id] = landlord;
+          });
+        }
         
-        const landlordsMap: Record<string, Profile> = landlordsData.reduce((acc: Record<string, Profile>, landlord: Profile) => {
-          acc[landlord.id] = landlord;
-          return acc;
-        }, {});
-        
-        // Step 6: Combine all data
-        // Use Promise.all with async map function
-        const conversationsWithExtras = await Promise.all(conversationsData.map(async (conv: any) => {
+        // Combine data
+        const conversationsWithExtras = conversationsData.map((conv: any) => {
           const property = propertiesMap[conv.property_id] || { 
             id: conv.property_id,
             name: 'Unknown Property',
             location: 'Unknown Location'
           };
           
-          const landlord = landlordsMap[conv.landlord_id] || { 
+          const landlord = landlordsMap[conv.landlord_id] || {
             id: conv.landlord_id,
             full_name: 'Unknown Landlord'
           };
           
-          // Check if we have messages directly in the conversation object
-          console.log('[CHAT_PAGE] Processing conversation:', conv.id);
+          // Handle image property
+          if (property) {
+            property.image = property.image || property.images || null;
+          }
           
-          // Get messages for this conversation
-          console.log('[CHAT_PAGE] Fetching messages for conversation:', conv.id);
-          
-          // Check if conversation has messages directly in the object
+          // Get the last message
+          let lastMessage = null;
           if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
-            console.log('[CHAT_PAGE] Using messages from conversation object:', conv.messages.length);
-            // Sort messages by created_at to get the latest
             const sortedMessages = [...conv.messages].sort((a, b) => {
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
             });
-            
-            // Take the latest message
-            const lastMessage = sortedMessages[0];
-            console.log('[CHAT_PAGE] Using latest message from conversation object:', lastMessage);
-            
-            // Return the conversation with the message data
-            return {
-              ...conv,
-              property,
-              landlord,
-              tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
-              last_message: lastMessage,
-              last_message_time: lastMessage.created_at 
-                ? formatMessageTime(lastMessage.created_at as string) 
-                : conv.last_message_at 
-                  ? formatMessageTime(conv.last_message_at as string) 
-                  : '',
-              unread_count: conv.tenant_unread_count || 0,
-              messages: conv.messages || [] // Include the messages array
-            };
+            lastMessage = sortedMessages[0];
           }
-          
-          // If no messages in conversation object, log it - we shouldn't need to fetch from a separate table
-          // since messages are stored directly in the conversation object as a JSONB array
-          console.log('[CHAT_PAGE] No messages found in conversation JSONB array');
-          
-          // Try regular supabase query first
-          try {
-            const { data } = await supabase
-              .from('messages')
-              .select('*')
-              .eq('conversation_id', conv.id)
-              .order('created_at', { ascending: false })
-              .limit(1);
-              
-            if (data && data.length > 0) {
-              console.log('[CHAT_PAGE] Messages fetched via supabase query:', data.length);
-              return data;
-            }
-            
-            console.log('[CHAT_PAGE] No messages found via supabase query, trying direct API');
-            
-            // If no results, try direct API approach
-            // Use the existing auth session
-            if (!authSession.session) {
-              console.error('[CHAT_PAGE] No active session when fetching messages');
-              return [];
-            }
-            
-            const messageAuthHeaders = {
-              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-              'Authorization': `Bearer ${authSession.session.access_token}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Prefer': 'return=representation'
-            };
-            
-            const messagesUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/messages?conversation_id=eq.${conv.id}&order=created_at.desc&limit=1`;
-            
-            const response = await fetch(messagesUrl, {
-              method: 'GET',
-              headers: authHeaders
-            });
-            
-            if (response.ok) {
-              const apiData = await response.json();
-              console.log('[CHAT_PAGE] Messages fetched via direct API:', apiData.length);
-              return apiData;
-            }
-            
-            console.error('[CHAT_PAGE] Direct API message fetch failed:', response.status);
-            return [];
-          } catch (error) {
-            console.error('[CHAT_PAGE] Error fetching messages:', error);
-            return [];
-          }
-          
-          // At this point, we've tried all approaches to get messages and none worked
-          console.log('[CHAT_PAGE] No messages found for conversation after all attempts:', conv.id);
-          
-          // Create a function to safely format message time
-          const getFormattedTime = () => {
-            if (conv.last_message_at) {
-              return formatMessageTime(conv.last_message_at as string);
-            }
-            return '';
-          };
-          
-          // Log the entire conversation object to debug
-          console.log('[CHAT_PAGE] Full conversation object:', JSON.stringify(conv, null, 2));
           
           return {
             ...conv,
             property,
             landlord,
             tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
-            last_message: null,
-            last_message_time: getFormattedTime(),
+            last_message: lastMessage,
+            last_message_time: lastMessage ? formatMessageTime(lastMessage.created_at) : 
+                              conv.last_message_at ? formatMessageTime(conv.last_message_at) : '',
             unread_count: conv.tenant_unread_count || 0,
-            messages: [] // Empty array since we couldn't find any messages
+            messages: conv.messages || []
           };
-        }));
+        });
         
         setConversations(conversationsWithExtras);
-        
-        // Group conversations by landlord
         groupConversationsByLandlord(conversationsWithExtras);
-      } catch (error: any) {
-        console.error('[CHAT_PAGE] Error loading conversations:', error);
+        console.log('[CHAT_PAGE] Fallback approach succeeded with', conversationsWithExtras.length, 'conversations');
+      } catch (fallbackError) {
+        console.error('[CHAT_PAGE] Fallback approach failed:', fallbackError);
+        
         toast({
           title: "Error loading conversations",
-          description: error.message || "Could not load your conversations",
+          description: error instanceof Error ? error.message : "Could not load your conversations",
         });
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-        setLastRefreshed(new Date());
-        console.log('[CHAT_PAGE] Final state - conversations:', conversations);
-        console.log('[CHAT_PAGE] Final state - landlord groups:', landlordGroups);
       }
-    };
-    
-    fetchConversations();
-    
-    // Subscribe to updates in conversations
-    const conversationsSubscription = supabase
-      .channel('property-conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'property_conversations',
-          filter: `tenant_id=eq.${user.id}`
-        },
-        () => {
-          fetchConversations();
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(conversationsSubscription);
-    };
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLastRefreshed(new Date());
+      setInitialPageLoad(false);
+    }
   }, [user?.id, toast]);
+
+  // Use prefetching to load data earlier
+  useEffect(() => {
+    // Prefetch conversations as soon as we have a user ID
+    if (user?.id && !hasPrefetched) {
+      fetchConversations();
+      setHasPrefetched(true);
+    }
+  }, [user?.id, hasPrefetched, fetchConversations]);
 
   // Group conversations by landlord
   const groupConversationsByLandlord = (convs: ConversationWithExtras[]) => {
     const groups: Record<string, LandlordGroup> = {};
     
-    convs.forEach(conv => {
+    convs.forEach((conv: ConversationWithExtras) => {
       const landlordId = conv.landlord_id;
       
       if (!groups[landlordId]) {
@@ -500,7 +453,36 @@ export default function ChatPage() {
     setLandlordGroups(groupsArray);
   };
 
-  // Fetch messages when a conversation is selected
+  // Optimize subscription handling
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    // Set up a more efficient subscription
+    const conversationsSubscription = supabase
+      .channel('property-conversations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'property_conversations',
+          filter: `tenant_id=eq.${user.id}`
+        },
+        (payload: { new: any; old: any; eventType: string }) => {
+          // Invalidate cache and refetch data on any change
+          const cacheKey = `conversations-${user.id}`;
+          conversationsCache.delete(cacheKey);
+          fetchConversations();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(conversationsSubscription);
+    };
+  }, [user?.id, fetchConversations]);
+
+  // Simplify message fetching when a conversation is selected
   useEffect(() => {
     if (!selectedConversation) {
       setMessages([]);
@@ -510,49 +492,57 @@ export default function ChatPage() {
     // Reset pagination when conversation changes
     setCurrentPage(0);
     setHasMoreMessages(false);
+    setLoading(true);
     
-    const fetchMessages = async () => {
-      setLoading(true);
+    // Messages are already in the conversation object, so use them directly
+    if (selectedConversation.messages && Array.isArray(selectedConversation.messages)) {
+      setMessages(selectedConversation.messages);
+      setHasMoreMessages(false);
       
-      try {
-        // Get the conversation with its messages array
-        const { data, error } = await supabase
-          .from('property_conversations')
-          .select('*')
-          .eq('id', selectedConversation.id)
-          .single();
+      // Mark messages as read
+      supabase.rpc('mark_conversation_messages_read', {
+        p_conversation_id: selectedConversation.id
+      });
+      
+      setLoading(false);
+    } else {
+      // Fallback if messages aren't in the conversation object
+      const fetchMessages = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('property_conversations')
+            .select('messages')
+            .eq('id', selectedConversation.id)
+            .single();
+            
+          if (error) throw error;
           
-        if (error) throw error;
-        
-        if (data && data.messages && Array.isArray(data.messages)) {
-          // Set messages from the JSONB array
-          setMessages(data.messages);
-          
-          // Check if there are more messages to load (for pagination if needed)
-          setHasMoreMessages(false); // No pagination needed with the array approach
-          
-          // Mark messages as read
-          await supabase.rpc('mark_conversation_messages_read', {
-            p_conversation_id: selectedConversation.id
+          if (data && data.messages && Array.isArray(data.messages)) {
+            setMessages(data.messages);
+            
+            // Mark messages as read
+            await supabase.rpc('mark_conversation_messages_read', {
+              p_conversation_id: selectedConversation.id
+            });
+          } else {
+            setMessages([]);
+          }
+        } catch (error: unknown) {
+          toast({
+            title: "Error loading messages",
+            description: error instanceof Error ? error.message : "Could not load messages",
           });
-        } else {
-          setMessages([]);
+        } finally {
+          setLoading(false);
         }
-      } catch (error: any) {
-        toast({
-          title: "Error loading messages",
-          description: error.message || "Could not load messages",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchMessages();
+      };
+      
+      fetchMessages();
+    }
     
     // Subscribe to conversation updates
     const messagesSubscription = supabase
-      .channel(`property-conversations-${selectedConversation.id}`)
+      .channel(`conversation-${selectedConversation.id}`)
       .on(
         'postgres_changes',
         {
@@ -561,7 +551,7 @@ export default function ChatPage() {
           table: 'property_conversations',
           filter: `id=eq.${selectedConversation.id}`
         },
-        (payload: RealtimePayload<Conversation>) => {
+        (payload: { new: any; old: any; eventType: string }) => {
           const updatedConversation = payload.new;
           
           // Update messages if the messages array has changed
@@ -613,10 +603,10 @@ export default function ChatPage() {
       
       // Update current page
       setCurrentPage(nextPage);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error loading more messages",
-        description: error.message || "Could not load older messages",
+        description: error instanceof Error ? error.message : "Could not load older messages",
       });
     } finally {
       setLoadingMoreMessages(false);
@@ -716,6 +706,27 @@ export default function ChatPage() {
   const showChatArea = selectedConversation && (isMobileView || !isMobileView);
   const showConversationList = !selectedConversation || !isMobileView;
 
+  // Optimize the render with a better loading indicator
+  const renderLoadingUI = () => (
+    <div className="w-full h-full flex flex-col">
+      {/* Conversation list skeleton */}
+      <div className="p-4 border-b border-white/10">
+        <div className="h-6 w-32 bg-white/10 rounded animate-pulse"></div>
+      </div>
+      <div className="p-4 space-y-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse"></div>
+            <div className="space-y-2 flex-1">
+              <div className="h-4 w-24 bg-white/10 rounded animate-pulse"></div>
+              <div className="h-3 w-40 bg-white/5 rounded animate-pulse"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Navigation />
@@ -724,7 +735,9 @@ export default function ChatPage() {
           {/* Conversations List */}
           {showConversationList && (
             <div className={`${isMobileView && selectedConversation ? 'hidden' : 'block'} w-full md:w-1/3 lg:w-1/4 bg-black text-white border-r border-white/10`}>
-              {loadingConversation ? (
+              {initialPageLoad ? (
+                renderLoadingUI()
+              ) : loadingConversation ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="animate-spin h-8 w-8 border-4 border-white/30 border-t-transparent rounded-full"></div>
                 </div>
@@ -785,15 +798,11 @@ export default function ChatPage() {
                                   )}
                                   onClick={() => handleConversationClick(conversation)}
                                 >
-                                  {/* Avatar Image */}
+                                  {/* Avatar - Always use text-based avatar */}
                                   <Avatar className="h-8 w-8 border border-white/10 mr-3">
-                                    {conversation.property.image ? (
-                                      <AvatarImage src={conversation.property.image} alt={conversation.property.name} />
-                                    ) : (
-                                      <AvatarFallback className="bg-blue-900 text-white">
-                                        {conversation.property.name.charAt(0)}
-                                      </AvatarFallback>
-                                    )}
+                                    <AvatarFallback className="bg-blue-900 text-white">
+                                      {conversation.property.name.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
                                   </Avatar>
 
                                   <div className="flex-1 min-w-0 overflow-hidden">
@@ -842,19 +851,9 @@ export default function ChatPage() {
                     
                     {selectedConversation && (
                       <div className="flex items-center">
-                        <div className="relative h-10 w-10 rounded-md overflow-hidden mr-3">
-                          {selectedConversation.property.image ? (
-                            <Image
-                              src={selectedConversation.property.image}
-                              alt={selectedConversation.property.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-white/10 flex items-center justify-center">
-                              <Home className="w-6 h-6 text-white/40" />
-                            </div>
-                          )}
+                        {/* Replace Image with div for property avatar */}
+                        <div className="h-10 w-10 rounded-md overflow-hidden mr-3 bg-blue-900 flex items-center justify-center text-white font-medium">
+                          {selectedConversation.property.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <h2 className="font-semibold">{selectedConversation.property.name}</h2>
