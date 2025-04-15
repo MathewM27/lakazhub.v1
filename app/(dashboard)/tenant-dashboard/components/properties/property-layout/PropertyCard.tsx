@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { 
-  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageSquare 
+  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare 
 } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+
 import PropertyDetailModal from '../PropertyDetail';
 import TenantMessage from '../message/messageProperty';
 
@@ -46,6 +48,7 @@ export interface Property {
 interface PropertyCardProps {
   property: Property;
   disableInteractions?: boolean; // New prop to disable interactions for rented properties
+  customBadge?: string;
 }
 
 interface PropertyCarouselProps {
@@ -53,10 +56,11 @@ interface PropertyCarouselProps {
   properties: Property[];
   isVisible?: boolean;
   disableInteractions?: boolean; // New prop to disable interactions for all cards in carousel
+  customBadge?: string;
 }
 
 // Individual Property Card Component
-const PropertyCard = ({ property, disableInteractions = false }: PropertyCardProps) => {
+const PropertyCard = ({ property, disableInteractions = false, customBadge }: PropertyCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -69,6 +73,20 @@ const PropertyCard = ({ property, disableInteractions = false }: PropertyCardPro
   const handleSaveProperty = () => {
     console.log('Property saved to favorites:', property.name);
     // Here you would implement saving to user's favorites
+  };
+
+  // Generate availability badge class
+  const getAvailabilityBadgeClass = (): string => {
+    switch (property.availability) {
+      case 'Available': 
+        return 'bg-green-500/80 hover:bg-green-500/90';
+      case 'Rented':
+        return 'bg-red-500/80 hover:bg-red-500/90';
+      case 'Coming Soon':
+        return 'bg-yellow-500/80 hover:bg-yellow-500/90';
+      default:
+        return 'bg-blue-500/80 hover:bg-blue-500/90';
+    }
   };
 
   return (
@@ -111,6 +129,16 @@ const PropertyCard = ({ property, disableInteractions = false }: PropertyCardPro
           {disableInteractions && (
             <div className="absolute top-3 left-3 bg-red-900/70 backdrop-blur-sm px-3 py-1 rounded-lg text-sm font-medium text-white border border-red-400/20">
               Rented
+            </div>
+          )}
+
+          {/* Custom Badge */}
+          {customBadge && (
+            <div className="absolute top-3 left-3 z-20">
+              <Badge className="bg-blue-700/90 hover:bg-blue-600 text-white px-2 py-0.5 text-[10px] font-medium flex items-center">
+                <MessageCircle className="mr-1 h-3.5 w-3.5" /> 
+                
+              </Badge>
             </div>
           )}
         </div>
@@ -193,7 +221,7 @@ const PropertyCard = ({ property, disableInteractions = false }: PropertyCardPro
 };
 
 // Property Carousel Component
-const PropertyCarousel = ({ title, properties, isVisible = true, disableInteractions = false }: PropertyCarouselProps) => {
+const PropertyCarousel = ({ title, properties, isVisible = true, disableInteractions = false, customBadge }: PropertyCarouselProps) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
   const [isAtEnd, setIsAtEnd] = useState(false); // New state to track if we're at the end
@@ -311,7 +339,7 @@ const PropertyCarousel = ({ title, properties, isVisible = true, disableInteract
                 key={`${property.id || property.name}-${index}`} 
                 className="min-w-[280px] md:min-w-[320px] snap-start"
               >
-                <PropertyCard property={property} disableInteractions={disableInteractions} />
+                <PropertyCard property={property} disableInteractions={disableInteractions} customBadge={customBadge} />
               </div>
             ))
           ) : (

@@ -12,6 +12,7 @@ import Preferences from './Preferences';
 import RecentlyAdded from './RecentlyAdded';
 import AvailableProperties from './AvailableProperties';
 import RentedProperties from './RentedProperties';
+import MessagedProperties from './MessagedProperties'; // Import the new component
 import { Property } from '@/utils/types/property'; 
 import { ImageOff } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const PropertiesSection = () => {
   const [rentedProperties, setRentedProperties] = useState<Property[]>([]);
   const [recentlyAddedProperties, setRecentlyAddedProperties] = useState<Property[]>([]);
   const [preferredProperties, setPreferredProperties] = useState<Property[]>([]);
+  const [messagedProperties, setMessagedProperties] = useState<Property[]>([]); // Add new state for messaged properties
   
   // UI states
   const [loading, setLoading] = useState(true);
@@ -112,6 +114,197 @@ const PropertiesSection = () => {
     }
   };
 
+  // Improved function to fetch messaged properties using cached conversations
+  const fetchMessagedProperties = async (userId: string) => {
+    if (!userId) return;
+    
+    console.log('=== FETCH MESSAGED PROPERTIES ===');
+    console.log('User ID:', userId);
+    
+    try {
+      // First check if we have cached conversations in chat system
+      const CONVERSATIONS_CACHE_KEY = `conversations-${userId}`;
+      let conversationsData = null;
+      
+      try {
+        // Try to get conversations from localStorage first
+        const cachedConversationsData = localStorage.getItem(CONVERSATIONS_CACHE_KEY);
+        if (cachedConversationsData) {
+          const parsedData = JSON.parse(cachedConversationsData);
+          console.log('Found cached conversations data:', parsedData);
+          
+          if (parsedData?.data && Array.isArray(parsedData.data)) {
+            conversationsData = parsedData.data;
+            console.log(`Using ${conversationsData.length} cached conversations`);
+          }
+        } else {
+          console.log('No cached conversations found in localStorage');
+        }
+      } catch (cacheError) {
+        console.error("Error reading cached conversations:", cacheError);
+      }
+      
+      // If no cached conversations, fetch directly from the database
+      if (!conversationsData) {
+        console.log("Fetching conversations from database");
+        const { data, error } = await supabase
+          .from('property_conversations')
+          .select('id, property_id, tenant_id, landlord_id')
+          .eq('tenant_id', userId);
+          
+        if (error) {
+          console.error('Error fetching property conversations:', error);
+          return;
+        }
+        
+        conversationsData = data;
+        console.log(`Fetched ${conversationsData?.length || 0} conversations from database`);
+      }
+      
+      // Log conversations data for debugging
+      if (conversationsData && conversationsData.length > 0) {
+        console.log('Sample conversation data:', conversationsData[0]);
+      }
+      
+      if (!conversationsData || conversationsData.length === 0) {
+        console.log('No conversations found for user');
+        setMessagedProperties([]);
+        return;
+      }
+      
+      // Extract unique property IDs from conversations
+      const propertyIds = [...new Set(
+        conversationsData.map((conv: any) => 
+          conv.property_id || (conv.property && conv.property.id)
+        ).filter(Boolean)
+      )];
+      
+      console.log(`Found ${propertyIds.length} unique property IDs from conversations:`, propertyIds);
+      
+      // If we have no property IDs, return empty array
+      if (propertyIds.length === 0) {
+        console.log('No valid property IDs found in conversations');
+        setMessagedProperties([]);
+        return;
+      }
+      
+      // First try to match with already loaded properties
+      let matchedProperties: Property[] = [];
+      if (allProperties.length > 0) {
+        matchedProperties = allProperties.filter(
+          property => propertyIds.includes(property.id)
+        );
+        
+        console.log(`Matched ${matchedProperties.length} properties with existing data`);
+        if (matchedProperties.length > 0) {
+          console.log('Sample matched property:', {
+            id: matchedProperties[0].id,
+            name: matchedProperties[0].name
+          });
+        }
+      }
+      
+      if (matchedProperties.length > 0) {
+        console.log(`Setting ${matchedProperties.length} messaged properties from already loaded data`);
+        setMessagedProperties(matchedProperties);
+        return;
+      }
+      
+      // If we couldn't match with loaded properties, fetch them separately
+      console.log(`Fetching ${propertyIds.length} properties by IDs`);
+      const { data: propertiesData, error: propertiesError } = await supabase
+        .from('properties')
+        .select('*')
+        .in('id', propertyIds);
+        
+      if (propertiesError) {
+        console.error('Error fetching properties:', propertiesError);
+        return;
+      }
+      
+      if (!propertiesData || propertiesData.length === 0) {
+        console.log('No properties found for the conversations');
+        setMessagedProperties([]);
+        return;
+      }
+      
+      console.log(`Fetched ${propertiesData.length} properties for conversations`);
+      
+      // Transform properties to match our format
+      const transformedProperties = propertiesData.map((item: any) => {
+        // Make sure we have a valid image URL
+        const imageUrl = item.images && item.images.length > 0 
+          ? item.images[0] 
+          : item.image || '/placeholder-property.jpg';
+          
+        return {
+          id: item.id,
+          landlord_id: item.landlord_id,
+          name: item.name || 'Unnamed Property',
+          location: item.location || 'Unknown Location',
+          property_type: item.property_type || 'apartment',
+          bedrooms: item.bedrooms || 0,
+          bathrooms: item.bathrooms || 0,
+          description: item.description || '',
+          monthly_rent: item.monthly_rent || 0,
+          security_deposit: item.security_deposit || 0,
+          utilities: item.utilities || {
+            water: false,
+            electricity: false,
+            internet: false,
+            gas: false,
+            trash: false,
+            cable: false
+          },
+          images: Array.isArray(item.images) ? item.images : ['/placeholder-property.jpg'],
+          image: imageUrl,
+          available: !!item.available,
+          status: item.status as 'active' | 'archived' | 'pending' | 'rented' || 'active',
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          amenities: parseAmenities(item.amenities),
+          rules: item.rules || [],
+          next_available_date: item.next_available_date,
+          availability: getAvailabilityLabel(!!item.available, item.status || ''),
+          imageErrorHandler: (e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = '/placeholder-property.jpg';
+          }
+        };
+      });
+      
+      console.log(`Setting ${transformedProperties.length} messaged properties:`);
+      if (transformedProperties.length > 0) {
+        console.log('First property:', {
+          id: transformedProperties[0].id,
+          name: transformedProperties[0].name,
+          images: transformedProperties[0].images?.length
+        });
+      }
+      
+      setMessagedProperties(transformedProperties);
+      
+    } catch (err) {
+      console.error('Error in fetchMessagedProperties:', err);
+      // Don't break the whole component if this fails
+      setMessagedProperties([]);
+    }
+    console.log('=== END FETCH MESSAGED PROPERTIES ===');
+  };
+
+  // Get the current user
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getCurrentUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserId(data.user.id);
+      }
+    }
+    
+    getCurrentUser();
+  }, []);
+  
   // Extract fetchProperties to a named function to avoid duplication
   const fetchProperties = async (pageNum = 1, refresh = false) => {
     try {
@@ -239,6 +432,11 @@ const PropertiesSection = () => {
         count || 0
       );
       
+      // After loading properties, fetch messaged properties if we have a user ID
+      if (userId && pageNum === 1) {
+        fetchMessagedProperties(userId);
+      }
+      
     } catch (err: any) {
       console.error('Error in fetchProperties:', err);
       setError(err.message || 'Failed to load properties');
@@ -258,7 +456,7 @@ const PropertiesSection = () => {
     
     // 2. Recently Added Properties - available properties from the last 7 days
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 1);
     const recent = properties.filter(p => {
       const createdDate = new Date(p.created_at);
       return createdDate > sevenDaysAgo && p.available === true && p.status === 'active';
@@ -274,6 +472,11 @@ const PropertiesSection = () => {
       .filter(p => p.status === 'rented' || p.available === false)
       .slice(0, MAX_RENTED_PROPERTIES); // Limit to maximum display count
     setRentedProperties(rented);
+    
+    // 5. After processing properties, also refresh messaged properties
+    if (userId) {
+      fetchMessagedProperties(userId);
+    }
     
     setLoading(false);
     setIsLoadingMore(false);
@@ -491,6 +694,45 @@ const PropertiesSection = () => {
     visible: { opacity: 1, transition: { duration: 0.3 } }
   };
 
+  // Add function to refresh messaged properties
+  const refreshMessagedProperties = () => {
+    if (userId) {
+      fetchMessagedProperties(userId);
+    }
+  };
+
+  // Update the useEffect to ensure we call fetchMessagedProperties with userId
+  useEffect(() => {
+    if (userId) {
+      console.log('User ID available, fetching messaged properties');
+      fetchMessagedProperties(userId);
+    }
+  }, [userId]);
+
+  // Also make sure we fetch/refresh messaged properties when all properties change
+  useEffect(() => {
+    if (userId && allProperties.length > 0) {
+      console.log('Properties loaded, checking for messaged properties');
+      fetchMessagedProperties(userId);
+    }
+  }, [allProperties.length, userId]);
+
+  // Add a listener for conversation updates
+  useEffect(() => {
+    const handleConversationUpdate = () => {
+      if (userId) {
+        console.log('Conversation update detected, refreshing messaged properties');
+        fetchMessagedProperties(userId);
+      }
+    };
+    
+    window.addEventListener('conversationUpdated', handleConversationUpdate);
+    
+    return () => {
+      window.removeEventListener('conversationUpdated', handleConversationUpdate);
+    };
+  }, [userId]);
+
   return (
     <section className="py-16 bg-black relative overflow-hidden">
       {/* Background grid pattern */}
@@ -535,8 +777,8 @@ const PropertiesSection = () => {
                   <button 
                     className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-white transition"
                   >
-                    <FiFilter className="h-4 w-4" />
-                    <span className="hidden sm:inline">Filters</span>
+                    <FiFilter className="h-3.5 w-3.5" />
+                    
                     {activeFilterCount > 0 && (
                       <span className="h-5 w-5 flex items-center justify-center bg-white text-black text-xs rounded-full font-medium">
                         {activeFilterCount}
@@ -586,30 +828,7 @@ const PropertiesSection = () => {
             </div>
           </div>
           
-          {/* Results count with improved display */}
-          {!loading && !error && (
-            <div className="mb-8 text-white/70 text-sm flex items-center justify-between">
-              <div>
-                {hasActiveFilters() ? (
-                  <span>
-                    Found <span className="text-white">{preferredProperties.length}</span> matching properties
-                    {allProperties.length < totalCount && " (more may be available)"}
-                  </span>
-                ) : (
-                  <span>
-                    Showing <span className="text-white">{allProperties.length}</span> of <span className="text-white">{totalCount}</span> properties
-                  </span>
-                )}
-              </div>
-              
-              {/* Cache stats in dev mode - remove in production */}
-              {process.env.NODE_ENV === 'development' && cacheStats.size > 0 && (
-                <div className="text-xs text-white/40">
-                  Cache: {cacheStats.size} KB ({cacheStats.properties} properties)  
-                </div>
-              )}
-            </div>
-          )}
+         
           
           {loading && page === 1 ? (
             // Loading skeleton for initial load
@@ -637,17 +856,28 @@ const PropertiesSection = () => {
                 hasActiveFilters={hasActiveFilters()}
                 clearFilters={clearFilters}
               />
-              
+
               <RecentlyAdded 
                 recentlyAddedProperties={recentlyAddedProperties as any} // Type assertion for now
               />
               
+    
               <AvailableProperties 
                 availableProperties={availableProperties as any} // Type assertion for now
               />
+
+               {/* Explicitly check if messagedProperties has length before rendering */}
+               {messagedProperties.length > 0 && (
+                <div className="mt-8">
+                  <MessagedProperties 
+                    messagedProperties={messagedProperties} 
+                    className="mt-4" 
+                  />
+                </div>
+              )}
               
               <RentedProperties 
-                rentedProperties={rentedProperties as any} // Type assertion for now
+                rentedProperties={rentedProperties as any} 
               />
               
               {/* No properties message */}
@@ -688,15 +918,7 @@ const PropertiesSection = () => {
                   </div>
                 </div>
               )}
-              
-              {/* End of results indicator - when there are no more properties to load */}
-              {!hasMore && allProperties.length > 0 && !loading && !isLoadingMore && (
-                <div className="mt-12 text-center">
-                  <div className="inline-block px-4 py-2 rounded-full bg-white/5 text-white/60 text-sm border border-white/10">
-                    You've reached the end of the listings
-                  </div>
-                </div>
-              )}
+             
             </>
           )}
         </motion.div>

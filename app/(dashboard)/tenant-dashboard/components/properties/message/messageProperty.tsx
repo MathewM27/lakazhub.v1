@@ -572,6 +572,22 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         setTimeout(() => {
           refreshMessages();
         }, 500);
+
+        // Update cache for MessagedProperties component
+        try {
+          if (user?.id) {
+            const CONVERSATIONS_CACHE_KEY = `conversations-${user.id}`;
+            localStorage.removeItem(CONVERSATIONS_CACHE_KEY); // Invalidate cache to force refresh
+            
+            // Dispatch a custom event that PropertySelection can listen for
+            const event = new CustomEvent('conversationUpdated', { 
+              detail: { propertyId: property.id } 
+            });
+            window.dispatchEvent(event);
+          }
+        } catch (cacheError) {
+          console.error("Error updating conversations cache:", cacheError);
+        }
       }
       
       // Clear the input

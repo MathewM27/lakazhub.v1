@@ -19,7 +19,7 @@ export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
       {/* Property image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
-          src={property.imageUrl} // Changed from image to imageUrl
+          src={property.imageUrl || '/default-image.jpg'} 
           alt={property.name} // Changed from title to name
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -50,7 +50,7 @@ export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
           
           <div className="flex items-center text-xs text-white/70">
             <Users className="w-3 h-3 mr-1" />
-            <span>Up to {property.area / 30} Guests</span> {/* Using area as approximation for guests since there's no guests field */}
+            <span>Up to {(property.area ?? 0) / 30} Guests</span> {/* Using area as approximation for guests since there's no guests field */}
           </div>
         </div>
         

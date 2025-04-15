@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useAuth } from './auth/AuthHandler';
 import Hero from "./components/layouts/hero-section";
 import { PageWrapper } from "./components/layouts/PageWrapper";
-import Parallax from "./components/layouts/Parallax";
 import PropertiesSection from "./components/properties/PropertySelection";
 import { Footer } from './components/navigation/Footer';
 import Navigation from "./components/navigation/Navbar";
@@ -146,7 +145,6 @@ export default function Home() {
     <PageWrapper>
       <Navigation />
       <Hero />
-      <Parallax />
       <PropertiesSection />
       <PremiumFeatures />
       <Footer />
