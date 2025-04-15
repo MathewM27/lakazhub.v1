@@ -13,6 +13,7 @@ import RecentlyAdded from './RecentlyAdded';
 import AvailableProperties from './AvailableProperties';
 import RentedProperties from './RentedProperties';
 import { Property } from '@/utils/types/property'; 
+import { ImageOff } from 'lucide-react';
 
 // Constants - Modified for better performance
 const CACHE_KEY = 'property_cache';
@@ -162,8 +163,33 @@ const PropertiesSection = () => {
         return;
       }
       
+      // Create a function to handle image errors
+      const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        // Use default fallback image
+        e.currentTarget.src = '/placeholder-property.jpg';
+        // If the fallback also fails, remove the image element and show a div with error icon
+        e.currentTarget.onerror = () => {
+          const parent = e.currentTarget.parentElement;
+          if (parent) {
+            e.currentTarget.style.display = 'none';
+            const fallbackDiv = document.createElement('div');
+            fallbackDiv.className = 'absolute inset-0 bg-gray-900 flex items-center justify-center';
+            fallbackDiv.innerHTML = `
+              <div class="flex flex-col items-center text-white/60">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8 mb-2">
+                  <path d="M2 12s1-3 5-3 5 3 8 3 5-3 5-3"></path>
+                  <line x1="2" y1="20" x2="22" y2="20"></line>
+                </svg>
+                <span class="text-xs">Image unavailable</span>
+              </div>
+            `;
+            parent.appendChild(fallbackDiv);
+          }
+        };
+      };
+
       // Transform database properties to match our Property interface
-      const transformedProperties: Property[] = data.map(item => {
+      const transformedProperties: Property[] = data.map((item: any) => {
         // Get first image or fallback
         const imageUrl = item.images && item.images.length > 0 
           ? item.images[0] 
@@ -188,7 +214,7 @@ const PropertiesSection = () => {
             trash: false,
             cable: false
           },
-          images: item.images || [],
+          images: Array.isArray(item.images) ? item.images : ['/placeholder-property.jpg'], // Ensure this is always a non-empty array
           image: imageUrl,
           available: !!item.available,
           status: item.status as 'active' | 'archived' | 'pending' | 'rented' || 'active',
@@ -197,7 +223,8 @@ const PropertiesSection = () => {
           amenities: parseAmenities(item.amenities),
           rules: item.rules || [],
           next_available_date: item.next_available_date,
-          availability: getAvailabilityLabel(!!item.available, item.status || '')
+          availability: getAvailabilityLabel(!!item.available, item.status || ''),
+          imageErrorHandler: handleImageError
         };
       });
       
@@ -606,21 +633,21 @@ const PropertiesSection = () => {
             // Property sections with improved styling
             <>
               <Preferences 
-                preferredProperties={preferredProperties}
+                preferredProperties={preferredProperties as any} // Type assertion for now
                 hasActiveFilters={hasActiveFilters()}
                 clearFilters={clearFilters}
               />
               
               <RecentlyAdded 
-                recentlyAddedProperties={recentlyAddedProperties}
+                recentlyAddedProperties={recentlyAddedProperties as any} // Type assertion for now
               />
               
               <AvailableProperties 
-                availableProperties={availableProperties}
+                availableProperties={availableProperties as any} // Type assertion for now
               />
               
               <RentedProperties 
-                rentedProperties={rentedProperties}
+                rentedProperties={rentedProperties as any} // Type assertion for now
               />
               
               {/* No properties message */}

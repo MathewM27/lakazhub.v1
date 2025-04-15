@@ -1,9 +1,75 @@
 'use client'; // Keep client directive as we need interactivity for the slider
 
 import { useState, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Home, MapPin, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, MapPin, Star, ImageOff } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../../ui/property-card';
+import Image from 'next/image';
+
+// Create a component for handling image errors with proper TypeScript types
+interface ImageWithFallbackProps {
+  src: string;
+  alt: string;
+  className?: string;
+  [key: string]: any; // For any other props that might be passed
+}
+
+const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ src, alt, className, ...rest }) => {
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2;
+
+  const handleError = () => {
+    if (retryCount < maxRetries) {
+      // Retry loading the image a limited number of times
+      setRetryCount(prev => prev + 1);
+      setError(false);
+      // Add a small delay before retry
+      setTimeout(() => {
+        const timestamp = new Date().getTime();
+        // Append timestamp to bypass cache
+        const imgElement = document.createElement('img');
+        imgElement.src = `${src}?retry=${timestamp}`;
+      }, 500);
+    } else {
+      // After max retries, show fallback
+      setError(true);
+      setLoading(false);
+    }
+  };
+
+  if (error) {
+    // Render fallback UI instead of the image
+    return (
+      <div 
+        className={`flex items-center justify-center bg-gray-900 ${className || ''}`}
+        {...rest}
+      >
+        <div className="flex flex-col items-center text-white/60">
+          <ImageOff className="w-8 h-8 mb-2" />
+          <span className="text-xs">Image unavailable</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {loading && (
+        <div className={`absolute inset-0 bg-gray-900 animate-pulse ${className || ''}`} />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        onError={handleError}
+        onLoad={() => setLoading(false)}
+        {...rest}
+      />
+    </>
+  );
+};
 
 export const PropertySlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -122,9 +188,12 @@ export const PropertySlider = () => {
                       className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300"
                       onClick={handlePropertyClick}
                     >
+                      {/* Pass the property without the custom ImageComponent */}
                       <PropertyCard
                         property={property}
                         onClick={handlePropertyClick}
+                        // Pass the ImageWithFallback component as a separate prop if needed
+                        fallbackImage={ImageWithFallback}
                       />
                     </div>
                   </div>

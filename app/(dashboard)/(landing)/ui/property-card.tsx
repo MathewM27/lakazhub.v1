@@ -4,19 +4,46 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Property } from '@/utils/types/property';
 import { Bed, Bath, Square, Home } from 'lucide-react';
+import React from 'react';
 
-interface PropertyCardProps {
+export interface PropertyCardProps {
   property: Property;
   onClick?: () => void;
+  fallbackImage?: React.ComponentType<any>; // Add prop to accept a custom image component
 }
 
-export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, fallbackImage: FallbackImage }) => {
   const truncateString = (str: string, numWords: number) => {
     const words = str.split(' ');
     if (words.length > numWords) {
       return words.slice(0, numWords).join(' ') + '...';
     }
     return str;
+  };
+
+  const renderImage = () => {
+    if (FallbackImage) {
+      return (
+        <FallbackImage 
+          src={property.image}
+          alt={property.name}
+          className="w-full h-48 object-cover rounded-t-lg"
+        />
+      );
+    }
+    
+    // Default image rendering
+    return (
+      <img
+        src={property.image}
+        alt={property.name}
+        className="w-full h-48 object-cover rounded-t-lg"
+        onError={(e) => {
+          // Simple fallback
+          e.currentTarget.src = '/placeholder-property.jpg';
+        }}
+      />
+    );
   };
 
   return (
@@ -90,7 +117,7 @@ export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
           <div className="text-right">
             <div className="bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
               <p className="text-white font-bold">
-                Rs {property.price.toLocaleString()}
+                Rs {(property.price || property.monthly_rent || 0).toLocaleString()}
               </p>
               <p className="text-white/60 text-xs">per month</p>
             </div>
