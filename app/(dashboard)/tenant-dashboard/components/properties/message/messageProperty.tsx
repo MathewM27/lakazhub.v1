@@ -791,6 +791,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
               <span className="text-xs hidden sm:inline">{refreshStatusInfo.text}</span>
             </Button>
             
+            {/* Debug button - commented out for production
             <Button
               variant="outline"
               size="sm"
@@ -808,7 +809,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
                     Promise.resolve(
                       supabase
                         .from('property_conversations')
-                        .select<'id, messages', { id: string; messages: Message[] }>('id, messages')
+                        .select('id, messages')
                         .eq('id', conversation.id)
                         .single()
                     )
@@ -823,6 +824,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
             >
               Debug
             </Button>
+            */}
 
             <Button
               variant="ghost"
