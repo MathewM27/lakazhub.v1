@@ -43,22 +43,22 @@ function getSupabaseClient() {
 }
 
 // Log Supabase configuration for debugging
-console.log('[SUPABASE_CLIENT] Initialized with URL:', supabaseUrl ? 'URL defined' : 'URL missing');
-console.log('[SUPABASE_CLIENT] Anon key available:', !!supabaseAnonKey);
+// console.log('[SUPABASE_CLIENT] Initialized with URL:', supabaseUrl ? 'URL defined' : 'URL missing');
+// console.log('[SUPABASE_CLIENT] Anon key available:', !!supabaseAnonKey);
 
 // User-related functions
 export async function getUserProfile(userId: string) {
   if (!supabase) {
-    console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+    // console.error('[SUPABASE_CLIENT] Supabase client not initialized');
     return null;
   }
   
   try {
-    console.log('[SUPABASE_CLIENT] Fetching profile for user ID:', userId);
+    // console.log('[SUPABASE_CLIENT] Fetching profile for user ID:', userId);
     
     // First check if the user is authenticated
     const { data: sessionData } = await supabase.auth.getSession();
-    console.log('[SUPABASE_CLIENT] Current session exists:', !!sessionData.session);
+    // console.log('[SUPABASE_CLIENT] Current session exists:', !!sessionData.session);
     
     // Make the request with explicit headers
     const { data, error } = await supabase
@@ -70,7 +70,7 @@ export async function getUserProfile(userId: string) {
     if (error) {
       // Check if this is a "no rows" error - this is actually expected for new users
       if (error.code === 'PGRST116') {
-        console.log('[SUPABASE_CLIENT] No profile found for user:', userId);
+        // console.log('[SUPABASE_CLIENT] No profile found for user:', userId);
         return null; // Return null instead of throwing an error
       }
       
@@ -78,7 +78,7 @@ export async function getUserProfile(userId: string) {
       
       // If we got a 406 error, try a different approach
       if (error.code === '406') {
-        console.log('[SUPABASE_CLIENT] Received 406 error, trying alternative approach');
+        // console.log('[SUPABASE_CLIENT] Received 406 error, trying alternative approach');
         
         // Try a raw fetch with explicit headers as a fallback
         try {
@@ -95,13 +95,13 @@ export async function getUserProfile(userId: string) {
           
           if (response.ok) {
             const profileData = await response.json();
-            console.log('[SUPABASE_CLIENT] Alternative fetch succeeded:', profileData);
+            // console.log('[SUPABASE_CLIENT] Alternative fetch succeeded:', profileData);
             return profileData[0] || null;
           } else {
-            console.error('[SUPABASE_CLIENT] Alternative fetch failed:', response.status, response.statusText);
+            // console.error('[SUPABASE_CLIENT] Alternative fetch failed:', response.status, response.statusText);
           }
         } catch (altError) {
-          console.error('[SUPABASE_CLIENT] Alternative fetch error:', altError);
+          // console.error('[SUPABASE_CLIENT] Alternative fetch error:', altError);
         }
       }
       
@@ -109,7 +109,7 @@ export async function getUserProfile(userId: string) {
       return null;
     }
     
-    console.log('[SUPABASE_CLIENT] Profile fetched successfully:', data ? 'data exists' : 'data is null');
+    // console.log('[SUPABASE_CLIENT] Profile fetched successfully:', data ? 'data exists' : 'data is null');
     return data;
   } catch (error) {
     // If we're offline, return null instead of continuously retrying
@@ -119,19 +119,19 @@ export async function getUserProfile(userId: string) {
        error.message.includes('network'))) {
       return null;
     }
-    console.error('[SUPABASE_CLIENT] Unexpected error in getUserProfile:', error);
+    // console.error('[SUPABASE_CLIENT] Unexpected error in getUserProfile:', error);
     return null; // Return null instead of throwing to prevent cascading errors
   }
 }
 
 export async function createUserProfile(profileData: Partial<UserProfile> & { email?: string }) {
   if (!supabase) {
-    console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+    // console.error('[SUPABASE_CLIENT] Supabase client not initialized');
     return null;
   }
   
   try {
-    console.log('[SUPABASE_CLIENT] Creating user profile with data:', profileData);
+    // console.log('[SUPABASE_CLIENT] Creating user profile with data:', profileData);
     
     // Create a data object that matches your actual database schema
     const cleanedData = {
@@ -143,8 +143,8 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
       phone_number: profileData.phone_number || null
     };
     
-    console.log('[SUPABASE_CLIENT] Cleaned profile data:', cleanedData);
-    console.log('[SUPABASE_CLIENT] User role being set:', cleanedData.user_role);
+    // console.log('[SUPABASE_CLIENT] Cleaned profile data:', cleanedData);
+    // console.log('[SUPABASE_CLIENT] User role being set:', cleanedData.user_role);
     
     // First check if profile already exists to avoid duplicate key errors
     const { data: existingProfile, error: checkError } = await supabase
@@ -154,11 +154,11 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
       .single();
       
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('[SUPABASE_CLIENT] Error checking existing profile:', JSON.stringify(checkError));
+      // console.error('[SUPABASE_CLIENT] Error checking existing profile:', JSON.stringify(checkError));
     }
       
     if (existingProfile) {
-      console.log('[SUPABASE_CLIENT] Profile already exists, updating instead of creating');
+      // console.log('[SUPABASE_CLIENT] Profile already exists, updating instead of creating');
       const { data, error } = await supabase
         .from('profiles')
         .update(cleanedData)
@@ -166,12 +166,12 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
         .select();
         
       if (error) {
-        console.error('[SUPABASE_CLIENT] Error updating user profile:', JSON.stringify(error));
+        // console.error('[SUPABASE_CLIENT] Error updating user profile:', JSON.stringify(error));
         
         // Try alternative approach with raw fetch if we get a 406 error
         if (error.code === '406') {
           try {
-            console.log('[SUPABASE_CLIENT] Trying alternative update approach');
+            // console.log('[SUPABASE_CLIENT] Trying alternative update approach');
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${profileData.id}`, {
               method: 'PATCH',
               headers: {
@@ -186,34 +186,34 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
             
             if (response.ok) {
               const updatedData = await response.json();
-              console.log('[SUPABASE_CLIENT] Alternative update succeeded:', updatedData);
+              // console.log('[SUPABASE_CLIENT] Alternative update succeeded:', updatedData);
               return updatedData[0] || null;
             }
           } catch (altError) {
-            console.error('[SUPABASE_CLIENT] Alternative update failed:', altError);
+            // console.error('[SUPABASE_CLIENT] Alternative update failed:', altError);
           }
         }
         
         return null;
       }
       
-      console.log('[SUPABASE_CLIENT] Profile updated successfully:', data ? 'data exists' : 'data is null');
+      // console.log('[SUPABASE_CLIENT] Profile updated successfully:', data ? 'data exists' : 'data is null');
       return data?.[0] || null;
     } else {
       // Create a new profile
-      console.log('[SUPABASE_CLIENT] Creating new profile');
+      // console.log('[SUPABASE_CLIENT] Creating new profile');
       const { data, error } = await supabase
         .from('profiles')
         .insert(cleanedData)
         .select();
         
       if (error) {
-        console.error('[SUPABASE_CLIENT] Error creating user profile:', JSON.stringify(error));
+        // console.error('[SUPABASE_CLIENT] Error creating user profile:', JSON.stringify(error));
         
         // Try alternative approach with raw fetch if we get a 406 error
         if (error.code === '406') {
           try {
-            console.log('[SUPABASE_CLIENT] Trying alternative insert approach');
+            // console.log('[SUPABASE_CLIENT] Trying alternative insert approach');
             const response = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
               method: 'POST',
               headers: {
@@ -228,35 +228,35 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
             
             if (response.ok) {
               const insertedData = await response.json();
-              console.log('[SUPABASE_CLIENT] Alternative insert succeeded:', insertedData);
+              // console.log('[SUPABASE_CLIENT] Alternative insert succeeded:', insertedData);
               return insertedData[0] || null;
             }
           } catch (altError) {
-            console.error('[SUPABASE_CLIENT] Alternative insert failed:', altError);
+            // console.error('[SUPABASE_CLIENT] Alternative insert failed:', altError);
           }
         }
         
         return null;
       }
       
-      console.log('[SUPABASE_CLIENT] Profile created successfully:', data ? 'data exists' : 'data is null');
+      // console.log('[SUPABASE_CLIENT] Profile created successfully:', data ? 'data exists' : 'data is null');
       return data?.[0] || null;
     }
   } catch (error) {
-    console.error('[SUPABASE_CLIENT] Unexpected error in createUserProfile:', error);
+    // console.error('[SUPABASE_CLIENT] Unexpected error in createUserProfile:', error);
     return null; // Return null instead of throwing to prevent cascading errors
   }
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
   if (!supabase) {
-    console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+    // console.error('[SUPABASE_CLIENT] Supabase client not initialized');
     return null;
   }
   
   try {
-    console.log('[SUPABASE_CLIENT] Updating profile for user ID:', userId);
-    console.log('[SUPABASE_CLIENT] Update data:', updates);
+    // console.log('[SUPABASE_CLIENT] Updating profile for user ID:', userId);
+    // console.log('[SUPABASE_CLIENT] Update data:', updates);
     
     const { data, error } = await supabase
       .from('profiles')
@@ -265,14 +265,14 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
       .select();
       
     if (error) {
-      console.error('[SUPABASE_CLIENT] Error updating user profile:', JSON.stringify(error));
+      // console.error('[SUPABASE_CLIENT] Error updating user profile:', JSON.stringify(error));
       return null;
     }
     
-    console.log('[SUPABASE_CLIENT] Profile updated successfully:', data ? 'data exists' : 'data is null');
+    // console.log('[SUPABASE_CLIENT] Profile updated successfully:', data ? 'data exists' : 'data is null');
     return data?.[0] || null;
   } catch (error) {
-    console.error('[SUPABASE_CLIENT] Unexpected error in updateUserProfile:', error);
+    // console.error('[SUPABASE_CLIENT] Unexpected error in updateUserProfile:', error);
     return null; // Return null instead of throwing to prevent cascading errors
   }
 }
@@ -281,7 +281,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 export async function checkAuthStatus() {
   if (!supabase) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[SUPABASE_CLIENT] Supabase client not initialized');
+      // console.error('[SUPABASE_CLIENT] Supabase client not initialized');
     }
     return { authenticated: false, user: null, error: 'Client not initialized' };
   }
@@ -309,7 +309,7 @@ export async function checkAuthStatus() {
     
     if (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[SUPABASE_CLIENT] Error checking auth status:', error);
+        // console.error('[SUPABASE_CLIENT] Error checking auth status:', error);
       }
       return { authenticated: false, user: null, error: error.message };
     }
@@ -327,7 +327,7 @@ export async function checkAuthStatus() {
     return result;
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[SUPABASE_CLIENT] Unexpected error in checkAuthStatus:', error);
+      // console.error('[SUPABASE_CLIENT] Unexpected error in checkAuthStatus:', error);
     }
     return { authenticated: false, user: null, error: String(error) };
   }
@@ -345,7 +345,7 @@ export async function validateUserRole(userId: string, requiredRole: string) {
     return !!profile && profile.user_role === requiredRole;
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[SUPABASE_CLIENT] Error validating user role:', error);
+      // console.error('[SUPABASE_CLIENT] Error validating user role:', error);
     }
     return false;
   }

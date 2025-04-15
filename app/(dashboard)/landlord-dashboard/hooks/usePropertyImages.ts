@@ -106,8 +106,6 @@ import { useCallback } from 'react';
 export function usePropertyImages(propertyId: string) {
   // Function to get optimized URL for images
   const getOptimizedUrl = useCallback((imageUrl: string) => {
-    console.log(`Getting optimized URL for: ${imageUrl}`);
-    
     // If the URL is already optimized or is a relative path, return it as is
     if (!imageUrl || imageUrl.startsWith('/')) {
       return imageUrl;
@@ -115,7 +113,6 @@ export function usePropertyImages(propertyId: string) {
 
     // Log if the URL is a blob URL (usually from local file preview)
     if (imageUrl.startsWith('blob:')) {
-      console.log(`Blob URL detected, cannot optimize: ${imageUrl}`);
       return imageUrl;
     }
 

@@ -2,24 +2,24 @@ import * as Sentry from '@sentry/nextjs';
 
 // Consistent development logging
 export const logDebug = (prefix: string, message: string, data?: unknown) => {
-  if (process.env.NODE_ENV === 'development') {
+  /* if (process.env.NODE_ENV === 'development') {
     if (data !== undefined) {
       console.log(`[${prefix}] ${message}`, data);
     } else {
       console.log(`[${prefix}] ${message}`);
     }
-  }
+  } */
 };
 
 // Unified error logging with Sentry integration
 export const logError = (prefix: string, message: string, error?: any) => {
-  if (process.env.NODE_ENV === 'development') {
+  /* if (process.env.NODE_ENV === 'development') {
     if (error !== undefined) {
       console.error(`[${prefix}] ${message}`, error);
     } else {
       console.error(`[${prefix}] ${message}`);
     }
-  }
+  } */
   
   // Report errors to Sentry in all environments
   if (error) {

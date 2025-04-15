@@ -169,12 +169,10 @@ export default function NotificationsModal({
   // Function to fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId: string, page = 0, pageSize = 20) => {
     if (!user?.id) {
-      console.log('Cannot fetch messages: No user ID available');
       return [];
     }
     
     try {
-      console.log(`Fetching messages for conversation ${conversationId}, page ${page}, size ${pageSize}`);
       
       // Check cache first
       if (property?.id) {
@@ -182,7 +180,6 @@ export default function NotificationsModal({
         const cachedData = messagesCache.get(cacheKey);
         
         if (cachedData?.messages?.[conversationId]) {
-          console.log('Using cached messages for conversation:', conversationId);
           return cachedData.messages[conversationId];
         }
       }
@@ -195,11 +192,6 @@ export default function NotificationsModal({
       });
       
       if (error) {
-        console.error('Error fetching messages:', error);
-        console.error('Error details:', JSON.stringify(error));
-        
-        // Fallback: Try to fetch messages directly from the conversation record
-        console.log('Falling back to direct query for messages');
         
         const { data: convData, error: convError } = await supabase
           .from('property_conversations')
@@ -208,12 +200,10 @@ export default function NotificationsModal({
           .single();
           
         if (convError) {
-          console.error('Error fetching conversation:', convError);
           throw new Error(`Failed to fetch messages: ${convError.message || 'Unknown error'}`);
         }
         
         if (!convData || !convData.messages || !Array.isArray(convData.messages)) {
-          console.log('No messages found in conversation');
           return [];
         }
         
@@ -230,12 +220,9 @@ export default function NotificationsModal({
         return formatMessagesForUI(paginatedMessages);
       }
       
-      console.log(`Fetched ${data.length} messages for conversation ${conversationId}`);
-      
       // Format the messages for UI display
       return formatMessagesForUI(data);
     } catch (error) {
-      console.error("Error fetching messages:", error);
       toast({
         title: "Error loading messages",
         description: "Could not load conversation messages",
@@ -250,7 +237,6 @@ export default function NotificationsModal({
     if (!selectedTenant || !selectedTenant.hasMoreMessages) return;
     
     const nextPage = (selectedTenant.currentPage || 0) + 1;
-    console.log(`Loading more messages, page ${nextPage}`);
     
     try {
       const moreMessages = await fetchMessages(selectedTenant.id, nextPage, 20);
@@ -273,7 +259,6 @@ export default function NotificationsModal({
         };
       });
     } catch (error) {
-      console.error('Error loading more messages:', error);
     }
   }, [selectedTenant, fetchMessages]);
 
@@ -554,30 +539,20 @@ export default function NotificationsModal({
   // Function to fetch conversations - now extracted as its own function
   const fetchConversations = useCallback(async (targetConversationId?: string) => {
     if (!user?.id) {
-      console.log("Cannot fetch conversations: No user ID available");
       return;
     }
 
     setLoading(true);
 
     try {
-      console.log("Fetching conversations for user:", user.id);
-      // Fetch conversations using the `get_user_conversations` RPC function
-      // If property is provided, filter conversations by that property
       let conversationsData;
       
       if (property?.id) {
-        console.log("Fetching conversations for property:", property.id);
-        // Use property_id filter when a specific property is selected
         const { data, error } = await supabase.rpc("get_user_conversations_by_property", {
           property_id_param: property.id
         });
         
         if (error) {
-          console.error("RPC error details:", JSON.stringify(error));
-          
-          // Fallback: Try to query the database directly
-          console.log("Falling back to direct database query for conversations");
           
           const { data: directData, error: directError } = await supabase
             .from("property_conversations")
@@ -585,7 +560,6 @@ export default function NotificationsModal({
             .eq("property_id", property.id);
             
           if (directError) {
-            console.error("Error with direct query:", directError);
             throw new Error(`Error fetching property conversations: ${error.message || "Unknown error"}`);
           }
           
@@ -594,22 +568,15 @@ export default function NotificationsModal({
           conversationsData = data;
         }
       } else {
-        console.log("Fetching all landlord conversations");
-        // Fetch all conversations if no property is specified
         const { data, error } = await supabase.rpc("get_user_conversations");
         
         if (error) {
-          console.error("RPC error details:", JSON.stringify(error));
-          
-          // Fallback: Try to query the database directly
-          console.log("Falling back to direct database query for all conversations");
           
           const { data: directData, error: directError } = await supabase
             .from("property_conversations")
             .select("*");
             
           if (directError) {
-            console.error("Error with direct query:", directError);
             throw new Error(`Error fetching all conversations: ${error.message || "Unknown error"}`);
           }
           
@@ -619,7 +586,6 @@ export default function NotificationsModal({
         }
       }
 
-      console.log("Conversations data:", conversationsData);
       if (!conversationsData || conversationsData.length === 0) {
         setTenants([]);
         setLoading(false);
@@ -700,7 +666,6 @@ export default function NotificationsModal({
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Error refreshing data:", error);
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -748,7 +713,6 @@ export default function NotificationsModal({
       }, 3000)
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Error refreshing data:", error);
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -814,11 +778,8 @@ export default function NotificationsModal({
       });
 
       if (error) {
-        console.error("Error sending message:", error);
-        console.error("Error details:", JSON.stringify(error));
         
         // Try fallback approach: directly update the conversation's messages array
-        console.log("Falling back to direct update for sending message");
         
         // Create a new message object
         const messageObj = {
@@ -891,7 +852,6 @@ export default function NotificationsModal({
       setLastRefreshAt(new Date());
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Error refreshing data:", error);
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -955,7 +915,6 @@ export default function NotificationsModal({
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("Error refreshing data:", error);
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -997,15 +956,12 @@ export default function NotificationsModal({
   // Function to mark messages as read
   const markMessagesAsRead = useCallback(async (conversationId: string) => {
     if (!user?.id) {
-      console.log('Cannot mark messages as read: No user ID available');
       return;
     }
     
     try {
-      console.log('Marking messages as read for conversation:', conversationId, 'user:', user.id);
       
       // Skip checking for RPC functions since we know it's failing
-      console.log('Using direct database update for marking messages as read');
       
       // Update the conversation directly in the database
       const { error: updateError } = await supabase
@@ -1014,11 +970,9 @@ export default function NotificationsModal({
         .eq('id', conversationId);
         
       if (updateError) {
-        console.error('Error updating conversation read status:', updateError);
         return;
       }
       
-      console.log('Successfully marked messages as read via direct update');
       
       // Update the UI to reflect the changes
       setTenants(prev => 
@@ -1065,18 +1019,15 @@ export default function NotificationsModal({
       }
       
     } catch (error) {
-      console.error('Error in markMessagesAsRead:', error);
     }
   }, [user?.id, property?.id, formatMessageTime, formatMessagesForUI, toast]);
 
   // When modal is opened with initialConversationId, mark those messages as read
   useEffect(() => {
     if (open && user?.id) {
-      console.log('Modal opened with initialConversationId:', initialConversationId);
       
       // If initialConversationId is provided, mark that conversation as read immediately
       if (initialConversationId) {
-        console.log('Marking messages as read for conversation:', initialConversationId);
         markMessagesAsRead(initialConversationId);
       }
     }
@@ -1106,7 +1057,6 @@ export default function NotificationsModal({
     
     // Save to cache
     messagesCache.set(cacheKey, updatedCache);
-    console.log('Updated messages cache for conversation:', conversationId);
   }, [property?.id, user?.id]);
 
   // Handle selecting a tenant

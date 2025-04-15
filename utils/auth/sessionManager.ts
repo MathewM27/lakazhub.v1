@@ -60,7 +60,7 @@ export class SessionManager {
     
     // If already expired or will expire very soon, call expiration handler immediately
     if (timeUntilExpiry <= REFRESH_BUFFER_SECONDS * 1000) {
-      logDebug(PREFIX, 'Session expired or expiring very soon');
+      // logDebug(PREFIX, 'Session expired or expiring very soon');
       this.refreshSession();
       return;
     }
@@ -68,7 +68,7 @@ export class SessionManager {
     // Schedule refresh for 5 minutes before expiration
     const refreshTime = timeUntilExpiry - (REFRESH_BUFFER_SECONDS * 1000);
     
-    logDebug(PREFIX, `Scheduling token refresh in ${Math.floor(refreshTime / 60000)} minutes`);
+    // logDebug(PREFIX, `Scheduling token refresh in ${Math.floor(refreshTime / 60000)} minutes`);
     
     this.refreshTimeout = setTimeout(() => {
       this.refreshSession();
@@ -80,7 +80,7 @@ export class SessionManager {
    */
   private async refreshSession(): Promise<void> {
     try {
-      logDebug(PREFIX, 'Attempting to refresh session');
+      // logDebug(PREFIX, 'Attempting to refresh session');
       
       const { data, error } = await this.client.auth.refreshSession();
       
@@ -101,12 +101,12 @@ export class SessionManager {
       }
       
       if (data?.session) {
-        logDebug(PREFIX, 'Session refreshed successfully');
+        // logDebug(PREFIX, 'Session refreshed successfully');
         
         // Schedule the next refresh
         this.scheduleRefresh(data.session);
       } else {
-        logDebug(PREFIX, 'No session returned after refresh');
+        // logDebug(PREFIX, 'No session returned after refresh');
         this.onSessionExpired();
       }
     } catch (err) {

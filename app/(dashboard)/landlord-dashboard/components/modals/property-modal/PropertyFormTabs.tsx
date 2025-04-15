@@ -84,8 +84,9 @@ export default function PropertyFormTabs({
     try {
       setUploadingImages(true)
       
-      console.log('Starting property submission process');
-      console.log('Form data:', JSON.stringify(formData, null, 2));
+      // Comment out console logs
+      // console.log('Starting property submission process');
+      // console.log('Form data:', JSON.stringify(formData, null, 2));
       
       // Fix: We need to treat the images differently since JSON.stringify doesn't handle File objects properly
       // The images are showing up as empty objects in the logs but they are valid File objects
@@ -96,20 +97,23 @@ export default function PropertyFormTabs({
           type: img.type
         }));
       
-      console.log(`Found ${imagesToUpload.length} images to upload`, 
-        imagesToUpload.map(img => `${img.type}: ${(img.file as File).name}`));
+      // Comment out console logs
+      // console.log(`Found ${imagesToUpload.length} images to upload`, 
+      //   imagesToUpload.map(img => `${img.type}: ${(img.file as File).name}`));
       
       // Get existing image URLs that don't need uploading
       const existingImageUrls = formData.images
         .filter(img => img.url && typeof img.url === 'string' && img.url.startsWith('http'))
         .map(img => img.url as string);
       
-      console.log(`Existing image URLs: ${existingImageUrls.length}`);
+      // Comment out console logs
+      // console.log(`Existing image URLs: ${existingImageUrls.length}`);
       
       // If we have new images to upload
       let uploadedImageUrls: string[] = [];
       if (imagesToUpload.length > 0) {
-        console.log('Preparing to upload new images');
+        // Comment out console logs
+        // console.log('Preparing to upload new images');
         
         // Fix: Create a proper mapping of image types to files
         const imagesByType: Record<string, File[]> = {};
@@ -129,15 +133,16 @@ export default function PropertyFormTabs({
           }
         });
         
-        console.log('Images grouped by room type:', 
-          Object.entries(imagesByType).map(([type, files]) => 
-            `${type}: ${files.length} files ${files.length > 0 ? `(${files[0]?.name || 'unnamed'})` : ''}`
-          )
-        );
+        // Comment out console logs
+        // console.log('Images grouped by room type:', 
+        //   Object.entries(imagesByType).map(([type, files]) => 
+        //     `${type}: ${files.length} files ${files.length > 0 ? `(${files[0]?.name || 'unnamed'})` : ''}`
+        //   )
+        // );
         
         // Generate a property ID for storage
         const propertyId = property?.id || `new-property-${Date.now()}`;
-        console.log(`Using property ID for storage: ${propertyId}`);
+        // console.log(`Using property ID for storage: ${propertyId}`);
         
         // Upload each group of images
         for (const [roomType, files] of Object.entries(imagesByType)) {
@@ -146,8 +151,9 @@ export default function PropertyFormTabs({
               // Update progress
               setUploadProgress(prev => prev + 10);
               
-              console.log(`Uploading ${files.length} files for room type: ${roomType}`);
-              console.log('File objects:', files.map(f => `${f.name} (${f.size} bytes)`));
+              // Comment out console logs
+              // console.log(`Uploading ${files.length} files for room type: ${roomType}`);
+              // console.log('File objects:', files.map(f => `${f.name} (${f.size} bytes)`));
               
               // Import ImageStorage here to ensure it's available
               const { ImageStorage } = await import('../../../lib/utils/imageStorage');
@@ -165,10 +171,12 @@ export default function PropertyFormTabs({
                 }
               );
               
-              console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
+              // Comment out console logs
+              // console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
               uploadedImageUrls = [...uploadedImageUrls, ...urls];
             } catch (error) {
-              console.error(`Error uploading ${roomType} images:`, error);
+              // Comment out console errors but keep the actual error handling
+              // console.error(`Error uploading ${roomType} images:`, error);
               
               // Show more specific error message
               let errorMessage = "Failed to upload some images. Please try again.";
@@ -189,7 +197,7 @@ export default function PropertyFormTabs({
       // Check if we have any successful uploads before proceeding
       if (imagesToUpload.length > 0 && uploadedImageUrls.length === 0) {
         // All uploads failed, but we'll still create the property
-        console.warn("All image uploads failed, continuing with property creation without images");
+        // console.warn("All image uploads failed, continuing with property creation without images");
         toast({
           title: "Image Upload Warning",
           description: "Images couldn't be uploaded due to size limitations. Please try with smaller images (under 2MB) or resize them before uploading.",
@@ -199,12 +207,12 @@ export default function PropertyFormTabs({
       
       // Combine existing and newly uploaded URLs
       const allImageUrls = [...existingImageUrls, ...uploadedImageUrls];
-      console.log(`Total image URLs to save to property: ${allImageUrls.length}`);
-      console.log('URLs:', allImageUrls);
+      // console.log(`Total image URLs to save to property: ${allImageUrls.length}`);
+      // console.log('URLs:', allImageUrls);
       
       // Submit the form with all image URLs
       await onSubmit(formData, allImageUrls);
-      console.log('Property submission complete');
+      // console.log('Property submission complete');
       
       // Call the onSuccess callback if provided
       if (onSuccess) {
@@ -212,7 +220,7 @@ export default function PropertyFormTabs({
       }
       
     } catch (error) {
-      console.error("Error in form submission:", error);
+      // console.error("Error in form submission:", error);
       toast({
         title: "Submission Error",
         description: "Failed to submit property. Please try again.",

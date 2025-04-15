@@ -46,13 +46,14 @@ const PropertyFilters = ({
       location: location.trim()
     };
     
-    console.log("=== FILTER DEBUGGING ===");
-    console.log("Sending filters from Filter component:", filters);
-    console.log("Bedroom value:", filters.bedrooms, "Type:", typeof filters.bedrooms);
-    console.log("Min Price:", filters.minPrice, "Type:", typeof filters.minPrice);
-    console.log("Max Price:", filters.maxPrice, "Type:", typeof filters.maxPrice);
-    console.log("Location:", filters.location, "Type:", typeof filters.location);
-    console.log("========================");
+    // Comment out console logs
+    // console.log("=== FILTER DEBUGGING ===");
+    // console.log("Sending filters from Filter component:", filters);
+    // console.log("Bedroom value:", filters.bedrooms, "Type:", typeof filters.bedrooms);
+    // console.log("Min Price:", filters.minPrice, "Type:", typeof filters.minPrice);
+    // console.log("Max Price:", filters.maxPrice, "Type:", typeof filters.maxPrice);
+    // console.log("Location:", filters.location, "Type:", typeof filters.location);
+    // console.log("========================");
     
     // Apply the filters
     onFilterChange(filters);
@@ -71,7 +72,8 @@ const PropertyFilters = ({
     setBedrooms("");
     setLocation("");
     
-    console.log("Resetting all filters");
+    // Comment out console log
+    // console.log("Resetting all filters");
     onFilterChange(resetFilters);
   };
 
@@ -145,7 +147,8 @@ const PropertyFilters = ({
               onClick={() => {
                 // Ensure we always store as string
                 const value = num.toString();
-                console.log(`Setting bedroom filter to: ${value}`);
+                // Comment out console log
+                // console.log(`Setting bedroom filter to: ${value}`);
                 setBedrooms(value);
               }}
             >

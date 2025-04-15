@@ -20,21 +20,23 @@ const AUTH_ROLE = 'tenant';
 // Safe logging functions that only log in development
 const logDebug = (message: string, data?: unknown) => {
   if (process.env.NODE_ENV === 'development') {
-    if (data !== undefined) {
-      console.log(`[AUTH_HANDLER] ${message}`, data);
-    } else {
-      console.log(`[AUTH_HANDLER] ${message}`);
-    }
+    // Comment out all console.log calls
+    // if (data !== undefined) {
+    //   console.log(`[AUTH_HANDLER] ${message}`, data);
+    // } else {
+    //   console.log(`[AUTH_HANDLER] ${message}`);
+    // }
   }
 };
 
 const logError = (message: string, error?: any) => {
   if (process.env.NODE_ENV === 'development') {
-    if (error !== undefined) {
-      console.error(`[AUTH_HANDLER] ${message}`, error);
-    } else {
-      console.error(`[AUTH_HANDLER] ${message}`);
-    }
+    // Comment out all console.error calls
+    // if (error !== undefined) {
+    //   console.error(`[AUTH_HANDLER] ${message}`, error);
+    // } else {
+    //   console.error(`[AUTH_HANDLER] ${message}`);
+    // }
   }
   
   // Report errors to Sentry in all environments
@@ -106,7 +108,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error('[AUTH_HANDLER] Error signing out:', error);
+        // console.error('[AUTH_HANDLER] Error signing out:', error);
       }
     }
   }, []);
@@ -189,22 +191,22 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
     const fetchUserProfileEffect = async () => {
       if (!user) {
-        console.log('[AUTH_HANDLER] No user available, setting profile to null');
+        // console.log('[AUTH_HANDLER] No user available, setting profile to null');
         setProfile(null);
         return;
       }
 
-      console.log('[AUTH_HANDLER] User authenticated, fetching profile...', user.id);
-      console.log('[AUTH_HANDLER] User metadata when fetching profile:', JSON.stringify(user.user_metadata));
+      // console.log('[AUTH_HANDLER] User authenticated, fetching profile...', user.id);
+      // console.log('[AUTH_HANDLER] User metadata when fetching profile:', JSON.stringify(user.user_metadata));
 
       try {
-        console.log('[AUTH_HANDLER] Calling fetchUserProfile function');
+        // console.log('[AUTH_HANDLER] Calling fetchUserProfile function');
         const userProfile = await getUserProfile(user.id);
         
         if (isMounted) {
           if (userProfile) {
-            console.log('[AUTH_HANDLER] Profile fetched successfully:', userProfile);
-            console.log('[AUTH_HANDLER] Profile user_role:', userProfile.user_role);
+            // console.log('[AUTH_HANDLER] Profile fetched successfully:', userProfile);
+            // console.log('[AUTH_HANDLER] Profile user_role:', userProfile.user_role);
             setProfile(userProfile);
             
             // Explicitly check if user has the tenant role
@@ -213,12 +215,12 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           } else if (retryCount < maxRetries) {
             // Only retry a limited number of times
             retryCount++;
-            console.log(`[AUTH_HANDLER] Retry ${retryCount}/${maxRetries} in ${retryDelay}ms`);
+            // console.log(`[AUTH_HANDLER] Retry ${retryCount}/${maxRetries} in ${retryDelay}ms`);
             
             setTimeout(fetchUserProfileEffect, retryDelay);
           } else {
             // If we still can't get the profile, create a fallback in-memory profile
-            console.log('[AUTH_HANDLER] Max retries reached, using fallback profile');
+            // console.log('[AUTH_HANDLER] Max retries reached, using fallback profile');
             const fallbackProfile = {
               id: user.id, 
               full_name: user.user_metadata?.full_name || 'User',
@@ -227,23 +229,25 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
               created_at: new Date().toISOString()
             } as UserProfile;
             
-            console.log('[AUTH_HANDLER] Using fallback profile:', fallbackProfile);
-            console.log('[AUTH_HANDLER] Fallback profile user_role:', fallbackProfile.user_role);
+            // console.log('[AUTH_HANDLER] Using fallback profile:', fallbackProfile);
+            // console.log('[AUTH_HANDLER] Fallback profile user_role:', fallbackProfile.user_role);
             setProfile(fallbackProfile);
             
             // Try to create the profile in the background
-            console.log('[AUTH_HANDLER] Attempting background profile creation');
+            // console.log('[AUTH_HANDLER] Attempting background profile creation');
             createUserProfile({
               id: user.id,
               email: user.email,
               full_name: user.user_metadata?.full_name || '',
               user_role: user.user_metadata?.user_role || 'tenant',
               phone_number: user.user_metadata?.phone_number
-            }).catch(err => console.error('[AUTH_HANDLER] Background profile creation failed:', err));
+            }).catch(err => {
+              // console.error('[AUTH_HANDLER] Background profile creation failed:', err)
+            });
           }
         }
       } catch (error) {
-        console.error('[AUTH_HANDLER] Error in profile effect:', error);
+        // console.error('[AUTH_HANDLER] Error in profile effect:', error);
         
         // Set fallback profile after error
         if (isMounted) {
@@ -255,8 +259,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             created_at: new Date().toISOString()
           } as UserProfile;
           
-          console.log('[AUTH_HANDLER] Error occurred, using fallback profile:', fallbackProfile);
-          console.log('[AUTH_HANDLER] Error fallback profile user_role:', fallbackProfile.user_role);
+          // console.log('[AUTH_HANDLER] Error occurred, using fallback profile:', fallbackProfile);
+          // console.log('[AUTH_HANDLER] Error fallback profile user_role:', fallbackProfile.user_role);
           setProfile(fallbackProfile);
         }
       }
@@ -272,19 +276,19 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   useEffect(() => {
     const handleAuth = async () => {
       try {
-        console.log('[AUTH_HANDLER] Initializing authentication...');
-        console.log('[AUTH_HANDLER] Current URL:', window.location.href);
+        // console.log('[AUTH_HANDLER] Initializing authentication...');
+        // console.log('[AUTH_HANDLER] Current URL:', window.location.href);
         
         // For the combined app, we need to check for auth in multiple places
         
         // 1. First check for an existing session (most reliable)
-        console.log('[AUTH_HANDLER] Checking for existing session');
+        // console.log('[AUTH_HANDLER] Checking for existing session');
         const { data: sessionData } = await supabase.auth.getSession();
         
         if (sessionData.session?.user) {
-          console.log('[AUTH_HANDLER] Found existing session. User ID:', sessionData.session.user.id);
-          console.log('[AUTH_HANDLER] User metadata:', JSON.stringify(sessionData.session.user.user_metadata));
-          console.log('[AUTH_HANDLER] User role:', sessionData.session.user.user_metadata?.user_role);
+          // console.log('[AUTH_HANDLER] Found existing session. User ID:', sessionData.session.user.id);
+          // console.log('[AUTH_HANDLER] User metadata:', JSON.stringify(sessionData.session.user.user_metadata));
+          // console.log('[AUTH_HANDLER] User role:', sessionData.session.user.user_metadata?.user_role);
           
           setUser(sessionData.session.user);
           setIsAuthenticated(true);
@@ -298,32 +302,32 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         const refreshToken = url.searchParams.get('refresh_token');
         const code = url.searchParams.get('code');
         
-        console.log('[AUTH_HANDLER] Tokens in URL:', { 
-          accessTokenExists: !!accessToken, 
-          refreshTokenExists: !!refreshToken,
-          codeExists: !!code
-        });
+        // console.log('[AUTH_HANDLER] Tokens in URL:', { 
+        //   accessTokenExists: !!accessToken, 
+        //   refreshTokenExists: !!refreshToken,
+        //   codeExists: !!code
+        // });
 
         // 3. If we have tokens, use them to set the session
         if (accessToken && refreshToken) {
-          console.log('[AUTH_HANDLER] Found auth tokens in URL, setting session...');
+          // console.log('[AUTH_HANDLER] Found auth tokens in URL, setting session...');
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
 
           if (error) {
-            console.error('[AUTH_HANDLER] Error setting session:', error);
+            // console.error('[AUTH_HANDLER] Error setting session:', error);
             throw error;
           }
           
           // Clean URL by removing the tokens
           window.history.replaceState({}, document.title, window.location.pathname);
-          console.log('[AUTH_HANDLER] Cleaned URL of tokens');
+          // console.log('[AUTH_HANDLER] Cleaned URL of tokens');
           
-          console.log('[AUTH_HANDLER] Session set successfully. User ID:', data.user?.id);
-          console.log('[AUTH_HANDLER] User metadata:', JSON.stringify(data.user?.user_metadata));
-          console.log('[AUTH_HANDLER] User role:', data.user?.user_metadata?.user_role);
+          // console.log('[AUTH_HANDLER] Session set successfully. User ID:', data.user?.id);
+          // console.log('[AUTH_HANDLER] User metadata:', JSON.stringify(data.user?.user_metadata));
+          // console.log('[AUTH_HANDLER] User role:', data.user?.user_metadata?.user_role);
           
           setUser(data.user);
           setIsAuthenticated(!!data.user);
@@ -332,12 +336,12 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         }
         
         // 4. If we don't have a session or tokens, we're not authenticated
-        console.log('[AUTH_HANDLER] No session or tokens found, user is not authenticated');
+        // console.log('[AUTH_HANDLER] No session or tokens found, user is not authenticated');
         setUser(null);
         setIsAuthenticated(false);
         setProfile(null);
       } catch (error) {
-        console.error('[AUTH_HANDLER] Auth error:', error);
+        // console.error('[AUTH_HANDLER] Auth error:', error);
         
         // Enhanced error handling with categorization
         const errorType = categorizeAuthError(error);
@@ -364,7 +368,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         setUser(null);
       } finally {
         // Ensure we always exit the authenticating state
-        console.log('[AUTH_HANDLER] Exiting authenticating state');
+        // console.log('[AUTH_HANDLER] Exiting authenticating state');
         setIsAuthenticating(false);
         setInitialLoading(false);
       }
@@ -374,23 +378,23 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     handleAuth();
     
     // Set up auth state change listener
-    console.log('[AUTH_HANDLER] Setting up auth state change listener');
+    // console.log('[AUTH_HANDLER] Setting up auth state change listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: string, session: any) => {
-        console.log(`[AUTH_HANDLER] Auth state changed: ${event}`);
-        console.log('[AUTH_HANDLER] Session in state change:', !!session);
-        console.log('[AUTH_HANDLER] User ID in state change:', session?.user?.id);
+        // console.log(`[AUTH_HANDLER] Auth state changed: ${event}`);
+        // console.log('[AUTH_HANDLER] Session in state change:', !!session);
+        // console.log('[AUTH_HANDLER] User ID in state change:', session?.user?.id);
         
-        if (session?.user) {
-          console.log('[AUTH_HANDLER] User metadata in state change:', 
-            JSON.stringify(session.user.user_metadata));
-          console.log('[AUTH_HANDLER] User role in state change:', 
-            session.user.user_metadata?.user_role);
-        }
+        // if (session?.user) {
+        //   console.log('[AUTH_HANDLER] User metadata in state change:', 
+        //     JSON.stringify(session.user.user_metadata));
+        //   console.log('[AUTH_HANDLER] User role in state change:', 
+        //     session.user.user_metadata?.user_role);
+        // }
         
         // Handle different auth events
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          console.log('[AUTH_HANDLER] Positive auth event detected:', event);
+          // console.log('[AUTH_HANDLER] Positive auth event detected:', event);
           setUser(session?.user || null);
           setIsAuthenticated(!!session?.user);
           
@@ -399,7 +403,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             // This will trigger the profile fetch in the profile effect
           }
         } else if (event === 'SIGNED_OUT') {
-          console.log('[AUTH_HANDLER] User signed out');
+          // console.log('[AUTH_HANDLER] User signed out');
           setUser(null);
           setProfile(null);
           setIsAuthenticated(false);

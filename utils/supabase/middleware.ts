@@ -66,7 +66,6 @@ export async function updateSession(request: NextRequest, skipSessionCheck = fal
     
     // If no session/user, redirect to login
     if (!session || !user) {
-      console.log(`Middleware: No authenticated user detected, redirecting from ${request.nextUrl.pathname}`);
       const redirectUrl = new URL('/auth/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
@@ -94,8 +93,6 @@ export async function updateSession(request: NextRequest, skipSessionCheck = fal
       
       // If user doesn't have the required role, redirect to appropriate dashboard or home
       if (!userRole || userRole !== requiredRole) {
-        console.log(`Middleware: User has role ${userRole}, but ${requiredRole} is required`);
-        
         if (userRole === 'tenant' && requiredRole === 'landlord') {
           return NextResponse.redirect(new URL('/tenant-dashboard', request.url));
         } else if (userRole === 'landlord' && requiredRole === 'tenant') {
@@ -107,7 +104,6 @@ export async function updateSession(request: NextRequest, skipSessionCheck = fal
     }
 
   } catch (error) {
-    console.error('Middleware session error:', error);
     // Continue on error to avoid blocking but log to Sentry
     // You would add Sentry.captureException(error) here if needed
   }

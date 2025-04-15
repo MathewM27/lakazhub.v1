@@ -9,30 +9,30 @@ export function useProperties() {
   
   // Load properties with caching
   const loadProperties = useCallback(async (forceRefresh = false) => {
-    console.log('loadProperties called, forceRefresh:', forceRefresh);
+    // console.log('loadProperties called, forceRefresh:', forceRefresh);
     setLoading(true);
     setError(null);
     
     try {
-      console.log('Loading properties, forceRefresh:', forceRefresh);
+      // console.log('Loading properties, forceRefresh:', forceRefresh);
       const propertiesData = await PropertyService.getAllProperties(forceRefresh);
-      console.log('Properties loaded successfully:', propertiesData.length);
+      // console.log('Properties loaded successfully:', propertiesData.length);
       setProperties(propertiesData);
       return propertiesData;
     } catch (err) {
-      console.error('Error loading properties:', err);
+      // console.error('Error loading properties:', err);
       setError(err instanceof Error ? err : new Error('Failed to load properties'));
       // Return empty array to prevent further errors
       return [];
     } finally {
-      console.log('Setting loading to false');
+      // console.log('Setting loading to false');
       setLoading(false);
     }
   }, []);
   
   // Load properties on mount
   useEffect(() => {
-    console.log('useProperties useEffect running');
+    // console.log('useProperties useEffect running');
     loadProperties();
   }, [loadProperties]);
   
@@ -51,7 +51,7 @@ export function useProperties() {
       
       return newProperty;
     } catch (err) {
-      console.error('Error creating property:', err);
+      // console.error('Error creating property:', err);
       throw err;
     }
   }, []);
@@ -68,7 +68,7 @@ export function useProperties() {
       
       return updatedProperty;
     } catch (err) {
-      console.error('Error updating property:', err);
+      // console.error('Error updating property:', err);
       throw err;
     }
   }, []);
@@ -85,7 +85,7 @@ export function useProperties() {
       
       return success;
     } catch (err) {
-      console.error('Error deleting property:', err);
+      // console.error('Error deleting property:', err);
       throw err;
     }
   }, []);

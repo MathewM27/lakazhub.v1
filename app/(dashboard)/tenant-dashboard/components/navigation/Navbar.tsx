@@ -162,7 +162,7 @@ const Navigation = () => {
                 
                 setUnreadMessagesCount(totalUnreadCount);
             } catch (error) {
-                console.error('Error fetching unread messages count:', error);
+                // console.error('Error fetching unread messages count:', error);
             }
         };
         
@@ -211,7 +211,7 @@ const Navigation = () => {
                     // Clear unread count in UI 
                     setUnreadMessagesCount(0);
                 }).catch((error: unknown) => {
-                    console.error('Error marking messages as read:', error);
+                    // console.error('Error marking messages as read:', error);
                 });
                 
                 // Keep loading state for minimal time for better UX
@@ -219,7 +219,7 @@ const Navigation = () => {
                     setIsNavigating(false);
                 }, 250);
             } catch (error: unknown) {
-                console.error('Error handling message link click:', error);
+                // console.error('Error handling message link click:', error);
                 setIsNavigating(false);
             }
         } else {
@@ -245,7 +245,7 @@ const Navigation = () => {
             await supabase.auth.signOut();
             window.location.href = 'http://localhost:3000/login'; // Update to use full URL
         } catch (err) {
-            console.error('Error logging out:', err);
+            // console.error('Error logging out:', err);
         }
     };
 

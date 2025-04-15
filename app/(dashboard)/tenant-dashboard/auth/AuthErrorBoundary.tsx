@@ -36,8 +36,9 @@ export default class AuthErrorBoundary extends React.Component<
     
     // You can also log the error to your monitoring service
     if (process.env.NODE_ENV === 'development') {
-      console.error('[AUTH_ERROR_BOUNDARY] Error caught in AuthErrorBoundary:', error);
-      console.error('[AUTH_ERROR_BOUNDARY] Component stack:', errorInfo.componentStack);
+      // Comment out console errors but keep them for reference
+      // console.error('[AUTH_ERROR_BOUNDARY] Error caught in AuthErrorBoundary:', error);
+      // console.error('[AUTH_ERROR_BOUNDARY] Component stack:', errorInfo.componentStack);
     }
   }
 

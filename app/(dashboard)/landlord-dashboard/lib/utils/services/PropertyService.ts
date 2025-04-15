@@ -9,28 +9,28 @@ export const PropertyService = {
    */
   getAllProperties: async (forceRefresh = false): Promise<Property[]> => {
     try {
-      console.log('getAllProperties called, forceRefresh:', forceRefresh);
+      // console.log('getAllProperties called, forceRefresh:', forceRefresh);
       
       // Check if we have a valid session
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        console.error('No active session found when trying to fetch properties');
+        // console.error('No active session found when trying to fetch properties');
         return [];
       }
       
-      console.log('User authenticated:', sessionData.session.user.id);
+      // console.log('User authenticated:', sessionData.session.user.id);
       
       // Check cache first if not forcing refresh
       if (!forceRefresh) {
         const { data: cachedData, isCached } = PropertyCache.getProperties();
         if (isCached && cachedData) {
-          console.log('Using cached properties data, count:', cachedData.length);
+          // console.log('Using cached properties data, count:', cachedData.length);
           return cachedData;
         }
       }
       
       // Try direct Supabase query (uses RLS policies)
-      console.log('Fetching properties directly from database for user:', sessionData.session.user.id);
+      // console.log('Fetching properties directly from database for user:', sessionData.session.user.id);
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -38,23 +38,23 @@ export const PropertyService = {
         .order('created_at', { ascending: false });
         
       if (error) {
-        console.error('Error fetching properties from database:', error);
+        // console.error('Error fetching properties from database:', error);
         throw error;
       }
       
       if (!data) {
-        console.log('No data returned from properties query');
+        // console.log('No data returned from properties query');
         return [];
       }
       
-      console.log(`Fetched ${data.length} properties`);
+      // console.log(`Fetched ${data.length} properties`);
       
       // Update cache
       PropertyCache.setProperties(data);
       
       return data;
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      // console.error('Error fetching properties:', error);
       throw error;
     }
   },
@@ -68,13 +68,13 @@ export const PropertyService = {
       if (!forceRefresh) {
         const { data: cachedProperty, isCached } = PropertyCache.getProperty(id);
         if (isCached && cachedProperty) {
-          console.log(`Using cached property data for ${id}`);
+          // console.log(`Using cached property data for ${id}`);
           return cachedProperty;
         }
       }
       
       // Direct Supabase query
-      console.log(`Fetching property ${id} from database`);
+      // console.log(`Fetching property ${id} from database`);
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -82,7 +82,7 @@ export const PropertyService = {
         .single();
         
       if (error) {
-        console.error(`Error fetching property ${id}:`, error);
+        // console.error(`Error fetching property ${id}:`, error);
         throw error;
       }
       
@@ -95,7 +95,7 @@ export const PropertyService = {
       
       return data;
     } catch (error) {
-      console.error(`Error fetching property ${id}:`, error);
+      // console.error(`Error fetching property ${id}:`, error);
       throw error;
     }
   },
@@ -104,8 +104,8 @@ export const PropertyService = {
    * Create a new property
    */
   createProperty: async (propertyData: Omit<Property, 'id'>): Promise<Property> => {
-    console.log('PropertyService: Creating new property');
-    console.log('Property data:', JSON.stringify(propertyData, null, 2));
+    // console.log('PropertyService: Creating new property');
+    // console.log('Property data:', JSON.stringify(propertyData, null, 2));
     
     try {
       // Try direct API approach first
@@ -116,16 +116,16 @@ export const PropertyService = {
           throw new Error('Not authenticated');
         }
         
-        console.log(`Creating property for user: ${session.user.id}`);
+        // console.log(`Creating property for user: ${session.user.id}`);
         
         // Ensure images array is present
         if (!propertyData.images) {
-          console.warn('No images array in property data, initializing empty array');
+          // console.warn('No images array in property data, initializing empty array');
           propertyData.images = [];
         }
         
-        console.log(`Inserting property with ${propertyData.images.length} image URLs`);
-        console.log('Image URLs to save:', propertyData.images);
+        // console.log(`Inserting property with ${propertyData.images.length} image URLs`);
+        // console.log('Image URLs to save:', propertyData.images);
         
         // Make the request
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/properties`, {
@@ -145,33 +145,33 @@ export const PropertyService = {
         const result = await response.json();
         const newProperty = result.data;
         
-        console.log('Property created successfully:', newProperty);
+        // console.log('Property created successfully:', newProperty);
         
         // Invalidate properties cache since we added a new one
         PropertyCache.setProperties([], undefined);
         
         return newProperty;
       } catch (apiError) {
-        console.warn('API approach failed, falling back to direct Supabase:', apiError);
+        // console.warn('API approach failed, falling back to direct Supabase:', apiError);
         
         // Fallback to direct Supabase approach
         // Check auth status
         const { data: authData } = await supabase.auth.getUser();
         if (!authData?.user) {
-          console.error('Authentication required');
+          // console.error('Authentication required');
           throw new Error('Authentication required');
         }
         
-        console.log(`Creating property for user: ${authData.user.id}`);
+        // console.log(`Creating property for user: ${authData.user.id}`);
         
         // Ensure images array is present
         if (!propertyData.images) {
-          console.warn('No images array in property data, initializing empty array');
+          // console.warn('No images array in property data, initializing empty array');
           propertyData.images = [];
         }
         
-        console.log(`Inserting property with ${propertyData.images.length} image URLs`);
-        console.log('Image URLs to save:', propertyData.images);
+        // console.log(`Inserting property with ${propertyData.images.length} image URLs`);
+        // console.log('Image URLs to save:', propertyData.images);
         
         const { data, error } = await supabase
           .from('properties')
@@ -183,15 +183,15 @@ export const PropertyService = {
           .single();
         
         if (error) {
-          console.error('Error creating property:', error);
+          // console.error('Error creating property:', error);
           throw new Error(`Failed to create property: ${error.message}`);
         }
         
-        console.log('Property created successfully:', data);
+        // console.log('Property created successfully:', data);
         return data;
       }
     } catch (error) {
-      console.error('Error creating property:', error);
+      // console.error('Error creating property:', error);
       throw error;
     }
   },
@@ -200,8 +200,8 @@ export const PropertyService = {
    * Update an existing property
    */
   updateProperty: async (id: string, propertyData: Partial<Property>): Promise<Property> => {
-    console.log(`PropertyService: Updating property ${id}`);
-    console.log('Update data:', JSON.stringify(propertyData, null, 2));
+    // console.log(`PropertyService: Updating property ${id}`);
+    // console.log('Update data:', JSON.stringify(propertyData, null, 2));
     
     try {
       // Try API approach first
@@ -214,8 +214,8 @@ export const PropertyService = {
         
         // Ensure images array is handled properly if present
         if (propertyData.images) {
-          console.log(`Updating property with ${propertyData.images.length} image URLs`);
-          console.log('Image URLs to save:', propertyData.images);
+          // console.log(`Updating property with ${propertyData.images.length} image URLs`);
+          // console.log('Image URLs to save:', propertyData.images);
         }
         
         // Make the request
@@ -236,7 +236,7 @@ export const PropertyService = {
         const result = await response.json();
         const updatedProperty = result.data;
         
-        console.log('Property updated successfully:', updatedProperty);
+        // console.log('Property updated successfully:', updatedProperty);
         
         // Invalidate caches since data changed
         PropertyCache.invalidatePropertyCache(id);
@@ -244,13 +244,13 @@ export const PropertyService = {
         
         return updatedProperty;
       } catch (apiError) {
-        console.warn('API approach failed, falling back to direct Supabase:', apiError);
+        // console.warn('API approach failed, falling back to direct Supabase:', apiError);
         
         // Fallback to direct Supabase approach
         // Ensure images array is handled properly if present
         if (propertyData.images) {
-          console.log(`Updating property with ${propertyData.images.length} image URLs`);
-          console.log('Image URLs to save:', propertyData.images);
+          // console.log(`Updating property with ${propertyData.images.length} image URLs`);
+          // console.log('Image URLs to save:', propertyData.images);
         }
         
         const { data, error } = await supabase
@@ -261,15 +261,15 @@ export const PropertyService = {
           .single();
         
         if (error) {
-          console.error('Error updating property:', error);
+          // console.error('Error updating property:', error);
           throw new Error(`Failed to update property: ${error.message}`);
         }
         
-        console.log('Property updated successfully:', data);
+        // console.log('Property updated successfully:', data);
         return data;
       }
     } catch (error) {
-      console.error(`Error updating property ${id}:`, error);
+      // console.error(`Error updating property ${id}:`, error);
       throw error;
     }
   },
@@ -305,7 +305,7 @@ export const PropertyService = {
       
       return true;
     } catch (error) {
-      console.error(`Error deleting property ${id}:`, error);
+      // console.error(`Error deleting property ${id}:`, error);
       throw error;
     }
   }
@@ -321,7 +321,7 @@ export async function deleteProperty(propertyId: string): Promise<{ success: boo
     // Step 1: Delete all images from storage
     const imageResult = await ImageStorage.deleteAllPropertyImages(propertyId);
     if (!imageResult.success) {
-      console.warn(`Failed to delete some property images, continuing with property deletion`);
+      // console.warn(`Failed to delete some property images, continuing with property deletion`);
     }
     
     // Step 2: Delete the property data from the database
@@ -331,13 +331,13 @@ export async function deleteProperty(propertyId: string): Promise<{ success: boo
       .eq('id', propertyId);
     
     if (error) {
-      console.error('Error deleting property data:', error);
+      // console.error('Error deleting property data:', error);
       return { success: false, error };
     }
     
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error in deleteProperty:', error);
+    // console.error('Unexpected error in deleteProperty:', error);
     return { success: false, error };
   }
 }

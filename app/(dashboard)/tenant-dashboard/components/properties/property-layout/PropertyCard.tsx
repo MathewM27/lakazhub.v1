@@ -71,7 +71,8 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
     (property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg');
   
   const handleSaveProperty = () => {
-    console.log('Property saved to favorites:', property.name);
+    // Comment out console log
+    // console.log('Property saved to favorites:', property.name);
     // Here you would implement saving to user's favorites
   };
 
@@ -108,7 +109,8 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={`object-cover ${!disableInteractions && 'transition-transform duration-700 group-hover:scale-105'}`}
               onError={() => {
-                console.error(`Image failed to load: ${imageUrl}`);
+                // Comment out console error
+                // console.error(`Image failed to load: ${imageUrl}`);
                 setImageError(true);
               }}
             />

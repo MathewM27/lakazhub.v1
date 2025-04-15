@@ -70,7 +70,8 @@ export default function PropertyCard({
           .eq('is_archived', false);
 
         if (error) {
-          console.error('Error fetching unread count:', error);
+          // Comment out console error
+          // console.error('Error fetching unread count:', error);
           return;
         }
 
@@ -90,7 +91,8 @@ export default function PropertyCard({
           setUnreadCount(totalUnread);
         }
       } catch (error) {
-        console.error('Error in unread count fetch:', error);
+        // Comment out console error
+        // console.error('Error in unread count fetch:', error);
       }
     };
 
@@ -190,7 +192,8 @@ export default function PropertyCard({
     try {
       return format(new Date(dateString), "MMM d, yyyy");
     } catch (error) {
-      console.error("Error formatting date:", error);
+      // Comment out console error
+      // console.error("Error formatting date:", error);
       return null;
     }
   };

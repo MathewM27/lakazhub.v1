@@ -146,7 +146,7 @@ const PropertyDetailModal = ({
                 fill
                 className="object-cover"
                 onError={(e) => {
-                  console.error("Failed to load image:", enhancedProperty.images?.[currentImageIndex]);
+                  // console.error("Failed to load image:", enhancedProperty.images?.[currentImageIndex]);
                   (e.target as HTMLImageElement).src = '/placeholder-property.jpg';
                 }}
               />

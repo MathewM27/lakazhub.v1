@@ -14,31 +14,32 @@ const MessagedProperties: React.FC<MessagedPropertiesProps> = ({ messagedPropert
   
   // Enhanced debugging for MessagedProperties component
   useEffect(() => {
-    console.log("=== MESSAGED PROPERTIES DEBUG ===");
-    console.log("Component received properties:", messagedProperties?.length || 0);
+    // Comment out all console logs
+    // console.log("=== MESSAGED PROPERTIES DEBUG ===");
+    // console.log("Component received properties:", messagedProperties?.length || 0);
     
-    if (messagedProperties?.length > 0) {
-      console.log("First messaged property details:", {
-        id: messagedProperties[0].id,
-        name: messagedProperties[0].name,
-        bedrooms: messagedProperties[0].bedrooms,
-        image: messagedProperties[0].image || messagedProperties[0].images?.[0],
-        images: messagedProperties[0].images?.length || 0,
-        isArray: Array.isArray(messagedProperties[0].images)
-      });
-    } else {
-      console.log("No messaged properties received");
-    }
-    console.log("===============================");
+    // if (messagedProperties?.length > 0) {
+    //   console.log("First messaged property details:", {
+    //     id: messagedProperties[0].id,
+    //     name: messagedProperties[0].name,
+    //     bedrooms: messagedProperties[0].bedrooms,
+    //     image: messagedProperties[0].image || messagedProperties[0].images?.[0],
+    //     images: messagedProperties[0].images?.length || 0,
+    //     isArray: Array.isArray(messagedProperties[0].images)
+    //   });
+    // } else {
+    //   console.log("No messaged properties received");
+    // }
+    // console.log("===============================");
   }, [messagedProperties]);
 
   // Debug whether we're returning null or rendering the component
   if ((!messagedProperties || messagedProperties.length === 0) && !isLoading) {
-    console.log("MessagedProperties: Returning null - no properties and not loading");
+    // console.log("MessagedProperties: Returning null - no properties and not loading");
     return null;
   }
 
-  console.log("MessagedProperties: Rendering component with", messagedProperties?.length || 0, "properties");
+  // console.log("MessagedProperties: Rendering component with", messagedProperties?.length || 0, "properties");
   
   return (
     <div className={cn("property-section mb-16 relative", className)}>
@@ -57,7 +58,7 @@ const MessagedProperties: React.FC<MessagedPropertiesProps> = ({ messagedPropert
           <PropertyCarousel 
             title="Properties You've Messaged" 
             properties={messagedProperties}
-            customBadge="..."
+            customBadge="Conversation"
           />
           
           

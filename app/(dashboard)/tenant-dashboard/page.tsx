@@ -47,33 +47,34 @@ export default function Home() {
   const { isAuthenticated, user, profile, isAuthenticating, hasCorrectRole, signOut } = useAuth();
 
   useEffect(() => {
-    console.log('[TENANT_DASHBOARD] Home component mounted');
-    console.log('[TENANT_DASHBOARD] Authentication state:', { 
-      isAuthenticating, 
-      isAuthenticated, 
-      hasUser: !!user, 
-      hasProfile: !!profile,
-      hasCorrectRole
-    });
+    // Comment out all console.log statements for cleaner production code
+    // console.log('[TENANT_DASHBOARD] Home component mounted');
+    // console.log('[TENANT_DASHBOARD] Authentication state:', { 
+    //   isAuthenticating, 
+    //   isAuthenticated, 
+    //   hasUser: !!user, 
+    //   hasProfile: !!profile,
+    //   hasCorrectRole
+    // });
     
-    if (user) {
-      console.log('[TENANT_DASHBOARD] User ID:', user.id);
-      console.log('[TENANT_DASHBOARD] User email:', user.email);
-      console.log('[TENANT_DASHBOARD] User metadata:', JSON.stringify(user.user_metadata));
-    }
+    // if (user) {
+    //   console.log('[TENANT_DASHBOARD] User ID:', user.id);
+    //   console.log('[TENANT_DASHBOARD] User email:', user.email);
+    //   console.log('[TENANT_DASHBOARD] User metadata:', JSON.stringify(user.user_metadata));
+    // }
     
-    if (profile) {
-      console.log('[TENANT_DASHBOARD] Profile details:', {
-        id: profile.id,
-        full_name: profile.full_name,
-        email: profile.email_address,
-        role: profile.user_role
-      });
-    }
+    // if (profile) {
+    //   console.log('[TENANT_DASHBOARD] Profile details:', {
+    //     id: profile.id,
+    //     full_name: profile.full_name,
+    //     email: profile.email_address,
+    //     role: profile.user_role
+    //   });
+    // }
     
     // Log Supabase environment variables availability (not the actual values)
-    console.log('[TENANT_DASHBOARD] Supabase URL defined:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('[TENANT_DASHBOARD] Supabase Anon Key defined:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    // console.log('[TENANT_DASHBOARD] Supabase URL defined:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    // console.log('[TENANT_DASHBOARD] Supabase Anon Key defined:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   }, [isAuthenticating, isAuthenticated, user, profile, hasCorrectRole]);
 
   if (isAuthenticating) {

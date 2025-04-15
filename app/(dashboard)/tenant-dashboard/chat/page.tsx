@@ -133,11 +133,9 @@ export default function ChatPage() {
   // Optimize conversation fetching with caching
   const fetchConversations = useCallback(async () => {
     if (!user?.id) {
-      console.log('[CHAT_PAGE] No user ID available, skipping conversation fetch');
       return;
     }
     
-    console.log('[CHAT_PAGE] User authenticated:', user);
     setLoading(true);
     
     try {
@@ -148,7 +146,6 @@ export default function ChatPage() {
       
       // Use cached data if available and not expired
       if (cachedData && (now - cachedData.timestamp < CACHE_TTL)) {
-        console.log('[CHAT_PAGE] Using cached conversations data');
         setConversations(cachedData.data);
         groupConversationsByLandlord(cachedData.data);
         setLoading(false);
@@ -161,7 +158,6 @@ export default function ChatPage() {
       // Get current session for auth token
       const { data: authSession } = await supabase.auth.getSession();
       if (!authSession.session) {
-        console.error('[CHAT_PAGE] No active session when fetching conversations');
         throw new Error('No active session');
       }
       
@@ -172,7 +168,6 @@ export default function ChatPage() {
         .limit(1);
         
       if (columnsError) {
-        console.error('[CHAT_PAGE] Error checking property columns:', columnsError);
         throw columnsError;
       }
       
@@ -184,8 +179,6 @@ export default function ChatPage() {
       // Default to using 'images' if the column can't be determined
       const imageColumnName = propertiesColumns && propertiesColumns.length > 0 && 
         Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') ? 'image' : 'images';
-      
-      console.log(`[CHAT_PAGE] Using property image column name: ${imageColumnName}`);
       
       // Use a more efficient query approach - get all data in one query
       // Dynamically construct the query based on the column name
@@ -206,12 +199,10 @@ export default function ChatPage() {
         .order('last_message_at', { ascending: false });
       
       if (error) {
-        console.error('[CHAT_PAGE] Query error details:', error);
         throw error;
       }
       
       if (!data || data.length === 0) {
-        console.log('[CHAT_PAGE] No conversations found for user:', user.id);
         setConversations([]);
         setLandlordGroups([]);
         setLoading(false);
@@ -231,7 +222,6 @@ export default function ChatPage() {
         .in('id', landlordIds);
       
       if (landlordsError) {
-        console.error('[CHAT_PAGE] Landlord profiles query error:', landlordsError);
         throw landlordsError;
       }
       
@@ -291,17 +281,12 @@ export default function ChatPage() {
       setConversations(conversationsWithExtras);
       groupConversationsByLandlord(conversationsWithExtras);
     } catch (error: unknown) {
-      console.error('[CHAT_PAGE] Error loading conversations:', error);
-      
       // Log more detailed error information
       if (error && typeof error === 'object' && 'message' in error) {
-        console.error('[CHAT_PAGE] Error message:', (error as Error).message);
       }
       
       // Try a fallback approach with simpler queries
       try {
-        console.log('[CHAT_PAGE] Trying fallback approach...');
-        
         // First, get the conversations
         const { data: conversationsData } = await supabase
           .from('property_conversations')
@@ -312,7 +297,6 @@ export default function ChatPage() {
         if (!conversationsData || conversationsData.length === 0) {
           setConversations([]);
           setLandlordGroups([]);
-          console.log('[CHAT_PAGE] No conversations found in fallback query');
           return;
         }
         
@@ -388,9 +372,7 @@ export default function ChatPage() {
         
         setConversations(conversationsWithExtras);
         groupConversationsByLandlord(conversationsWithExtras);
-        console.log('[CHAT_PAGE] Fallback approach succeeded with', conversationsWithExtras.length, 'conversations');
       } catch (fallbackError) {
-        console.error('[CHAT_PAGE] Fallback approach failed:', fallbackError);
         
         toast({
           title: "Error loading conversations",
@@ -676,10 +658,7 @@ export default function ChatPage() {
       // Clear the input
       setNewMessage("");
       
-      // The subscription will handle any further updates if needed
-      
     } catch (error: any) {
-      console.error('Error sending message:', error);
       toast({
         title: "Error sending message",
         description: error.message || "Could not send your message",

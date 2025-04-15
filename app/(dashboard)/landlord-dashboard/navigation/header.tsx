@@ -106,7 +106,7 @@ const Header = () => {
                     setUser(data.user);
                 }
             } catch (err) {
-                console.error('Error loading user in navbar:', err);
+                // console.error('Error loading user in navbar:', err);
             }
         }
         
@@ -153,7 +153,7 @@ const Header = () => {
             const unreadCount = filteredConversations ? 
               filteredConversations.reduce((sum: number, conv: { landlord_unread_count?: number }) => sum + (conv.landlord_unread_count || 0), 0) : 0;
             setUnreadMessagesCount(unreadCount);
-            console.log('Unread count:', unreadCount);
+            // console.log('Unread count:', unreadCount);
 
             // If no unread messages, clear notifications and return
             if (!filteredConversations || filteredConversations.length === 0) {
@@ -168,8 +168,8 @@ const Header = () => {
               .select('*')
               .in('id', tenantIds);
 
-            console.log('Tenant profiles:', profilesData);
-            console.log('Profiles error:', profilesError);
+            // console.log('Tenant profiles:', profilesData);
+            // console.log('Profiles error:', profilesError);
 
             // Create a map of tenant IDs to profiles for easy lookup
             const tenantProfiles: Record<string, any> = {};
@@ -210,10 +210,10 @@ const Header = () => {
               return new Date(b.time).getTime() - new Date(a.time).getTime();
             }).slice(0, 10); // Limit to 10 most recent conversations
             
-            console.log('Final notifications to display:', notifications);
+            // console.log('Final notifications to display:', notifications);
             setMessageNotifications(notifications);
         } catch (error) {
-            console.error('Error fetching message notifications:', error);
+            // console.error('Error fetching message notifications:', error);
         }
     }, [user?.id]);
 
@@ -229,8 +229,8 @@ const Header = () => {
                 .eq('id', notification.propertyId)
                 .single();
             
-            console.log('Property data:', propertyData);
-            console.log('Property error:', propertyError);
+            // console.log('Property data:', propertyData);
+            // console.log('Property error:', propertyError);
                 
             if (propertyError) throw propertyError;
             
@@ -241,7 +241,7 @@ const Header = () => {
             // Open the notification modal
             setNotificationModalOpen(true);
         } catch (error) {
-            console.error('Error handling notification click:', error);
+            // console.error('Error handling notification click:', error);
         }
     };
 
@@ -261,7 +261,7 @@ const Header = () => {
             table: 'property_conversations',
             filter: `landlord_id=eq.${user.id}`,
           }, (payload: { new: any }) => {
-            console.log('Conversation updated:', payload);
+            // console.log('Conversation updated:', payload);
             const updatedConversation = payload.new;
             
             // Only update if there are unread messages
@@ -273,7 +273,7 @@ const Header = () => {
           
         // Listen for the custom event when messages are marked as read in other components
         const handleMessagesRead = (event: CustomEvent) => {
-          console.log('Header received messagesMarkedAsRead event:', event.detail);
+        //   console.log('Header received messagesMarkedAsRead event:', event.detail);
           // Refresh notifications to update the UI
           fetchUnreadMessagesAndNotifications();
         };
@@ -283,12 +283,12 @@ const Header = () => {
           
         messageSubscriptionRef.current = conversationUpdateSubscription;
         
-        console.log('Subscribed to conversation changes in header');
+        // console.log('Subscribed to conversation changes in header');
         
         return () => {
           conversationUpdateSubscription.unsubscribe();
           window.removeEventListener('messagesMarkedAsRead', handleMessagesRead as EventListener);
-          console.log('Unsubscribed from conversation changes in header');
+        //   console.log('Unsubscribed from conversation changes in header');
         }
     }, [user?.id, fetchUnreadMessagesAndNotifications]);
 
@@ -352,7 +352,7 @@ const Header = () => {
             // Reset unread count
             setUnreadMessagesCount(0);
         } catch (error) {
-            console.error('Error marking messages as read:', error);
+            // console.error('Error marking messages as read:', error);
         }
     };
 
@@ -376,13 +376,13 @@ const Header = () => {
             //   .eq('recipient_id', user?.id);
             
         } catch (error) {
-            console.error('Error marking notifications as read:', error);
+            // console.error('Error marking notifications as read:', error);
         }
     };
 
     const handleSavePreferences = () => {
         // Here you would typically save to backend/database
-        console.log("Saving preferences:", { bedrooms, location, budget });
+        // console.log("Saving preferences:", { bedrooms, location, budget });
         // Add toast notification or feedback here
     };
     

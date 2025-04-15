@@ -11,7 +11,7 @@ export const setupSessionRefresh = () => {
   
   const refreshSession = async () => {
     try {
-      logDebug('Refreshing authentication session');
+      // logDebug('Refreshing authentication session');
       const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
@@ -27,7 +27,7 @@ export const setupSessionRefresh = () => {
           const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000); // 5 minutes before expiry
           
           if (refreshTime > 0) {
-            logDebug(`Scheduling next refresh in ${Math.floor(refreshTime / 60000)} minutes`);
+            // logDebug(`Scheduling next refresh in ${Math.floor(refreshTime / 60000)} minutes`);
             refreshTimeout = setTimeout(refreshSession, refreshTime);
           }
         }
@@ -61,7 +61,7 @@ export const setupSessionRefresh = () => {
           const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000); // 5 minutes before expiry
           
           if (refreshTime > 0) {
-            logDebug(`Initial session refresh in ${Math.floor(refreshTime / 60000)} minutes`);
+            // logDebug(`Initial session refresh in ${Math.floor(refreshTime / 60000)} minutes`);
             refreshTimeout = setTimeout(refreshSession, refreshTime);
           } else {
             // If already close to expiry, refresh immediately

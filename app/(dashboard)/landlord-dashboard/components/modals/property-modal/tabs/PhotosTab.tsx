@@ -41,50 +41,30 @@ export default function PhotosTab({
   const handleFileSelected = (category: string, files: FileList | null) => {
     if (!files || files.length === 0) return
 
-    console.log(`Files selected for category ${category}:`, 
-      Array.from(files).map(f => `${f.name} (${f.type}, ${f.size} bytes)`)
-    );
-
     // Convert FileList to array and filter for images only
     const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
-    if (imageFiles.length === 0) {
-      console.log('No valid image files found');
-      return;
-    }
-
-    console.log(`${imageFiles.length} valid image files found`);
+    if (imageFiles.length === 0) return;
 
     // Find category config
     const categoryConfig = ROOM_CATEGORIES.find(c => c.id === category)
-    if (!categoryConfig) {
-      console.error(`Category ${category} not found in ROOM_CATEGORIES`);
-      return;
-    }
+    if (!categoryConfig) return;
 
     // Get current images for this category
     const currentImages = formData.images.filter(img => img.type === category)
-    console.log(`Current images in ${category} category: ${currentImages.length}`);
 
     // Calculate remaining slots
     const limit = categoryConfig.limit
     const remaining = limit - currentImages.length
     
-    if (remaining <= 0) {
-      console.warn(`Maximum images (${limit}) reached for ${category}`);
-      return;
-    }
+    if (remaining <= 0) return;
     
-    console.log(`${remaining} image slots remaining for ${category}`);
-
     // Add new images (limiting to available slots)
     let newImagesToAdd: File[] = []
 
     // Handle primary images differently (replace instead of add)
     if (categoryConfig.primary) {
-      console.log(`Handling primary category: ${category}`);
       // For primary categories, replace the existing image
       if (currentImages.length > 0) {
-        console.log('Replacing existing primary image');
         // Remove the existing image
         const updatedImages = formData.images.filter(img => img.type !== category)
         
@@ -95,12 +75,9 @@ export default function PhotosTab({
           url: URL.createObjectURL(imageFiles[0])
         }
         
-        console.log('Creating new image object:', 
-          `type: ${newImage.type}, file: ${newImage.file.name}, URL created`
-        );
-        
-        // Log file instance check
-        console.log(`File check: is File instance = ${newImage.file instanceof File}`);
+        // Comment out debugging logs
+        // console.log('Creating new image object:', `type: ${newImage.type}, file: ${newImage.file.name}, URL created`);
+        // console.log(`File check: is File instance = ${newImage.file instanceof File}`);
         
         onChange({
           images: [...updatedImages, newImage]
@@ -115,25 +92,12 @@ export default function PhotosTab({
       newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
     }
 
-    console.log(`Adding ${newImagesToAdd.length} new images to ${category}`);
-
     // Create new images to add
-    const newImages = newImagesToAdd.map(file => {
-      const obj = {
-        file, // Keep the actual File object intact
-        type: category,
-        url: URL.createObjectURL(file)
-      };
-      // Log file instance check
-      console.log(`File check for ${file.name}: is File instance = ${obj.file instanceof File}`);
-      return obj;
-    });
-
-    console.log('New image objects created:', 
-      newImages.map((img, idx) => 
-        `${idx + 1}: type: ${img.type}, file: ${img.file.name}, URL created`
-      )
-    );
+    const newImages = newImagesToAdd.map(file => ({
+      file,
+      type: category,
+      url: URL.createObjectURL(file)
+    }));
 
     // Update form data with new images
     onChange({

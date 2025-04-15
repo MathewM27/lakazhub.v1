@@ -13,23 +13,23 @@ interface PreferencesProps {
 const Preferences: React.FC<PreferencesProps> = ({ preferredProperties, hasActiveFilters, clearFilters }) => {
   // Debug logging for Preferences component
   useEffect(() => {
-    console.log("=== PREFERENCES COMPONENT ===");
-    console.log("hasActiveFilters:", hasActiveFilters);
-    console.log("preferredProperties.length:", preferredProperties.length);
-    console.log("Should display properties:", hasActiveFilters && preferredProperties.length > 0);
-    console.log("Should display no match alert:", hasActiveFilters && preferredProperties.length === 0);
+    // console.log("=== PREFERENCES COMPONENT ===");
+    // console.log("hasActiveFilters:", hasActiveFilters);
+    // console.log("preferredProperties.length:", preferredProperties.length);
+    // console.log("Should display properties:", hasActiveFilters && preferredProperties.length > 0);
+    // console.log("Should display no match alert:", hasActiveFilters && preferredProperties.length === 0);
     
     // Log first 3 properties if available (for debugging)
-    if (preferredProperties.length > 0) {
-      const sampleProps = preferredProperties.slice(0, 3).map(p => ({
-        id: p.id.substring(0, 8),
-        name: p.name,
-        bedrooms: p.bedrooms
-      }));
-      console.log("Sample preferred properties:", sampleProps);
-    }
+    // if (preferredProperties.length > 0) {
+    //   const sampleProps = preferredProperties.slice(0, 3).map(p => ({
+    //     id: p.id.substring(0, 8),
+    //     name: p.name,
+    //     bedrooms: p.bedrooms
+    //   }));
+    //   console.log("Sample preferred properties:", sampleProps);
+    // }
     
-    console.log("=============================");
+    // console.log("=============================");
   }, [preferredProperties, hasActiveFilters]);
   
   // If no filters are active, don't show anything
@@ -47,11 +47,11 @@ const Preferences: React.FC<PreferencesProps> = ({ preferredProperties, hasActiv
             properties={preferredProperties}
           />
           {/* Add debug property count in development */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* {process.env.NODE_ENV === 'development' && (
             <div className="mt-2 text-xs text-white/50">
               Showing {preferredProperties.length} properties matching your filters
             </div>
-          )}
+          )} */}
         </div>
       ) : (
         <div className="mb-16">

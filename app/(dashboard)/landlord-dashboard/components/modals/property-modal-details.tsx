@@ -142,7 +142,8 @@ export default function PropertyModal({
         onOpenChangeAction(false)
         
       } catch (error) {
-        console.error("Database operation failed:", error)
+        // Comment out the console.error
+        // console.error("Database operation failed:", error)
         toast({
           title: "Database Error",
           description: "Failed to save property details. Please try again.",
@@ -150,7 +151,8 @@ export default function PropertyModal({
         })
       }
     } catch (error) {
-      console.error("Error submitting property:", error)
+      // Comment out the console.error
+      // console.error("Error submitting property:", error)
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

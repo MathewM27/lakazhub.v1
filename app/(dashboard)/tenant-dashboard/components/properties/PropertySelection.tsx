@@ -69,16 +69,16 @@ const PropertiesSection = () => {
             properties: properties.length 
           });
           
-          console.log(`Loading ${properties.length} properties from cache (${Math.round(cacheSize / 1024)} KB)`);
+          // console.log(`Loading ${properties.length} properties from cache (${Math.round(cacheSize / 1024)} KB)`);
           return { properties, totalCount, fromCache: true };
         } else {
-          console.log("Cache expired, will fetch fresh data");
+          // console.log("Cache expired, will fetch fresh data");
           // Clear expired cache to free up storage
           localStorage.removeItem(CACHE_KEY);
         }
       }
     } catch (err) {
-      console.error("Error loading from cache:", err);
+      // console.error("Error loading from cache:", err);
       // Reset cache on error
       localStorage.removeItem(CACHE_KEY);
     }
@@ -105,12 +105,12 @@ const PropertiesSection = () => {
           size: Math.round(cacheSize / 1024), // Size in KB
           properties: properties.length 
         });
-        console.log(`Saved ${properties.length} properties to cache (${Math.round(cacheSize / 1024)} KB)`);
+        // console.log(`Saved ${properties.length} properties to cache (${Math.round(cacheSize / 1024)} KB)`);
       } else {
-        console.warn(`Cache size too large (${Math.round(cacheSize / 1024)} KB), not caching`);
+        // console.warn(`Cache size too large (${Math.round(cacheSize / 1024)} KB), not caching`);
       }
     } catch (err) {
-      console.error("Error saving to cache:", err);
+      // console.error("Error saving to cache:", err);
     }
   };
 
@@ -118,8 +118,8 @@ const PropertiesSection = () => {
   const fetchMessagedProperties = async (userId: string) => {
     if (!userId) return;
     
-    console.log('=== FETCH MESSAGED PROPERTIES ===');
-    console.log('User ID:', userId);
+    // console.log('=== FETCH MESSAGED PROPERTIES ===');
+    // console.log('User ID:', userId);
     
     try {
       // First check if we have cached conversations in chat system
@@ -131,43 +131,43 @@ const PropertiesSection = () => {
         const cachedConversationsData = localStorage.getItem(CONVERSATIONS_CACHE_KEY);
         if (cachedConversationsData) {
           const parsedData = JSON.parse(cachedConversationsData);
-          console.log('Found cached conversations data:', parsedData);
+          // console.log('Found cached conversations data:', parsedData);
           
           if (parsedData?.data && Array.isArray(parsedData.data)) {
             conversationsData = parsedData.data;
-            console.log(`Using ${conversationsData.length} cached conversations`);
+            // console.log(`Using ${conversationsData.length} cached conversations`);
           }
         } else {
-          console.log('No cached conversations found in localStorage');
+          // console.log('No cached conversations found in localStorage');
         }
       } catch (cacheError) {
-        console.error("Error reading cached conversations:", cacheError);
+        // console.error("Error reading cached conversations:", cacheError);
       }
       
       // If no cached conversations, fetch directly from the database
       if (!conversationsData) {
-        console.log("Fetching conversations from database");
+        // console.log("Fetching conversations from database");
         const { data, error } = await supabase
           .from('property_conversations')
           .select('id, property_id, tenant_id, landlord_id')
           .eq('tenant_id', userId);
           
         if (error) {
-          console.error('Error fetching property conversations:', error);
+          // console.error('Error fetching property conversations:', error);
           return;
         }
         
         conversationsData = data;
-        console.log(`Fetched ${conversationsData?.length || 0} conversations from database`);
+        // console.log(`Fetched ${conversationsData?.length || 0} conversations from database`);
       }
       
       // Log conversations data for debugging
-      if (conversationsData && conversationsData.length > 0) {
+      /* if (conversationsData && conversationsData.length > 0) {
         console.log('Sample conversation data:', conversationsData[0]);
-      }
+      } */
       
       if (!conversationsData || conversationsData.length === 0) {
-        console.log('No conversations found for user');
+        // console.log('No conversations found for user');
         setMessagedProperties([]);
         return;
       }
@@ -179,11 +179,11 @@ const PropertiesSection = () => {
         ).filter(Boolean)
       )];
       
-      console.log(`Found ${propertyIds.length} unique property IDs from conversations:`, propertyIds);
+      // console.log(`Found ${propertyIds.length} unique property IDs from conversations:`, propertyIds);
       
       // If we have no property IDs, return empty array
       if (propertyIds.length === 0) {
-        console.log('No valid property IDs found in conversations');
+        // console.log('No valid property IDs found in conversations');
         setMessagedProperties([]);
         return;
       }
@@ -195,40 +195,40 @@ const PropertiesSection = () => {
           property => propertyIds.includes(property.id)
         );
         
-        console.log(`Matched ${matchedProperties.length} properties with existing data`);
-        if (matchedProperties.length > 0) {
+        // console.log(`Matched ${matchedProperties.length} properties with existing data`);
+        /* if (matchedProperties.length > 0) {
           console.log('Sample matched property:', {
             id: matchedProperties[0].id,
             name: matchedProperties[0].name
           });
-        }
+        } */
       }
       
       if (matchedProperties.length > 0) {
-        console.log(`Setting ${matchedProperties.length} messaged properties from already loaded data`);
+        // console.log(`Setting ${matchedProperties.length} messaged properties from already loaded data`);
         setMessagedProperties(matchedProperties);
         return;
       }
       
       // If we couldn't match with loaded properties, fetch them separately
-      console.log(`Fetching ${propertyIds.length} properties by IDs`);
+      // console.log(`Fetching ${propertyIds.length} properties by IDs`);
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select('*')
         .in('id', propertyIds);
         
       if (propertiesError) {
-        console.error('Error fetching properties:', propertiesError);
+        // console.error('Error fetching properties:', propertiesError);
         return;
       }
       
       if (!propertiesData || propertiesData.length === 0) {
-        console.log('No properties found for the conversations');
+        // console.log('No properties found for the conversations');
         setMessagedProperties([]);
         return;
       }
       
-      console.log(`Fetched ${propertiesData.length} properties for conversations`);
+      // console.log(`Fetched ${propertiesData.length} properties for conversations`);
       
       // Transform properties to match our format
       const transformedProperties = propertiesData.map((item: any) => {
@@ -272,23 +272,23 @@ const PropertiesSection = () => {
         };
       });
       
-      console.log(`Setting ${transformedProperties.length} messaged properties:`);
-      if (transformedProperties.length > 0) {
+      // console.log(`Setting ${transformedProperties.length} messaged properties:`);
+      /* if (transformedProperties.length > 0) {
         console.log('First property:', {
           id: transformedProperties[0].id,
           name: transformedProperties[0].name,
           images: transformedProperties[0].images?.length
         });
-      }
+      } */
       
       setMessagedProperties(transformedProperties);
       
     } catch (err) {
-      console.error('Error in fetchMessagedProperties:', err);
+      // console.error('Error in fetchMessagedProperties:', err);
       // Don't break the whole component if this fails
       setMessagedProperties([]);
     }
-    console.log('=== END FETCH MESSAGED PROPERTIES ===');
+    // console.log('=== END FETCH MESSAGED PROPERTIES ===');
   };
 
   // Get the current user
@@ -324,7 +324,7 @@ const PropertiesSection = () => {
       const from = (pageNum - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
       
-      console.log(`Fetching properties page ${pageNum} (items ${from}-${to})...`);
+      // console.log(`Fetching properties page ${pageNum} (items ${from}-${to})...`);
       
       // Get properties with pagination
       const { data, error, count } = await supabase
@@ -334,14 +334,14 @@ const PropertiesSection = () => {
         .range(from, to);
           
       if (error) {
-        console.error("Error fetching properties:", error);
+        // console.error("Error fetching properties:", error);
         throw error;
       }
       
-      console.log(`Received ${data?.length || 0} properties from database (page ${pageNum})`);
+      // console.log(`Received ${data?.length || 0} properties from database (page ${pageNum})`);
       
       if (!data || data.length === 0) {
-        console.log("No properties found in database or reached the end");
+        // console.log("No properties found in database or reached the end");
         if (pageNum === 1) {
           setAllProperties([]);
           setPreferredProperties([]);
@@ -438,7 +438,7 @@ const PropertiesSection = () => {
       }
       
     } catch (err: any) {
-      console.error('Error in fetchProperties:', err);
+      // console.error('Error in fetchProperties:', err);
       setError(err.message || 'Failed to load properties');
       setLoading(false);
       setIsLoadingMore(false);
@@ -446,7 +446,7 @@ const PropertiesSection = () => {
   };
   
   const processProperties = (properties: Property[], count: number) => {
-    console.log("Processing properties:", properties.length);
+    // console.log("Processing properties:", properties.length);
     setAllProperties(properties);
     setTotalCount(count);
     setHasMore(properties.length < count);
@@ -504,54 +504,54 @@ const PropertiesSection = () => {
 
   // Filter handlers - with optimization to avoid unnecessary fetch
   const handleFilterChange = (filters: any) => {
-    console.log("== FILTER PROCESS START ==");
-    console.log("Received filters:", filters);
-    console.log("Current allProperties count:", allProperties.length);
+    // console.log("== FILTER PROCESS START ==");
+    // console.log("Received filters:", filters);
+    // console.log("Current allProperties count:", allProperties.length);
     
     // Update filter state
     setActiveFilters(filters);
     
     // Apply filters to currently loaded properties
     const filteredResults = applyFiltersToProperties(allProperties, filters);
-    console.log("Final filtered results count:", filteredResults.length);
+    // console.log("Final filtered results count:", filteredResults.length);
     
     // Check if we need to fetch more properties based on filter results
     if (filteredResults.length < MIN_FILTERED_RESULTS && hasMore) {
-      console.log(`Found only ${filteredResults.length} results, which is below minimum (${MIN_FILTERED_RESULTS}). Loading more...`);
+      // console.log(`Found only ${filteredResults.length} results, which is below minimum (${MIN_FILTERED_RESULTS}). Loading more...`);
       // If we have too few results and there might be more, load more
       const nextPage = page + 1;
       setPage(nextPage);
       fetchProperties(nextPage);
     }
     
-    console.log("== FILTER PROCESS END ==");
+    // console.log("== FILTER PROCESS END ==");
     setIsFilterOpen(false);
   };
 
   // Separate filter application from state updates for better control
   const applyFiltersToProperties = (properties: Property[], filters: any): Property[] => {
-    console.log("Filter debugging in applyFiltersToProperties:");
-    console.log("Initial properties:", properties.length);
-    console.log("Bedrooms filter value:", filters.bedrooms, typeof filters.bedrooms);
+    // console.log("Filter debugging in applyFiltersToProperties:");
+    // console.log("Initial properties:", properties.length);
+    // console.log("Bedrooms filter value:", filters.bedrooms, typeof filters.bedrooms);
     
     // Start with a deep copy of properties to avoid reference issues
     let filtered = [...properties];
     
     // First, filter for available properties only
     filtered = filtered.filter(p => p.available === true && p.status === 'active');
-    console.log("After availability filtering:", filtered.length);
+    // console.log("After availability filtering:", filtered.length);
     
     // Apply price filters
     if (filters.minPrice) {
       const minPriceValue = parseInt(filters.minPrice);
       filtered = filtered.filter(p => p.monthly_rent >= minPriceValue);
-      console.log(`After min price (${minPriceValue}) filtering:`, filtered.length);
+      // console.log(`After min price (${minPriceValue}) filtering:`, filtered.length);
     }
     
     if (filters.maxPrice) {
       const maxPriceValue = parseInt(filters.maxPrice);
       filtered = filtered.filter(p => p.monthly_rent <= maxPriceValue);
-      console.log(`After max price (${maxPriceValue}) filtering:`, filtered.length);
+      // console.log(`After max price (${maxPriceValue}) filtering:`, filtered.length);
     }
     
     // Apply bedroom filter with exact matching for bedrooms
@@ -559,23 +559,23 @@ const PropertiesSection = () => {
       if (filters.bedrooms === '5+') {
         // For 5+ bedrooms, use >= 5
         filtered = filtered.filter(p => p.bedrooms >= 5);
-        console.log("After 5+ bedroom filtering:", filtered.length);
+        // console.log("After 5+ bedroom filtering:", filtered.length);
       } else {
         // For 1-4 bedrooms, use exact match with parseInt
         const bedroomValue = parseInt(filters.bedrooms);
-        console.log("Exact bedroom value to match:", bedroomValue, typeof bedroomValue);
+        // console.log("Exact bedroom value to match:", bedroomValue, typeof bedroomValue);
         
         // Use strict equality with the parsed integer
         filtered = filtered.filter(p => p.bedrooms === bedroomValue);
         
         // Debug: Show all bedroom values for verification
-        console.log("Sample after bedroom filtering:", filtered.map(p => ({
+        /* console.log("Sample after bedroom filtering:", filtered.map(p => ({
           id: p.id.substring(0, 8),
           bedrooms: p.bedrooms,
           type: typeof p.bedrooms
-        })));
+        }))); */
         
-        console.log("After specific bedroom filtering:", filtered.length);
+        // console.log("After specific bedroom filtering:", filtered.length);
       }
     }
     
@@ -584,10 +584,10 @@ const PropertiesSection = () => {
       const locationLower = filters.location.toLowerCase();
       filtered = filtered.filter(p => 
         p.location.toLowerCase().includes(locationLower));
-      console.log(`After location (${filters.location}) filtering:`, filtered.length);
+      // console.log(`After location (${filters.location}) filtering:`, filtered.length);
     }
     
-    console.log("Final filtered properties:", filtered.length);
+    // console.log("Final filtered properties:", filtered.length);
     
     // Return only the filtered results
     return filtered;
@@ -597,18 +597,18 @@ const PropertiesSection = () => {
     // Only run filter logic if there are active filters
     if (hasActiveFilters()) {
       const filtered = applyFiltersToProperties(properties, filters);
-      console.log("Setting preferred properties:", filtered.length);
+      // console.log("Setting preferred properties:", filtered.length);
       setPreferredProperties(filtered);
     } else {
       // No active filters, clear preferred properties
-      console.log("No active filters, clearing preferred properties");
+      // console.log("No active filters, clearing preferred properties");
       setPreferredProperties([]);
     }
   };
 
   // Force preferred properties to update when filters change
   useEffect(() => {
-    console.log("Active filters changed, reapplying filters");
+    // console.log("Active filters changed, reapplying filters");
     applyFilters(allProperties, activeFilters);
   }, [activeFilters]);
 
@@ -704,7 +704,7 @@ const PropertiesSection = () => {
   // Update the useEffect to ensure we call fetchMessagedProperties with userId
   useEffect(() => {
     if (userId) {
-      console.log('User ID available, fetching messaged properties');
+      // console.log('User ID available, fetching messaged properties');
       fetchMessagedProperties(userId);
     }
   }, [userId]);
@@ -712,7 +712,7 @@ const PropertiesSection = () => {
   // Also make sure we fetch/refresh messaged properties when all properties change
   useEffect(() => {
     if (userId && allProperties.length > 0) {
-      console.log('Properties loaded, checking for messaged properties');
+      // console.log('Properties loaded, checking for messaged properties');
       fetchMessagedProperties(userId);
     }
   }, [allProperties.length, userId]);
@@ -721,7 +721,7 @@ const PropertiesSection = () => {
   useEffect(() => {
     const handleConversationUpdate = () => {
       if (userId) {
-        console.log('Conversation update detected, refreshing messaged properties');
+        // console.log('Conversation update detected, refreshing messaged properties');
         fetchMessagedProperties(userId);
       }
     };

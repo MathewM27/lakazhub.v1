@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 
-import PropertyGrid from './property-component/property-grid';
+
 import PropertyModal from './modals/property-modal-details';
 import AvailabilityModal from './modals/availability-modal';
 import NotificationModal from './modals/notification-modal';
