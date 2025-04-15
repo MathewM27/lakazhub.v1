@@ -258,16 +258,19 @@ export default function AvailabilityModal({
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {nextAvailableDate 
                             ? format(nextAvailableDate, "PPP") 
-                            : "When will it be available again?"}
+                            : "Next Available Date?"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0" align="start">
                         <Calendar 
                           mode="single" 
                           selected={nextAvailableDate} 
                           onSelect={setNextAvailableDate} 
                           initialFocus 
-                          disabled={(date) => date < new Date()} // Disable past dates
+                          disabled={(date) => date < new Date()}
+                          className="rounded-md border"
+                          fromMonth={new Date()}
+                          defaultMonth={nextAvailableDate || new Date()}
                         />
                       </PopoverContent>
                     </Popover>
