@@ -389,7 +389,7 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
-            window.location.href = '/login'; // Redirect to login page
+            window.location.href = 'http://localhost:3000'; 
         } catch (err) {
             console.error('Error logging out:', err);
         }
@@ -405,7 +405,7 @@ const Header = () => {
                 }`}
             >
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
-                    <Link href="/" className="group flex items-center">
+                    <Link href="http://localhost:3000/" className="group flex items-center">
                         <span className="text-2xl font-bold tracking-tight transition-colors text-white">
                             Lakaz<span className="opacity-70">Hub</span>
                         </span>
@@ -417,7 +417,7 @@ const Header = () => {
                     {/* Desktop navigation */}
                     <div className="hidden items-center space-x-1 md:flex">
                         <Link 
-                            href="/" 
+                            href="http://localhost:3000/" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-white"
                         >
                             <Home className="mr-2 h-4 w-4" />
@@ -609,7 +609,7 @@ const Header = () => {
                                 <ScrollArea className="h-[40vh]">
                                     <nav className="flex flex-col space-y-1">
                                         <Link 
-                                            href="/" 
+                                            href="http://localhost:3000/" 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
                                         >
                                             <div className="flex items-center">
@@ -619,7 +619,7 @@ const Header = () => {
                                             <ChevronRight className="h-4 w-4 text-white/50" />
                                         </Link>
                                         <Link 
-                                            href="/chat" 
+                                            href="http://localhost:3000/chat" 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
                                         >
                                             <div className="flex items-center">
@@ -634,7 +634,7 @@ const Header = () => {
                                             </div>
                                         </Link>
                                         <Link 
-                                            href="/notifications" 
+                                            href="http://localhost:3000/notifications" 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
                                         >
                                             <div className="flex items-center">

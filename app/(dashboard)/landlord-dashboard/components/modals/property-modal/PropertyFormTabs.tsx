@@ -12,12 +12,14 @@ interface PropertyFormTabsProps {
   property?: PropertyData;
   onSubmit: (formData: FormData, imageUrls: string[]) => Promise<void>;
   isSubmitting: boolean;
+  onSuccess?: () => void; // Add this prop for refreshing properties
 }
 
 export default function PropertyFormTabs({ 
   property,
   onSubmit,
-  isSubmitting 
+  isSubmitting,
+  onSuccess 
 }: PropertyFormTabsProps) {
   const [activeTab, setActiveTab] = useState("basic-info")
   const [uploadingImages, setUploadingImages] = useState(false)
@@ -204,6 +206,11 @@ export default function PropertyFormTabs({
       await onSubmit(formData, allImageUrls);
       console.log('Property submission complete');
       
+      // Call the onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+      
     } catch (error) {
       console.error("Error in form submission:", error);
       toast({
@@ -255,6 +262,7 @@ export default function PropertyFormTabs({
           onSubmit={handleSubmitFinal}
           isSubmitting={isSubmitting}
           isUploading={uploadingImages}
+          onSuccess={onSuccess}
         />
         
         {uploadingImages && (

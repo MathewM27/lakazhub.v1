@@ -2,8 +2,8 @@
 
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
-import { Plus, Home } from "lucide-react";
-import { useState, useMemo, useCallback } from "react";
+import { Plus, Home, RefreshCw } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import { deleteProperty } from "../../lib/utils/services/PropertyService";
 import { useToast } from "../../hooks/use-toast";
@@ -13,25 +13,21 @@ interface PropertyGridProps {
   onPropertyDetailsAction: (property: Property) => void;
   onAvailabilityAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
+  onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
 }
 
 export default function PropertyGrid({ 
   onPropertyDetailsAction, 
   onAvailabilityAction, 
-  onAddNewPropertyAction 
+  onAddNewPropertyAction,
+  onRefreshNeeded 
 }: PropertyGridProps) {
-  const [activeFilter, setActiveFilter] = useState('all');
+  // Removed activeFilter state since we're removing the filter buttons
   const { properties, loading, error, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const { toast } = useToast();
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-
-  // Filter properties based on active filter
-  const filteredProperties = useMemo(() => {
-    if (activeFilter === 'all') return properties;
-    return properties.filter(property => property.property_type === activeFilter);
-  }, [properties, activeFilter]);
 
   // Handle refresh button click
   const handleRefresh = useCallback(() => {
@@ -89,6 +85,13 @@ export default function PropertyGrid({
     setNotificationModalOpen(true);
   };
 
+  // When the component mounts, expose the refresh function to parent components
+  useEffect(() => {
+    if (onRefreshNeeded) {
+      onRefreshNeeded(refreshProperties);
+    }
+  }, [onRefreshNeeded, refreshProperties]);
+
   return (
     <section className="py-12 bg-black relative overflow-hidden">
       {/* Background pattern */}
@@ -132,28 +135,13 @@ export default function PropertyGrid({
               </p>
             </div>
             
-            {/* Property filters */}
-            <div 
-              className="flex items-center gap-3 mt-6 md:mt-0 flex-wrap"
-            >
-              {['all', 'apartment', 'house'].map((filter, index) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 text-sm rounded-full transition-all duration-300 opacity-0 translate-y-2 animate-fade-in-up ${
-                    activeFilter === filter
-                      ? 'bg-white text-black font-medium'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20'
-                  }`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </button>
-              ))}
+            {/* Refresh button - Keeping only this button */}
+            <div className="mt-6 md:mt-0">
               <button
                 onClick={handleRefresh} 
-                className="px-4 py-2 text-sm rounded-full transition-all duration-300 bg-white/10 text-white/70 hover:bg-white/20 opacity-0 translate-y-2 animate-fade-in-up animation-delay-300"
+                className="px-4 py-2 text-sm rounded-full transition-all duration-300 bg-white/10 text-white/70 hover:bg-white/20 opacity-0 translate-y-2 animate-fade-in-up animation-delay-300 flex items-center gap-2"
               >
+                <RefreshCw className="w-4 h-4" />
                 Refresh
               </button>
             </div>
@@ -182,8 +170,8 @@ export default function PropertyGrid({
                   Try Again
                 </button>
               </div>
-            ) : Array.isArray(filteredProperties) && filteredProperties.length > 0 ? (
-              filteredProperties.map((property, index) => (
+            ) : Array.isArray(properties) && properties.length > 0 ? (
+              properties.map((property, index) => (
                 <div 
                   key={property.id}
                   className={`transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${

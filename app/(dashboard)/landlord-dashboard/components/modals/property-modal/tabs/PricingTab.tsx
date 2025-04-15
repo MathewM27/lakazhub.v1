@@ -11,6 +11,7 @@ interface PricingTabProps {
   onSubmit: () => Promise<void>
   isSubmitting: boolean
   isUploading: boolean
+  onSuccess?: () => void // New prop for handling successful submission
 }
 
 export default function PricingTab({ 
@@ -19,7 +20,8 @@ export default function PricingTab({
   onPrev, 
   onSubmit,
   isSubmitting,
-  isUploading
+  isUploading,
+  onSuccess
 }: PricingTabProps) {
   // Handle form input changes
   const handleInputChange = (field: string, value: string | number | boolean) => {
@@ -36,6 +38,15 @@ export default function PricingTab({
         [utility]: checked
       }
     })
+  }
+
+  // Handle form submission with success callback
+  const handleSubmit = async () => {
+    await onSubmit();
+    // Call onSuccess callback after successful submission if it exists
+    if (!isSubmitting && onSuccess) {
+      onSuccess();
+    }
   }
 
   return (
@@ -93,7 +104,7 @@ export default function PricingTab({
           Back
         </Button>
         <Button 
-          onClick={onSubmit} 
+          onClick={handleSubmit} 
           disabled={isSubmitting || isUploading}
         >
           {isSubmitting ? "Saving..." : isUploading ? "Uploading..." : "Save Property"}
