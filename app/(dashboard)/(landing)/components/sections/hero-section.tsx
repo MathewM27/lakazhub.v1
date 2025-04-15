@@ -51,7 +51,7 @@ export const HeroSection = () => {
                     {/* Status badge - positioned at top-right - changed to pure black */}
                     <div className="absolute top-4 right-4 bg-black px-3 py-1 rounded-full flex items-center space-x-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                      <span className="text-xs text-white font-medium">Available Online</span>
+                      <span className="text-xs text-white font-medium">Realtime Availability</span>
                     </div>
 
                     {/* Messaging badge - positioned at top-left - changed to pure black */}

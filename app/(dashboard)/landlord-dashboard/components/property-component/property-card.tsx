@@ -1,8 +1,9 @@
+// Keep "use client" directive as this component has interactive elements and state
 "use client";
 
 import { Property } from "../../types";
 import { usePropertyImages } from "../../hooks/usePropertyImages";
-import { motion } from "framer-motion";
+// Remove Framer Motion import
 import { Calendar, Bell, Bath, Bed, MapPin, ChevronRight, Home, Building, MoreVertical } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -14,15 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { supabase } from "../../lib/utils/supabase/client";
-
-interface PropertyCardProps {
-  property: Property;
-  onDetailsAction: () => void;
-  onAvailabilityAction: () => void;
-  onNotificationsAction: (property: Property) => void; // Update to pass property
-  onDeleteAction: (propertyId: string) => void;
-  isDeleting?: boolean;
-}
 
 // Define the type for conversation payload
 interface ConversationPayload {
@@ -37,6 +29,15 @@ declare global {
   interface Window {
     readConversations?: Set<string>;
   }
+}
+
+interface PropertyCardProps {
+  property: Property;
+  onDetailsAction: () => void;
+  onAvailabilityAction: () => void;
+  onNotificationsAction: (property: Property) => void; // Update to pass property
+  onDeleteAction: (propertyId: string) => void;
+  isDeleting?: boolean;
 }
 
 export default function PropertyCard({ 
@@ -195,10 +196,8 @@ export default function PropertyCard({
   };
 
   return (
-    <motion.div
-      className="bg-black border border-white/10 rounded-lg overflow-hidden h-full shadow-lg"
-      whileHover={{ y: -3, boxShadow: '0 10px 15px -5px rgba(0, 0, 0, 0.2)' }}
-      transition={{ duration: 0.3 }}
+    <div
+      className="bg-black border border-white/10 rounded-lg overflow-hidden h-full shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
       {/* Property Image Section - Now with prioritized exterior image */}
       <div className="relative aspect-[16/9] overflow-hidden">
@@ -297,7 +296,7 @@ export default function PropertyCard({
             className="w-full py-3 px-3 flex justify-between items-center text-white text-[13px] font-medium bg-white/10 rounded-md hover:bg-white/15 transition-colors group"
           >
             Property Details
-            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
           </button>
           
           <div className="flex gap-2">
@@ -351,6 +350,6 @@ export default function PropertyCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </motion.div>
+    </div>
   );
 }

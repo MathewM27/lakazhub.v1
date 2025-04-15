@@ -50,6 +50,17 @@
   100% { width: 100%; }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .content {
   text-align: center;
 }
@@ -162,8 +173,20 @@
   animation-delay: 0.3s;
 }
 
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
 .animation-delay-100 {
   animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
 }
 
 .animation-delay-300 {

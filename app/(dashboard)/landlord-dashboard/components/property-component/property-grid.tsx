@@ -2,7 +2,6 @@
 
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
-import { motion } from "framer-motion";
 import { Plus, Home } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { useProperties } from "../../hooks/useProperties";
@@ -49,26 +48,6 @@ export default function PropertyGrid({
       });
     });
   }, [refreshProperties, toast]);
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
-    }
-  };
 
   // Add this function to handle property deletion
   const handleDeleteProperty = async (propertyId: string) => {
@@ -126,94 +105,73 @@ export default function PropertyGrid({
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div 
-          className="max-w-6xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+        <div 
+          className="max-w-6xl mx-auto opacity-0 translate-y-5 animate-fade-in-up"
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
             <div className="max-w-2xl">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center gap-2 mb-4"
+              <div
+                className="flex items-center gap-2 mb-4 opacity-0 translate-y-2 animate-fade-in-up"
               >
                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                   <Home className="w-4 h-4 text-black" />
                 </div>
                 <span className="text-white/70 text-sm font-medium">Your Property Portfolio</span>
-              </motion.div>
+              </div>
               
-              <motion.h2 
-                className="text-3xl md:text-4xl font-bold mb-4 text-white"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+              <h2 
+                className="text-3xl md:text-4xl font-bold mb-4 text-white opacity-0 translate-y-2 animate-fade-in-up animation-delay-100"
               >
                 Manage Your Properties
-              </motion.h2>
+              </h2>
               
-              <motion.p 
-                className="text-base md:text-lg text-white/70"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+              <p 
+                className="text-base md:text-lg text-white/70 opacity-0 translate-y-2 animate-fade-in-up animation-delay-200"
               >
                 View and manage all your properties in one place with real-time information
-              </motion.p>
+              </p>
             </div>
             
             {/* Property filters */}
-            <motion.div 
+            <div 
               className="flex items-center gap-3 mt-6 md:mt-0 flex-wrap"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
             >
-              {['all', 'apartment', 'house'].map((filter) => (
-                <motion.button
+              {['all', 'apartment', 'house'].map((filter, index) => (
+                <button
                   key={filter}
-                  variants={itemVariants}
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 text-sm rounded-full transition-all duration-300 ${
+                  className={`px-4 py-2 text-sm rounded-full transition-all duration-300 opacity-0 translate-y-2 animate-fade-in-up ${
                     activeFilter === filter
                       ? 'bg-white text-black font-medium'
                       : 'bg-white/10 text-white/70 hover:bg-white/20'
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </motion.button>
+                </button>
               ))}
-              <motion.button
-                variants={itemVariants}
+              <button
                 onClick={handleRefresh} 
-                className="px-4 py-2 text-sm rounded-full transition-all duration-300 bg-white/10 text-white/70 hover:bg-white/20"
+                className="px-4 py-2 text-sm rounded-full transition-all duration-300 bg-white/10 text-white/70 hover:bg-white/20 opacity-0 translate-y-2 animate-fade-in-up animation-delay-300"
               >
                 Refresh
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           </div>
 
-          <motion.div 
+          <div 
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
           >
             {loading ? (
-              <motion.div 
-                variants={itemVariants}
-                className="col-span-3 flex flex-col items-center justify-center py-20 space-y-4"
+              <div 
+                className="col-span-3 flex flex-col items-center justify-center py-20 space-y-4 opacity-0 animate-fade-in"
               >
                 <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <p className="text-white/70">Loading properties...</p>
-              </motion.div>
+              </div>
             ) : error ? (
-              <motion.div 
-                variants={itemVariants}
-                className="col-span-3 text-center py-12 px-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
+              <div 
+                className="col-span-3 text-center py-12 px-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in"
               >
                 <h3 className="text-xl font-semibold text-red-400 mb-2">Error loading properties</h3>
                 <p className="text-white/80 mb-4">{error.message}</p>
@@ -223,16 +181,15 @@ export default function PropertyGrid({
                 >
                   Try Again
                 </button>
-              </motion.div>
+              </div>
             ) : Array.isArray(filteredProperties) && filteredProperties.length > 0 ? (
-              filteredProperties.map((property) => (
-                <motion.div 
+              filteredProperties.map((property, index) => (
+                <div 
                   key={property.id}
-                  variants={itemVariants}
-                  whileHover={{ y: -10 }}
-                  className={`transform transition-all duration-300 ${
+                  className={`transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
                     deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <PropertyCard
                     property={property}
@@ -241,21 +198,18 @@ export default function PropertyGrid({
                     onNotificationsAction={handleNotificationClick}
                     onDeleteAction={handleDeleteProperty}
                   />
-                </motion.div>
+                </div>
               ))
             ) : (
-              <motion.p 
-                variants={itemVariants}
-                className="text-white col-span-3 text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10"
+              <p 
+                className="text-white col-span-3 text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in"
               >
                 No properties found
-              </motion.p>
+              </p>
             )}
 
-            <motion.div 
-              variants={itemVariants}
-              whileHover={{ y: -10 }}
-              className="flex items-center justify-center border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden"
+            <div 
+              className="flex items-center justify-center border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden opacity-0 animate-fade-in-up animation-delay-300 hover:-translate-y-2.5 transition-all duration-300"
             >
               <button
                 onClick={onAddNewPropertyAction}
@@ -269,9 +223,9 @@ export default function PropertyGrid({
                   Click here to add a new property to your portfolio
                 </p>
               </button>
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            </div>
+          </div>
+        </div>
       </div>
       <NotificationsModal 
         open={notificationModalOpen}
