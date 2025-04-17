@@ -74,10 +74,10 @@ export default {
       container: {
         center: true,
         padding: {
-          DEFAULT: '1rem',
-          sm: '2rem',
-          lg: '4rem',
-          xl: '5rem',
+          DEFAULT: '0.75rem',  // Even smaller default padding
+          sm: '1rem',          // Further reduced
+          lg: '1.5rem',        // Further reduced
+          xl: '2rem',          // Further reduced
         },
         screens: {
           sm: '640px',

@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { rateLimiter } from '@/utils/rate-limiter'
 
-// More efficient background logging
-const logInBackground = (data: any) => {
+// More efficient background logging with proper type
+const logInBackground = (data: Record<string, unknown>) => {
   // Use queueMicrotask for lower overhead than Promise.resolve
   queueMicrotask(() => console.log(data));
 };
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 
   if (error) {
     const errorDescription = searchParams.get('error_description') || '';
-    logInBackground(`Auth error: ${error}, Description: ${errorDescription}`);
+    logInBackground({ message: `Auth error: ${error}, Description: ${errorDescription}` });
     return errorRedirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription)}`);
   }
 
