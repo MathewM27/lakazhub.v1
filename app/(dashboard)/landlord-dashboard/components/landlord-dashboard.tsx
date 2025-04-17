@@ -22,7 +22,7 @@ export default function LandlordDashboard() {
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
   const { toast } = useToast();
   const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [successModalProps, setSuccessModalProps] = useState({
+  const [successModalProps] = useState({
     title: "",
     message: "",
   });
@@ -41,11 +41,6 @@ export default function LandlordDashboard() {
   const handleAvailability = useCallback((property: Property) => {
     setSelectedProperty(property);
     setAvailabilityModalOpen(true);
-  }, []);
-  
-  const handleNotifications = useCallback((property: Property) => {
-    setSelectedProperty(property);
-    setNotificationsModalOpen(true);
   }, []);
   
   const handleSuccessAction = useCallback(() => {

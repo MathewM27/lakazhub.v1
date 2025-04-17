@@ -1,9 +1,10 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { FormData, ROOM_TYPES } from "../types"
-import { ImagePlus, X, UploadCloud, Camera, Info } from "lucide-react"
+import { FormData } from "../types"
+import { X, Camera, Info } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import Image from "next/image"
 
 interface PhotosTabProps {
   formData: FormData
@@ -200,7 +201,6 @@ export default function PhotosTab({
         {ROOM_CATEGORIES.map((category) => {
           const images = imagesByCategory[category.id] || []
           const hasImage = images.length > 0
-          const remainingSlots = getCategoryRemainingSlots(category.id)
           
           return (
             <div 
@@ -228,9 +228,11 @@ export default function PhotosTab({
                 {hasImage ? (
                   // Display the first image if we have one
                   <div className="w-full h-full relative">
-                    <img 
-                      src={images[0]?.url} 
+                    <Image 
+                      src={images[0]?.url || "/placeholder.jpg"} 
                       alt={category.displayName}
+                      width={400}
+                      height={300}
                       className="w-full h-full object-cover"
                     />
                     
@@ -323,9 +325,11 @@ export default function PhotosTab({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {imagesByCategory["other"].map((image, index) => (
               <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden">
-                <img 
-                  src={image.url} 
+                <Image 
+                  src={image.url || "/placeholder.jpg"} 
                   alt={`Other ${index + 1}`} 
+                  width={200}
+                  height={200}
                   className="w-full h-full object-cover"
                 />
                 <button 

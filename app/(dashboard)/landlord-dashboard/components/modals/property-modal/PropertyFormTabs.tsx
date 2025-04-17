@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/app/(dashboard)/landlord-dashboard/hooks/use-toast"
-import { FormData, PropertyData, ROOM_TYPES, convertPropertyToFormData } from "./types"
-import { ImageStorage } from "@/app/(dashboard)/landlord-dashboard/lib/utils/imageStorage"
+import { FormData, PropertyData, convertPropertyToFormData } from "./types"
 
 import BasicInfoTab from "./tabs/BasicInfoTab"
 import PhotosTab from "./tabs/PhotosTab"
@@ -174,14 +173,11 @@ export default function PropertyFormTabs({
               // Comment out console logs
               // console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
               uploadedImageUrls = [...uploadedImageUrls, ...urls];
-            } catch (error) {
-              // Comment out console errors but keep the actual error handling
-              // console.error(`Error uploading ${roomType} images:`, error);
-              
+            } catch {
               // Show more specific error message
               let errorMessage = "Failed to upload some images. Please try again.";
-              if (error instanceof Error) {
-                errorMessage = error.message || errorMessage;
+              if (errorMessage) {
+                errorMessage = errorMessage || errorMessage;
               }
               
               toast({
@@ -219,8 +215,7 @@ export default function PropertyFormTabs({
         onSuccess();
       }
       
-    } catch (error) {
-      // console.error("Error in form submission:", error);
+    } catch {
       toast({
         title: "Submission Error",
         description: "Failed to submit property. Please try again.",

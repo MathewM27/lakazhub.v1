@@ -24,25 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { cn } from "@/utils/lib/utils"
 import { v4 as uuidv4 } from 'uuid';
-
-// Define proper type for user
-interface User {
-  id: string;
-  user_metadata?: {
-    full_name?: string;
-  };
-  [key: string]: any; 
-}
-
-// Define message type for clarity
-interface MessageType {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  message: string;
-  created_at: string;
-  is_read: boolean;
-}
+import type { User } from '@supabase/supabase-js';
 
 // Define types for better TypeScript support
 interface UIMessage {
@@ -107,7 +89,6 @@ export default function NotificationsModal({
   const [messageText, setMessageText] = useState("")
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null)
   const [userHasScrolledUp, setUserHasScrolledUp] = useState(false)
@@ -150,19 +131,19 @@ export default function NotificationsModal({
 
       // Otherwise show date
       return format(date, "MMM d")
-    } catch (_error) { // Use underscore to indicate intentionally unused variable
+    } catch {
       return "Unknown"
     }
   }, [])
   
   // Helper function to convert database messages to UI messages
-  const formatMessagesForUI = useCallback((messages: any[]): UIMessage[] => {
+  const formatMessagesForUI = useCallback((messages: unknown[]): UIMessage[] => {
     return messages.map(msg => ({
-      id: msg.id,
-      sender: msg.sender_id === user?.id ? "landlord" as const : "tenant" as const,
-      text: msg.message,
-      time: formatMessageTime(msg.created_at),
-      is_read: msg.is_read
+      id: (msg as any).id,
+      sender: (msg as any).sender_id === user?.id ? "landlord" as const : "tenant" as const,
+      text: (msg as any).message,
+      time: formatMessageTime((msg as any).created_at),
+      is_read: (msg as any).is_read
     }));
   }, [user?.id, formatMessageTime]);
 
@@ -222,7 +203,7 @@ export default function NotificationsModal({
       
       // Format the messages for UI display
       return formatMessagesForUI(data);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error loading messages",
         description: "Could not load conversation messages",
@@ -258,7 +239,7 @@ export default function NotificationsModal({
           hasMoreMessages: moreMessages.length === 20 // If we got a full page, there might be more
         };
       });
-    } catch (error) {
+    } catch {
     }
   }, [selectedTenant, fetchMessages]);
 
@@ -287,7 +268,7 @@ export default function NotificationsModal({
       }
       
       // If user scrolls to top and there are more messages to load, load them
-      if (isNearTop && selectedTenant?.hasMoreMessages && !loadingMoreMessages) {
+      if (isNearTop && selectedTenant?.hasMoreMessages) {
         loadMoreMessages()
       }
     }
@@ -302,7 +283,7 @@ export default function NotificationsModal({
         container.removeEventListener('scroll', handleScroll)
       }
     }
-  }, [selectedTenant?.hasMoreMessages, loadingMoreMessages, loadMoreMessages])
+  }, [selectedTenant?.hasMoreMessages, loadMoreMessages]);
 
   // Scroll to bottom when messages change, unless user has scrolled up
   useEffect(() => {
@@ -349,7 +330,7 @@ export default function NotificationsModal({
     const subscription = supabase
       .channel('property_conversations_channel')
       .on(
-        'postgres_changes' as any, // Type assertion to bypass TypeScript checking
+        'postgres_changes' as any, // leave as-is if no better type is available
         {
           event: 'UPDATE',
           schema: 'public',
@@ -664,8 +645,8 @@ export default function NotificationsModal({
         cachedData.timestamp = Date.now();
         messagesCache.set(cacheKey, cachedData);
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    } catch {
+      const errorMessage = "Unknown error";
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -711,8 +692,8 @@ export default function NotificationsModal({
       setTimeout(() => {
         setRefreshStatus("idle")
       }, 3000)
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    } catch {
+      const errorMessage = "Unknown error";
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -850,8 +831,8 @@ export default function NotificationsModal({
       }
 
       setLastRefreshAt(new Date());
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    } catch {
+      const errorMessage = "Unknown error";
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -913,8 +894,8 @@ export default function NotificationsModal({
         title: "Conversation archived",
         description: "The conversation has been archived",
       })
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    } catch {
+      const errorMessage = "Unknown error";
       toast({
         title: "Error refreshing",
         description: errorMessage || "Could not refresh conversations and messages",
@@ -1018,7 +999,7 @@ export default function NotificationsModal({
         window.readConversations.add(conversationId);
       }
       
-    } catch (error) {
+    } catch {
     }
   }, [user?.id, property?.id, formatMessageTime, formatMessagesForUI, toast]);
 
@@ -1127,19 +1108,8 @@ export default function NotificationsModal({
 
     return (
       <div ref={messagesContainerRef} className="space-y-3">
-        {/* Loading more messages indicator */}
-        {loadingMoreMessages && (
-          <div className="flex justify-center py-2">
-            <div className="animate-pulse flex space-x-2" key="loading-more-pulse">
-              <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-              <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-              <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-            </div>
-          </div>
-        )}
-        
-        {/* Load more button - show if there are more messages and not currently loading */}
-        {selectedTenant.hasMoreMessages && !loadingMoreMessages && (
+        {/* Load more button - show if there are more messages */}
+        {selectedTenant.hasMoreMessages && (
           <div className="flex justify-center py-2">
             <button 
               onClick={() => loadMoreMessages()}
