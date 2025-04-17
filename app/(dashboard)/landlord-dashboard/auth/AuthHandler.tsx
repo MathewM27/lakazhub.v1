@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
-import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '../lib/utils/supabase/client';
+import { supabase, getUserProfile, createUserProfile } from '../lib/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
 import * as Sentry from '@sentry/nextjs';
@@ -9,6 +9,7 @@ import { logDebug, logError, categorizeAuthError, AuthErrorType } from '@/utils/
 import { SessionManager } from '@/utils/auth/sessionManager';
 import AuthLoadingScreen from '@/components/auth/AuthLoadingScreen';
 import { useRouter } from 'next/navigation';
+import type { Session } from '@supabase/supabase-js';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -49,7 +50,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [hasCorrectRole, setHasCorrectRole] = useState(false);
-  const [sessionManager, setSessionManager] = useState<SessionManager | null>(null);
   const router = useRouter();
 
   // Handle session expiration
@@ -58,19 +58,13 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     router.push('/auth/login?reason=expired');
   }, [router]);
 
-  // Initialize session manager
   useEffect(() => {
     if (isBrowser) {
       const manager = new SessionManager(supabase, handleSessionExpired);
-      setSessionManager(manager);
-      
       manager.initialize().then(initialized => {
         logDebug(PREFIX, `Session manager initialized: ${initialized}`);
       });
-      
-      // Set up auth listener
       const cleanupListener = manager.setupAuthListener();
-      
       return () => {
         manager.cleanup();
         cleanupListener();
@@ -139,7 +133,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         signal: AbortSignal.timeout(2000) // 2 second timeout
       });
       return true;
-    } catch (_e) {
+    } catch {
       return false;
     }
   };
@@ -158,7 +152,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           return JSON.parse(cachedProfile);
         }
       }
-    } catch (_e) {
+    } catch {
       // Invalid cache, continue with API call
     }
     
@@ -172,7 +166,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     try {
       localStorage.setItem(`profile_${userId}`, JSON.stringify(profile));
       localStorage.setItem(`profile_time_${userId}`, Date.now().toString());
-    } catch (_e) {
+    } catch {
       // Failed to cache, not critical
     }
   };
@@ -363,8 +357,8 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             }
           }
         }
-      } catch (_e) {
-        logError(PREFIX, 'Cache read error (non-critical)', _e);
+      } catch {
+        logError(PREFIX, 'Cache read error (non-critical)');
         // Ignore cache errors, will fall back to normal auth flow
       }
     }
@@ -465,7 +459,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: string, session: any) => {
+      (event: string, session: Session | null) => {
         logDebug(PREFIX, `Auth state changed: ${event}`);
         
         if (session) {
