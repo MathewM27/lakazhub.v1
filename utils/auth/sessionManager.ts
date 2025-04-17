@@ -11,6 +11,8 @@ export class SessionManager {
   private refreshTimeout: NodeJS.Timeout | null = null;
   private onSessionExpired: () => void;
   private isServerSide: boolean;
+  private lastRefreshTime: number = 0;
+  private minRefreshInterval: number = 60000; // Minimum 1 minute between refresh attempts
   
   constructor(
     supabaseClient: SupabaseClient,
@@ -60,15 +62,12 @@ export class SessionManager {
     
     // If already expired or will expire very soon, call expiration handler immediately
     if (timeUntilExpiry <= REFRESH_BUFFER_SECONDS * 1000) {
-      // logDebug(PREFIX, 'Session expired or expiring very soon');
       this.refreshSession();
       return;
     }
     
     // Schedule refresh for 5 minutes before expiration
     const refreshTime = timeUntilExpiry - (REFRESH_BUFFER_SECONDS * 1000);
-    
-    // logDebug(PREFIX, `Scheduling token refresh in ${Math.floor(refreshTime / 60000)} minutes`);
     
     this.refreshTimeout = setTimeout(() => {
       this.refreshSession();
@@ -79,9 +78,15 @@ export class SessionManager {
    * Refresh the session
    */
   private async refreshSession(): Promise<void> {
+    // Prevent excessive refreshes
+    const now = Date.now();
+    if (now - this.lastRefreshTime < this.minRefreshInterval) {
+      return;
+    }
+    
+    this.lastRefreshTime = now;
+    
     try {
-      // logDebug(PREFIX, 'Attempting to refresh session');
-      
       const { data, error } = await this.client.auth.refreshSession();
       
       if (error) {
@@ -101,17 +106,41 @@ export class SessionManager {
       }
       
       if (data?.session) {
-        // logDebug(PREFIX, 'Session refreshed successfully');
-        
         // Schedule the next refresh
         this.scheduleRefresh(data.session);
       } else {
-        // logDebug(PREFIX, 'No session returned after refresh');
         this.onSessionExpired();
       }
     } catch (err) {
       logError(PREFIX, 'Unexpected error during session refresh', err);
       this.onSessionExpired();
+    }
+  }
+  
+  /**
+   * Manually trigger a session refresh
+   * @returns Promise resolving to success boolean
+   */
+  public async manualRefresh(): Promise<boolean> {
+    if (this.isServerSide) return false;
+    
+    try {
+      const { data, error } = await this.client.auth.refreshSession();
+      
+      if (error) {
+        logError(PREFIX, 'Manual refresh failed', error);
+        return false;
+      }
+      
+      if (data?.session) {
+        this.scheduleRefresh(data.session);
+        return true;
+      }
+      
+      return false;
+    } catch (err) {
+      logError(PREFIX, 'Error during manual refresh', err);
+      return false;
     }
   }
   

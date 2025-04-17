@@ -6,6 +6,7 @@ import { FiUser, FiHome, FiMail, FiPhone, FiArrowRight } from "react-icons/fi";
 import Modal from "./../layout/Modal";
 import { signinWithGoogle, signinWithMagicLink } from "@/utils/actions";
 import { motion } from "framer-motion";
+import { useRouter } from 'next/navigation';
 
 // Static backgrounds with CSS instead of canvas for better performance
 const StaticBackground = () => (
@@ -22,6 +23,7 @@ const StaticBackground = () => (
 );
 
 export const SignupSection = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     fullName: "",
     phoneNumber: "",
@@ -75,14 +77,19 @@ export const SignupSection = () => {
   const handleGoogleSignIn = useCallback(async () => {
     try {
       setIsGoogleLoading(true);
+      
+      // First navigate to the loading screen, which gives immediate visual feedback
+      router.push(`/auth/auth-loading?message=Connecting to Google&user_role=${userType}`);
+      
+      // Then initiate the Google sign-in process
+      // The response will be handled by the callback route
       await signinWithGoogle(userType);
     } catch (error) {
       console.error('Failed to sign in with Google:', error);
       setError('Failed to sign in with Google. Please try again.');
-    } finally {
       setIsGoogleLoading(false);
     }
-  }, [userType]);
+  }, [userType, router]);
 
   return (
     <section id="signup" className="bg-black text-white py-16 relative overflow-hidden">

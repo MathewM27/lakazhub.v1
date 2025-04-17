@@ -26,41 +26,36 @@ const errorRedirect = (url: string) => NextResponse.redirect(url, { headers: ERR
 const successRedirect = (url: string) => NextResponse.redirect(url, { headers: SUCCESS_CACHE_HEADERS });
 
 export async function GET(request: Request) {
-  // Apply rate limiting to auth callback
+  // Check if this is a redirect from authentication
+  const url = new URL(request.url)
+  const { searchParams, origin } = url;
+  
+  // Get necessary parameters at once
+  const code = searchParams.get('code');
+  const error = searchParams.get('error');
+  const userRole = searchParams.get('user_role');
+  
+  // Apply rate limiting to auth callback - only check once we have the parameters
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
              request.headers.get('x-real-ip') || 
              'unknown-ip';
 
-  // Use a more lenient rate limit check for callbacks
-  // We only want to prevent extreme abuse scenarios for callbacks
-  if (ip !== 'unknown-ip') {
-    const { isLimited } = rateLimiter.checkLimit(`callback_${ip}`);
-    if (isLimited) {
-      logInBackground({
-        type: 'rate_limit_exceeded',
-        ip: ip
-      });
-      return errorRedirect(`${new URL(request.url).origin}/auth/auth-code-error?error=too_many_requests`);
-    }
-  }
-  
-  // Parse URL only once
-  const url = new URL(request.url);
-  const { searchParams, origin } = url;
-  
-  // Get all parameters at once to minimize searchParams access
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-  const userRole = searchParams.get('user_role');  // ✅ Gets user role from query params
-
+  // Early error handling for better UX
   if (error) {
     const errorDescription = searchParams.get('error_description') || '';
-    logInBackground({ message: `Auth error: ${error}, Description: ${errorDescription}` });
-    return errorRedirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription)}`);
+    return errorRedirect(`${origin}/auth/auth-loading?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription)}`);
   }
 
   if (!code) {
-    return errorRedirect(`${origin}/auth/auth-code-error?error=no_code`);
+    return errorRedirect(`${origin}/auth/auth-loading?error=no_code`);
+  }
+  
+  // Use a more lenient rate limit check for callbacks
+  if (ip !== 'unknown-ip') {
+    const { isLimited } = rateLimiter.checkLimit(`callback_${ip}`);
+    if (isLimited) {
+      return errorRedirect(`${origin}/auth/auth-loading?error=too_many_requests`);
+    }
   }
   
   // Initialize Supabase client once
@@ -71,12 +66,15 @@ export async function GET(request: Request) {
     const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
     
     if (sessionError) {
-      logInBackground({
-        type: 'session_error',
-        error: sessionError.message,
-        code: sessionError.status
+      // Log error in background but redirect immediately
+      queueMicrotask(() => {
+        logInBackground({
+          type: 'session_error',
+          error: sessionError.message,
+          code: sessionError.status
+        });
       });
-      return errorRedirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(sessionError.message)}`);
+      return errorRedirect(`${origin}/auth/auth-loading?error=${encodeURIComponent(sessionError.message)}`);
     }
 
     // Get session data - critical for authentication
@@ -84,20 +82,19 @@ export async function GET(request: Request) {
     
     // Check if we have a valid user session
     if (!session?.user) {
-      return errorRedirect(`${origin}/auth/auth-code-error?error=no_session`);
+      return errorRedirect(`${origin}/auth/auth-loading?error=no_session`);
     }
     
     // Log success in background (non-blocking)
-    logInBackground({ type: 'auth_success', provider: 'google' });
+    queueMicrotask(() => {
+      logInBackground({ type: 'auth_success', provider: 'google' });
+    });
     
-    // Process Google user data if available
-    // This is performance-optimized to avoid excessive string operations
-    if (session.user.app_metadata?.provider === 'google') {
-      const metadata = session.user.user_metadata || {};
-      
-      // Update user in background without blocking the redirect
+    // Update user metadata in background without blocking the redirect
+    if (session.user.app_metadata?.provider === 'google' && userRole) {
       queueMicrotask(async () => {
         try {
+          const metadata = session.user.user_metadata || {};
           const firstName = metadata.given_name || 
                            (metadata.full_name ? metadata.full_name.split(' ')[0] : 'Unknown');
           const lastName = metadata.family_name || 
@@ -107,10 +104,11 @@ export async function GET(request: Request) {
             data: {
               full_name: `${firstName} ${lastName}`,
               phone_number: '', 
-              user_role: userRole === 'landlord' ? 'landlord' : 'tenant'  // ✅ Correctly sets user role in Supabase
+              user_role: userRole === 'landlord' ? 'landlord' : 'tenant'
             }
           });
         } catch (updateError) {
+          // Just log the error, don't block the flow
           logInBackground({
             type: 'profile_update_error',
             error: String(updateError),
@@ -120,29 +118,24 @@ export async function GET(request: Request) {
       });
     }
 
-    // Determine redirect using optimized path selection
-    // Compute these values once to avoid redundant operations
-    const forwardedHost = request.headers.get('x-forwarded-host');
-    const isLocalEnv = process.env.NODE_ENV === 'development';
-    
-    // Use quick lookup rather than nested ternary
+    // Determine redirect path
     const dashboardPath = 
       userRole === 'landlord' ? '/landlord-dashboard' :
       userRole === 'admin' ? '/admin-dashboard' : 
-      '/tenant-dashboard';  // ✅ Uses user role to determine redirect path
+      '/tenant-dashboard';
     
-    // Build redirect URL more efficiently
-    const baseUrl = isLocalEnv ? origin : (forwardedHost ? `https://${forwardedHost}` : origin);
-    
-    // Return optimized redirect with user role
-    return successRedirect(`${baseUrl}${dashboardPath}?user_role=${userRole || 'tenant'}`);  // ✅ Includes user role in final redirect
+    // Redirect to auth-loading page which will show UI while session is being established
+    // Pass user role as query param for smoother transition
+    return successRedirect(`${origin}/auth/auth-loading?redirect=${encodeURIComponent(dashboardPath)}&user_role=${userRole || 'tenant'}`);
     
   } catch (error) {
     // Log error in background, don't block response
-    logInBackground({
-      type: 'auth_exception',
-      error: String(error)
+    queueMicrotask(() => {
+      logInBackground({
+        type: 'auth_exception',
+        error: String(error)
+      });
     });
-    return errorRedirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent('Unknown error')}&description=${encodeURIComponent(String(error))}`);
+    return errorRedirect(`${origin}/auth/auth-loading?error=${encodeURIComponent('Unknown error')}&description=${encodeURIComponent(String(error))}`);
   }
 }
