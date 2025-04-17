@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { 
   MapPin, Bed, Bath, Home, MessageSquare, Calendar, 
-  Clock, Save, X, ChevronLeft, ChevronRight,
+  Clock, X, ChevronLeft, ChevronRight,
   Wifi, Tv, Utensils, Car, Thermometer, ShowerHead, 
   Droplet, Zap, Trash, Flame, Tv2, DollarSign
 } from "lucide-react";
@@ -44,7 +44,7 @@ interface PropertyDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMessageLandlord: () => void;
-  onSaveProperty: () => void;
+  // Removed onSaveProperty prop
 }
 
 const PropertyDetailModal = ({
@@ -52,7 +52,6 @@ const PropertyDetailModal = ({
   open,
   onOpenChange,
   onMessageLandlord,
-  onSaveProperty
 }: PropertyDetailModalProps) => {
   // Image carousel state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -216,18 +215,18 @@ const PropertyDetailModal = ({
             <div className="grid grid-cols-2 gap-3 mb-5">
               {/* Contract length */}
               <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10">
+                
+                <div className='flex items-center'>
                 <Clock className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs uppercase text-white/60 leading-tight">Contract</div>
                   <div className="text-sm text-white">{enhancedProperty.contractLength}</div>
                 </div>
               </div>
               
               {/* Security deposit */}
               <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10">
+                
+                <div className='flex items-center'>
                 <DollarSign className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
-                <div>
-                  <div className="text-xs uppercase text-white/60 leading-tight">Deposit</div>
                   <div className="text-sm text-white">Rs {enhancedProperty.security_deposit.toLocaleString()}</div>
                 </div>
               </div>
@@ -269,22 +268,14 @@ const PropertyDetailModal = ({
           </div>
         </div>
         
-        {/* Footer Actions - Compact design */}
-        <div className="flex flex-col sm:flex-row gap-2 p-4 border-t border-white/10">
+        {/* Footer Actions - Modified to have only Message Landlord button */}
+        <div className="flex p-4 border-t border-white/10">
           <Button 
             className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto"
             onClick={onMessageLandlord}
           >
             <MessageSquare className="w-4 h-4 mr-2" />
             Message Landlord
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1 border-white/20 text-black hover:bg-white/10 text-sm py-2 h-auto"
-            onClick={onSaveProperty}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save Property
           </Button>
         </div>
       </DialogContent>

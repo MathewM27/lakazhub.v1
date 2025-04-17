@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { 
-  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare 
+  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare, Building, Calendar
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 
@@ -70,123 +70,135 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
   const imageUrl = property.image || 
     (property.images && property.images.length > 0 ? property.images[0] : '/placeholder-property.jpg');
   
-  const handleSaveProperty = () => {
-    // Comment out console log
-    // console.log('Property saved to favorites:', property.name);
-    // Here you would implement saving to user's favorites
-  };
+  // Remove the handleSaveProperty function as it's no longer needed
 
   // Generate availability badge class
   const getAvailabilityBadgeClass = (): string => {
     switch (property.availability) {
       case 'Available': 
-        return 'bg-green-500/80 hover:bg-green-500/90';
+        return 'bg-emerald-500';
       case 'Rented':
-        return 'bg-red-500/80 hover:bg-red-500/90';
+        return 'bg-amber-500';
       case 'Coming Soon':
-        return 'bg-yellow-500/80 hover:bg-yellow-500/90';
+        return 'bg-yellow-500';
       default:
-        return 'bg-blue-500/80 hover:bg-blue-500/90';
+        return 'bg-blue-500';
     }
   };
+
+  // Format location name
+  const formatLocation = (location: string) => {
+    if (!location) return "Unknown Location";
+    return location.charAt(0).toUpperCase() + location.slice(1);
+  }
 
   return (
     <>
       <div 
-        className={`h-full group rounded-xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-sm transition-all duration-300 ${
-          disableInteractions ? 'opacity-80' : 'hover:border-white/20'
+        className={`h-full group bg-black border border-white/10 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+          disableInteractions ? 'opacity-80' : ''
         }`}
         onMouseEnter={() => !disableInteractions && setIsHovered(true)}
         onMouseLeave={() => !disableInteractions && setIsHovered(false)}
       >
-        {/* Image Container */}
-        <div className="relative h-48 overflow-hidden">
+        {/* Image Container - Updated to match landlord style */}
+        <div className="relative aspect-[16/9] overflow-hidden">
           {!imageError ? (
-            <Image
-              src={imageUrl}
-              alt={property.name}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className={`object-cover ${!disableInteractions && 'transition-transform duration-700 group-hover:scale-105'}`}
-              onError={() => {
-                // Comment out console error
-                // console.error(`Image failed to load: ${imageUrl}`);
-                setImageError(true);
-              }}
-            />
+            <div 
+              className="w-full h-full bg-cover bg-center transition-all duration-500 hover:scale-105" 
+              style={{ backgroundImage: `url(${imageUrl})` }}
+            ></div>
           ) : (
             <div className="h-full w-full flex items-center justify-center bg-gray-800">
               <Home className="h-12 w-12 text-gray-600" />
             </div>
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-70"></div>
-          
-          {/* Property Name (moved from content to image overlay) */}
-          <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-lg text-sm font-medium text-white border border-white/10">
-            {property.name}
-          </div>
-          
-          {/* Rented badge for disabled cards */}
-          {disableInteractions && (
-            <div className="absolute top-3 left-3 bg-red-900/70 backdrop-blur-sm px-3 py-1 rounded-lg text-sm font-medium text-white border border-red-400/20">
-              Rented
+          {/* Status Badge - Top left */}
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-sm px-2.5 py-0.5 rounded-full">
+              <div className={`w-2 h-2 rounded-full ${getAvailabilityBadgeClass()}`}></div>
+              <span className="text-white text-[11px] font-medium">
+                {property.availability}
+              </span>
             </div>
-          )}
-
-          {/* Custom Badge */}
+            
+            {/* Coming soon / next available date badge */}
+            {property.availability === 'Coming Soon' && property.next_available_date && (
+              <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2.5 py-0.5 rounded-full ml-1">
+                <Calendar className="w-2.5 h-2.5 text-white/70" />
+                <span className="text-white text-[11px] font-medium">
+                  {new Date(property.next_available_date).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+          </div>
+        
+          {/* Custom Badge for messaged properties */}
           {customBadge && (
-            <div className="absolute top-3 left-3 z-20">
+            <div className="absolute bottom-2.5 left-2.5 z-20">
               <Badge className="bg-blue-700/90 hover:bg-blue-600 text-white px-2 py-0.5 text-[10px] font-medium flex items-center">
                 <MessageCircle className="mr-1 h-3.5 w-3.5" /> 
-                
+                {customBadge}
               </Badge>
             </div>
           )}
         </div>
         
-        {/* Content */}
-        <div className="p-4">
-          {/* Monthly Rent (moved from image overlay to content) */}
-          <h3 className="text-lg font-medium text-white group-hover:text-white/90 transition-colors line-clamp-1">
-            Rs {property.monthly_rent.toLocaleString()}<span className="text-xs text-white/70">/mo</span>
-          </h3>
-          
-          <div className="flex items-center mt-1 mb-3 text-white/60 text-sm">
-            <MapPin className="w-3 h-3 mr-1" />
-            <span className="line-clamp-1">{property.location}</span>
+        {/* Content - Updated to match landlord style */}
+        <div className="p-3.5">
+          <div className="flex justify-between items-start mb-1.5">
+            {/* Don't duplicate name here since it's now in the image overlay */}
+            <h3 className="text-white font-semibold truncate max-w-[70%]">
+              Rs {property.monthly_rent.toLocaleString()}
+              <span className="text-xs text-white/70">/mo</span>
+            </h3>
+          </div>
+
+          <div className="flex items-center text-[11px] text-white/70 mb-2.5">
+            <MapPin className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+            <span className="truncate">{formatLocation(property.location)}</span>
+          </div>
+
+          {/* Property Features - Grid layout like landlord version */}
+          <div className="grid grid-cols-3 gap-1.5 mb-3.5">
+            <div className="bg-white/5 rounded-md p-1.5 flex justify-between items-center">
+              <Bed className="w-4 h-4 text-white/70" />
+              <p className="text-white text-[13px] font-medium">{property.bedrooms}</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-md p-1.5 flex justify-between items-center">
+              <Bath className="w-4 h-4 text-white/70" />
+              <p className="text-white text-[13px] font-medium">{property.bathrooms}</p>
+            </div>
+            
+            <div className="bg-white/5 rounded-md p-1.5 flex justify-between items-center">
+              {property.property_type === 'apartment' ? 
+                <Building className="w-4 h-4 text-white/70" /> : 
+                <Home className="w-4 h-4 text-white/70" />}
+              <p className="text-white text-[13px] font-medium">
+                {property.property_type === 'apartment' ? 'Apt' : 'House'}
+              </p>
+            </div>
           </div>
           
-          <div className="h-px w-full bg-white/5 my-3"></div>
-          
-          {/* Property Features */}
-          <div className="flex justify-between">
-            <div className="flex items-center text-white/70 text-sm">
-              <Bed className="w-4 h-4 mr-1.5" />
-              <span>{property.bedrooms} beds</span>
-            </div>
-            <div className="flex items-center text-white/70 text-sm">
-              <Bath className="w-4 h-4 mr-1.5" />
-              <span>{property.bathrooms} baths</span>
-            </div>
-          </div>
-          
-          {/* Action Buttons - Shows on hover with simple transition unless disabled */}
+          {/* Action Buttons - Similar to landlord style */}
           {!disableInteractions && (
-            <div className={`mt-4 flex gap-2 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-80'}`}>
+            <div className="flex flex-col gap-2">
               <button 
-                className="flex-1 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-1"
                 onClick={() => setDetailModalOpen(true)}
+                className="w-full py-3 px-3 flex justify-between items-center text-white text-[13px] font-medium bg-white/10 rounded-md hover:bg-white/15 transition-colors group"
               >
                 View Details
+                <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
               </button>
               
               <button 
-                className="flex-1 py-2 bg-white text-black rounded-lg text-sm font-medium hover:bg-white/90 transition-colors flex items-center justify-center gap-1"
+                className="w-full py-3 px-2.5 flex justify-center items-center gap-1.5 text-[13px] font-medium text-white bg-white/5 rounded-md hover:bg-white/10 transition-colors"
                 onClick={() => setMessageModalOpen(true)}
               >
-                <MessageSquare className="w-3 h-3" /> 
-                Message
+                <MessageSquare className="w-4 h-4" /> 
+                Message Owner
               </button>
             </div>
           )}
@@ -200,7 +212,7 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
         </div>
       </div>
 
-      {/* Only render modals if interactions are enabled */}
+      {/* Only render modals if interactions are enabled - Keep existing modal implementation */}
       {!disableInteractions && (
         <>
           <PropertyDetailModal
@@ -208,7 +220,6 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
             open={detailModalOpen}
             onOpenChange={setDetailModalOpen}
             onMessageLandlord={() => setMessageModalOpen(true)}
-            onSaveProperty={handleSaveProperty}
           />
 
           <TenantMessage
