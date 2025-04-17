@@ -1,9 +1,10 @@
-import { Property } from "../../../types/index";
+import { Property, ImageMetadata } from "../../../types/index";
 
-// Define cache structure to include ETags
+// Define cache structure to include ETags and image metadata
 interface CacheData {
   propertyDetails: { [id: string]: { data: Property, timestamp: number } };
   properties?: { data: Property[], timestamp: number, etag?: string };
+  imageMetadata?: { [imageUrl: string]: { type: string, propertyId: string } };
 }
 
 
@@ -103,7 +104,17 @@ export class PropertyCache {
       optimizedProperty.images = optimizedProperty.images.slice(0, 3);
     }
     
-    // No need to remove non-existent properties
+    // Preserve image metadata if it exists
+    if (optimizedProperty.imageMetadata) {
+      // Only keep metadata for the images we're keeping
+      const keptMetadata: Record<string, ImageMetadata> = {};
+      optimizedProperty.images.forEach(url => {
+        if (optimizedProperty.imageMetadata?.[url]) {
+          keptMetadata[url] = optimizedProperty.imageMetadata[url];
+        }
+      });
+      optimizedProperty.imageMetadata = keptMetadata;
+    }
     
     return optimizedProperty;
   }

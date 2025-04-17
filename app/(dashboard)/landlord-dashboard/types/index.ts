@@ -19,12 +19,19 @@ export interface Property {
     cable: boolean;
   };
   images: string[];
-  imageMetadata?: Record<string, string>;
+  imageMetadata?: Record<string, ImageMetadata>; // Added for better image categorization
   available: boolean;
   status?: 'active' | 'archived' | 'pending' | 'rented';
   created_at: string;
   updated_at: string;
   next_available_date?: string;
+}
+
+// Add interface for image metadata
+export interface ImageMetadata {
+  type?: string; // Room category: 'exterior', 'living', 'kitchen', etc.
+  isMain?: boolean; // Whether this is the main image for a category
+  uploadedAt?: string; // When the image was uploaded
 }
 
 export interface PropertyFormData {

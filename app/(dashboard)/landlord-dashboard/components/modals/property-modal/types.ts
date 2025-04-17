@@ -15,18 +15,15 @@ export interface FormData {
     trash: boolean;
     cable: boolean;
   };
-  images: {
-    file?: File;
-    url?: string;
-    type: string;
-  }[];
+  images: ImageItem[];
+  existingImages?: string[];
   available: boolean;
-  status?: 'active' | 'archived' | 'pending' | 'rented';
+  status: string;
 }
 
 // Define property from database format
 export interface PropertyData {
-  id?: string;
+  id: string;
   name: string;
   location: string;
   property_type: string;
@@ -46,8 +43,17 @@ export interface PropertyData {
   images: string[];
   available: boolean;
   landlord_id: string;
+  created_at: string;
   updated_at: string;
-  status: 'active' | 'archived' | 'pending' | 'rented';
+  status: string;
+}
+
+// Define the ImageItem interface with existingUrl property
+export interface ImageItem {
+  file?: File;
+  url?: string;
+  type: string;
+  existingUrl?: boolean;
 }
 
 // Room types for organizing images
@@ -56,28 +62,26 @@ export const ROOM_TYPES = ["Living Room", "Bedroom", "Kitchen", "Bathroom", "Ext
 // For converting between form data and database data
 export function convertPropertyToFormData(property: PropertyData): FormData {
   return {
-    name: property.name,
-    location: property.location,
-    type: property.property_type,
-    bedrooms: property.bedrooms.toString(),
-    bathrooms: property.bathrooms.toString(),
-    description: property.description,
-    price: property.monthly_rent.toString(),
-    deposit: property.security_deposit.toString(),
-    utilities: property.utilities || {
-      water: false,
-      electricity: false,
-      internet: false,
-      gas: false,
-      trash: false,
-      cable: false,
+    name: property.name || '',
+    location: property.location || '',
+    type: property.property_type || 'apartment',
+    bedrooms: property.bedrooms?.toString() || '1',
+    bathrooms: property.bathrooms?.toString() || '1',
+    description: property.description || '',
+    price: property.monthly_rent ? property.monthly_rent.toString() : '',
+    deposit: property.security_deposit ? property.security_deposit.toString() : '',
+    utilities: {
+      water: property.utilities?.water || false,
+      electricity: property.utilities?.electricity || false,
+      internet: property.utilities?.internet || false,
+      gas: property.utilities?.gas || false,
+      trash: property.utilities?.trash || false,
+      cable: property.utilities?.cable || false,
     },
-    images: property.images ? property.images.map(url => ({
-      url,
-      type: determineRoomTypeFromUrl(url) 
-    })) : [],
-    available: property.available,
-    status: property.status
+    images: [], // Will be populated with processed image objects
+    existingImages: property.images || [], // Store original URLs
+    available: property.available ?? true,
+    status: property.status || 'active'
   };
 }
 

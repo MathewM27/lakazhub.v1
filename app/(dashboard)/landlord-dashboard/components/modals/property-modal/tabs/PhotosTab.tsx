@@ -1,16 +1,19 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { FormData } from "../types"
-import { X, Camera, Info } from "lucide-react"
+import { X, Camera, Info, Edit, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import Image from "next/image"
+import { ImageStorage } from "@/app/(dashboard)/landlord-dashboard/lib/utils/imageStorage"
+import { supabase } from "@/app/(dashboard)/landlord-dashboard/lib/utils/supabase/client" // Add supabase import
 
 interface PhotosTabProps {
   formData: FormData
   onChange: (formData: Partial<FormData>) => void
   onNext: () => void
   onPrev: () => void
+  propertyId?: string // Add propertyId prop for existing properties
 }
 
 // Room categories with display names and limits
@@ -27,10 +30,66 @@ export default function PhotosTab({
   formData,
   onChange,
   onNext,
-  onPrev
+  onPrev,
+  propertyId
 }: PhotosTabProps) {
   const [dragOver, setDragOver] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  
+  // Process existing images on component mount
+  useEffect(() => {
+    // If we have existing images but they're not properly processed, process them
+    if (formData.existingImages && formData.existingImages.length > 0 && 
+        (!formData.images || formData.images.filter(img => img.existingUrl).length === 0)) {
+      
+      processExistingImages();
+    }
+  }, [formData.existingImages]);
+  
+  // Function to process existing image URLs into the formData.images format
+  const processExistingImages = () => {
+    if (!formData.existingImages || formData.existingImages.length === 0) return;
+    
+    // Process each existing image
+    const processedImages = formData.existingImages.map((url: string, index: number) => {
+      // Try to determine image type from URL or metadata
+      // For simplicity, we'll assign types based on position
+      // You might want to enhance this with actual metadata if available
+      let imageType = "other";
+      
+      // Use a heuristic to guess image categories if no metadata
+      if (index === 0) {
+        imageType = "exterior"; // First image is usually exterior/cover
+      } else if (index === 1) {
+        imageType = "living";
+      } else if (index === 2) {
+        imageType = "kitchen";
+      } else if (index === 3) {
+        imageType = "bedroom";
+      } else if (index === 4) {
+        imageType = "bathroom";
+      }
+      
+      // Return image object with existing URL
+      return {
+        type: imageType,
+        url: url,
+        existingUrl: true  // Flag to indicate this is an existing image
+      };
+    });
+    
+    // Merge with any images already in formData
+    const newImages = [
+      ...formData.images.filter(img => !img.existingUrl), // Keep locally added images
+      ...processedImages
+    ];
+    
+    // Update form data
+    onChange({
+      images: newImages
+    });
+  };
   
   // Group images by category
   const imagesByCategory = ROOM_CATEGORIES.reduce((acc, category) => {
@@ -76,10 +135,6 @@ export default function PhotosTab({
           url: URL.createObjectURL(imageFiles[0])
         }
         
-        // Comment out debugging logs
-        // console.log('Creating new image object:', `type: ${newImage.type}, file: ${newImage.file.name}, URL created`);
-        // console.log(`File check: is File instance = ${newImage.file instanceof File}`);
-        
         onChange({
           images: [...updatedImages, newImage]
         })
@@ -106,17 +161,38 @@ export default function PhotosTab({
     })
   }
 
-  const handleRemoveImage = (index: number) => {
-    const newImages = [...formData.images]
-    
-    // If the image has a URL created with createObjectURL, revoke it
-    if (newImages[index].url && !newImages[index].url.startsWith('http')) {
-      URL.revokeObjectURL(newImages[index].url as string)
+  const handleRemoveImage = async (index: number) => {
+    setIsLoading(true);
+    try {
+      const imageToRemove = formData.images[index];
+      const newImages = [...formData.images];
+      
+      // If it's an existing image from the database, we need to delete it from storage
+      if (imageToRemove.existingUrl && propertyId) {
+        try {
+          // Get current user session for authorization
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id && imageToRemove.url) { // Add null check for url
+            // Delete the image from storage
+            await ImageStorage.deleteImage(imageToRemove.url, session.user.id);
+          }
+        } catch (error) {
+          console.error("Failed to delete image from storage:", error);
+          // Continue with UI removal even if storage delete fails
+        }
+      }
+      
+      // If the image has a URL created with createObjectURL, revoke it
+      if (newImages[index].url && !newImages[index].existingUrl && typeof newImages[index].url === 'string' && newImages[index].url.startsWith('blob:')) {
+        URL.revokeObjectURL(newImages[index].url as string);
+      }
+      
+      newImages.splice(index, 1);
+      onChange({ images: newImages });
+    } finally {
+      setIsLoading(false);
     }
-    
-    newImages.splice(index, 1)
-    onChange({ images: newImages })
-  }
+  };
 
   // Handle drag events
   const handleDragOver = (e: React.DragEvent, category: string) => {
@@ -227,7 +303,7 @@ export default function PhotosTab({
               >
                 {hasImage ? (
                   // Display the first image if we have one
-                  <div className="w-full h-full relative">
+                  <div className="w-full h-full relative group">
                     <Image 
                       src={images[0]?.url || "/placeholder.jpg"} 
                       alt={category.displayName}
@@ -243,19 +319,33 @@ export default function PhotosTab({
                       </div>
                     )}
                     
-                    {/* Remove button */}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        const imageIndex = formData.images.findIndex(img => 
-                          img.type === category.id && img.url === images[0].url
-                        )
-                        if (imageIndex !== -1) handleRemoveImage(imageIndex)
-                      }}
-                      className="absolute right-2 top-2 bg-black/70 text-white rounded-full p-1 hover:bg-black/90 transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    {/* Controls - Edit/Delete */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRefs.current[category.id]?.click();
+                        }}
+                        className="bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors"
+                        title="Replace image"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const imageIndex = formData.images.findIndex(img => 
+                            img.type === category.id && img.url === images[0].url
+                          );
+                          if (imageIndex !== -1) handleRemoveImage(imageIndex);
+                        }}
+                        className="bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors"
+                        title="Delete image"
+                        disabled={isLoading}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   // Upload placeholder
@@ -324,7 +414,7 @@ export default function PhotosTab({
           <Label className="mb-2 block">Other Photos Gallery</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {imagesByCategory["other"].map((image, index) => (
-              <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden">
+              <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden group">
                 <Image 
                   src={image.url || "/placeholder.jpg"} 
                   alt={`Other ${index + 1}`} 
@@ -332,17 +422,22 @@ export default function PhotosTab({
                   height={200}
                   className="w-full h-full object-cover"
                 />
-                <button 
-                  onClick={() => {
-                    const imageIndex = formData.images.findIndex(img => 
-                      img.type === "other" && img.url === image.url
-                    )
-                    if (imageIndex !== -1) handleRemoveImage(imageIndex)
-                  }}
-                  className="absolute right-1 top-1 bg-black/70 text-white rounded-full p-1 hover:bg-black/90"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                {/* Enhanced controls */}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => {
+                      const imageIndex = formData.images.findIndex(img => 
+                        img.type === "other" && img.url === image.url
+                      )
+                      if (imageIndex !== -1) handleRemoveImage(imageIndex)
+                    }}
+                    className="bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors"
+                    title="Delete image"
+                    disabled={isLoading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
