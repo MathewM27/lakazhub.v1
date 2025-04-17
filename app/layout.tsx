@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: 'LakazHub',
   description: 'Connecting Landlords and Tenants',
   icons: {
-    icon: './lakaz-hub.svg',
+    icon: '/lakaz-hub.svg',
   }
 }
 
