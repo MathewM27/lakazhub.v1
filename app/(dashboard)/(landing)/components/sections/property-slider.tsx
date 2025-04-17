@@ -1,7 +1,7 @@
 'use client'; // Keep client directive as we need interactivity for the slider
 
 import { useState, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Home, MapPin, Star, ImageOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, ImageOff } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../../ui/property-card';
 import Image from 'next/image';
@@ -11,6 +11,8 @@ interface ImageWithFallbackProps {
   src: string;
   alt: string;
   className?: string;
+  width?: number;
+  height?: number;
   [key: string]: any; // For any other props that might be passed
 }
 
@@ -59,12 +61,14 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ src, alt, classNa
       {loading && (
         <div className={`absolute inset-0 bg-gray-900 animate-pulse ${className || ''}`} />
       )}
-      <img
+      <Image
         src={src}
         alt={alt}
         className={className}
         onError={handleError}
         onLoad={() => setLoading(false)}
+        width={800}
+        height={600}
         {...rest}
       />
     </>

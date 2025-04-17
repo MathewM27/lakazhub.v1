@@ -6,10 +6,19 @@ import { Property } from '@/utils/types/property';
 import { Bed, Bath, Square, Home } from 'lucide-react';
 import React from 'react';
 
+type FallbackImageComponent = React.ComponentType<{
+  src: string;
+  alt: string;
+  className?: string;
+  width?: number;
+  height?: number;
+  [key: string]: any;
+}>;
+
 export interface PropertyCardProps {
   property: Property;
   onClick?: () => void;
-  fallbackImage?: React.ComponentType<any>; // Add prop to accept a custom image component
+  fallbackImage?: FallbackImageComponent;
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, fallbackImage: FallbackImage }) => {
@@ -19,31 +28,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
       return words.slice(0, numWords).join(' ') + '...';
     }
     return str;
-  };
-
-  const renderImage = () => {
-    if (FallbackImage) {
-      return (
-        <FallbackImage 
-          src={property.image}
-          alt={property.name}
-          className="w-full h-48 object-cover rounded-t-lg"
-        />
-      );
-    }
-    
-    // Default image rendering
-    return (
-      <img
-        src={property.image}
-        alt={property.name}
-        className="w-full h-48 object-cover rounded-t-lg"
-        onError={(e) => {
-          // Simple fallback
-          e.currentTarget.src = '/placeholder-property.jpg';
-        }}
-      />
-    );
   };
 
   return (
@@ -84,20 +68,29 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
       </div>
 
       <div className="relative h-52 w-full overflow-hidden">
-        {/* Use a fallback image if property.imageUrl is missing or invalid */}
-        <Image
-          src={property.imageUrl || '/bg1.jpg'}
-          alt={property.name}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={false}
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => {
-            // Fallback to placeholder if image fails to load
-            const target = e.target as HTMLImageElement;
-            target.src = '/images/property-placeholder.jpg';
-          }}
-        />
+        {/* Use fallbackImage if provided, otherwise default to Next.js Image */}
+        {FallbackImage ? (
+          <FallbackImage
+            src={property.imageUrl || '/bg1.jpg'}
+            alt={property.name}
+            className="object-cover transition-transform duration-500 group-hover:scale-110 w-full h-52"
+            width={800}
+            height={208}
+          />
+        ) : (
+          <Image
+            src={property.imageUrl || '/bg1.jpg'}
+            alt={property.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={false}
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = '/images/property-placeholder.jpg';
+            }}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
       </div>
 
