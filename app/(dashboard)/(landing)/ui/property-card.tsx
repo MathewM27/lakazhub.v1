@@ -12,7 +12,7 @@ type FallbackImageComponent = React.ComponentType<{
   className?: string;
   width?: number;
   height?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }>;
 
 export interface PropertyCardProps {

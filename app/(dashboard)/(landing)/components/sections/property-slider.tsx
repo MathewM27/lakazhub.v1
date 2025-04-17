@@ -13,7 +13,7 @@ interface ImageWithFallbackProps {
   className?: string;
   width?: number;
   height?: number;
-  [key: string]: any; // For any other props that might be passed
+  [key: string]: unknown; // For any other props that might be passed
 }
 
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ src, alt, className, ...rest }) => {

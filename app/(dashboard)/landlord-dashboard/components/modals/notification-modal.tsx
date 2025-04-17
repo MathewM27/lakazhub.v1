@@ -54,7 +54,7 @@ interface NotificationsModalProps {
   property?: {
     id: string;
     name?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
   initialConversationId?: string
 }
@@ -63,6 +63,13 @@ interface ConversationPayload {
   old: Conversation;
 }
 
+interface Message {
+  id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+  is_read: boolean;
+}
 
 // Add this new cache outside the component to persist between renders
 const messagesCache = new Map<
@@ -135,20 +142,20 @@ export default function NotificationsModal({
       return "Unknown"
     }
   }, [])
-  
+
   // Helper function to convert database messages to UI messages
-  const formatMessagesForUI = useCallback((messages: unknown[]): UIMessage[] => {
-    return messages.map(msg => ({
-      id: (msg as any).id,
-      sender: (msg as any).sender_id === user?.id ? "landlord" as const : "tenant" as const,
-      text: (msg as any).message,
-      time: formatMessageTime((msg as any).created_at),
-      is_read: (msg as any).is_read
+  const formatMessagesForUI = useCallback((messages: Message[]): UIMessage[] => {
+    return messages.map((msg) => ({
+      id: msg.id,
+      sender: msg.sender_id === user?.id ? "landlord" as const : "tenant" as const,
+      text: msg.message,
+      time: formatMessageTime(msg.created_at),
+      is_read: msg.is_read
     }));
   }, [user?.id, formatMessageTime]);
 
   // Function to fetch messages for a conversation
-  const fetchMessages = useCallback(async (conversationId: string, page = 0, pageSize = 20) => {
+  const fetchMessages = useCallback(async (conversationId: string, page = 0, pageSize = 20): Promise<UIMessage[]> => {
     if (!user?.id) {
       return [];
     }
@@ -1204,6 +1211,7 @@ export default function NotificationsModal({
     )
   });
 
+  
   // Handle key down event for message input
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Only send on Enter without Shift

@@ -1,9 +1,10 @@
 export interface Property {
   id: string;
-  landlord_id: string;
   name: string;
+  [key: string]: unknown;
+  landlord_id: string;
   location: string;
-  property_type: string; 
+  property_type: string;
   bedrooms: number;
   bathrooms: number;
   description: string;
@@ -17,16 +18,13 @@ export interface Property {
     trash: boolean;
     cable: boolean;
   };
-  // An array of image URLs from the storage bucket
   images: string[];
-  // Optional - to track image types for better display
   imageMetadata?: Record<string, string>;
   available: boolean;
   status?: 'active' | 'archived' | 'pending' | 'rented';
   created_at: string;
   updated_at: string;
-  // Add this line to fix the TypeScript error
-  next_available_date?: string; // Date when property will be available again if rented
+  next_available_date?: string;
 }
 
 export interface PropertyFormData {
