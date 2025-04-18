@@ -101,7 +101,7 @@ export async function getUserProfile(userId: string) {
           } else {
             // console.error('[SUPABASE_CLIENT] Alternative fetch failed:', response.status, response.statusText);
           }
-        } catch (_altError) {
+        } catch (_) {
           // console.error('[SUPABASE_CLIENT] Alternative fetch error:', _altError);
         }
       }
@@ -190,7 +190,7 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative update succeeded:', updatedData);
               return updatedData[0] || null;
             }
-          } catch (_altError) {
+          } catch (_) {
             // console.error('[SUPABASE_CLIENT] Alternative update failed:', _altError);
           }
         }
@@ -232,7 +232,7 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative insert succeeded:', insertedData);
               return insertedData[0] || null;
             }
-          } catch (_altError) {
+          } catch (_) {
             // console.error('[SUPABASE_CLIENT] Alternative insert failed:', _altError);
           }
         }
@@ -300,7 +300,7 @@ export async function checkAuthStatus() {
           if ((Date.now() - parseInt(cacheTime)) < 60 * 1000) {
             return authStatus;
           }
-        } catch (_unused) {
+        } catch (_) {
           // Invalid cache, continue with API call
         }
       }
@@ -326,11 +326,11 @@ export async function checkAuthStatus() {
     }
     
     return result;
-  } catch (error) {
+  } catch (_) {
     if (process.env.NODE_ENV === 'development') {
       // console.error('[SUPABASE_CLIENT] Unexpected error in checkAuthStatus:', error);
     }
-    return { authenticated: false, user: null, error: String(error) };
+    return { authenticated: false, user: null, error: String(_) };
   }
 }
 
@@ -344,9 +344,9 @@ export async function validateUserRole(userId: string, requiredRole: string) {
     
     // Check if profile exists and has the required role
     return !!profile && profile.user_role === requiredRole;
-  } catch (error) {
+  } catch (_) {
     if (process.env.NODE_ENV === 'development') {
-      // console.error('[SUPABASE_CLIENT] Error validating user role:', error);
+      // console.error('[SUPABASE_CLIENT] Error validating user role:', _);
     }
     return false;
   }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { 
   MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare, Building, Calendar
 } from "lucide-react";
@@ -54,17 +53,14 @@ interface PropertyCardProps {
 interface PropertyCarouselProps {
   title: string;
   properties: Property[];
-  isVisible?: boolean;
   disableInteractions?: boolean; // New prop to disable interactions for all cards in carousel
   customBadge?: string;
 }
 
 // Individual Property Card Component
 const PropertyCard = ({ property, disableInteractions = false, customBadge }: PropertyCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
-  const [imageError, setImageError] = useState(false);
 
   // Make sure we have a valid image URL
   const imageUrl = property.image || 
@@ -98,21 +94,13 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
         className={`h-full group bg-black border border-white/10 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
           disableInteractions ? 'opacity-80' : ''
         }`}
-        onMouseEnter={() => !disableInteractions && setIsHovered(true)}
-        onMouseLeave={() => !disableInteractions && setIsHovered(false)}
       >
         {/* Image Container - Updated to match landlord style */}
         <div className="relative aspect-[16/9] overflow-hidden">
-          {!imageError ? (
-            <div 
-              className="w-full h-full bg-cover bg-center transition-all duration-500 hover:scale-105" 
-              style={{ backgroundImage: `url(${imageUrl})` }}
-            ></div>
-          ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gray-800">
-              <Home className="h-12 w-12 text-gray-600" />
-            </div>
-          )}
+          <div 
+            className="w-full h-full bg-cover bg-center transition-all duration-500 hover:scale-105" 
+            style={{ backgroundImage: `url(${imageUrl})` }}
+          ></div>
           
           {/* Status Badge - Top left */}
           <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
@@ -225,7 +213,7 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
           <TenantMessage
             open={messageModalOpen}
             onOpenChangeAction={setMessageModalOpen}
-            property={property}
+            property={property as unknown as Record<string, unknown>} // Fix type error
           />
         </>
       )}
@@ -234,11 +222,10 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
 };
 
 // Property Carousel Component
-const PropertyCarousel = ({ title, properties, isVisible = true, disableInteractions = false, customBadge }: PropertyCarouselProps) => {
+const PropertyCarousel = ({ title, properties, disableInteractions = false, customBadge }: PropertyCarouselProps) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
-  const [isAtEnd, setIsAtEnd] = useState(false); // New state to track if we're at the end
-  const [showEndIndicator, setShowEndIndicator] = useState(false); // Controls visibility of end indicator
+  const [showEndIndicator, setShowEndIndicator] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Handle scroll navigation
@@ -269,7 +256,6 @@ const PropertyCarousel = ({ title, properties, isVisible = true, disableInteract
       
       // Check if we're at the end (within 20px of the max scroll)
       const reachedEnd = maxScrollPos > 0 && currentPos >= maxScrollPos - 20;
-      setIsAtEnd(reachedEnd);
       
       // Show indicator briefly when reaching the end
       if (reachedEnd && !showEndIndicator) {

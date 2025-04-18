@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { Property } from '@/utils/types/property';
 import { Bed, Bath, Square, Home } from 'lucide-react';
 import React from 'react';
@@ -22,22 +21,10 @@ export interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, fallbackImage: FallbackImage }) => {
-  const truncateString = (str: string, numWords: number) => {
-    const words = str.split(' ');
-    if (words.length > numWords) {
-      return words.slice(0, numWords).join(' ') + '...';
-    }
-    return str;
-  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative h-full flex flex-col"
+    <div
+      className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative h-full flex flex-col transition-transform duration-200 hover:-translate-y-2"
       onClick={onClick}
     >
       {/* Availability indicator at top left (moved from right) */}
@@ -57,14 +44,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
 
       {/* Property Status Tag - moved to right */}
       <div className="absolute top-4 right-4 z-10">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-          className="px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-medium rounded-full border border-white/20"
+        <div 
+          className="px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-medium rounded-full border border-white/20 transition-all duration-300"
         >
           {property.type || 'For Rent'}
-        </motion.div>
+        </div>
       </div>
 
       <div className="relative h-52 w-full overflow-hidden">
@@ -122,61 +106,50 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
         
         {/* Features */}
         <div className="flex justify-between mt-3 text-white/70">
-          <motion.div 
-            whileHover={{ y: -3, color: 'rgba(255, 255, 255, 0.9)' }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-1"
+          <div 
+            className="flex flex-col items-center gap-1 transition-all duration-200 hover:-translate-y-1 hover:text-white"
           >
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
               <Bed className="w-4 h-4" />
             </div>
             <span className="text-xs">{property.bedrooms} Beds</span>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            whileHover={{ y: -3, color: 'rgba(255, 255, 255, 0.9)' }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-1"
+          <div 
+            className="flex flex-col items-center gap-1 transition-all duration-200 hover:-translate-y-1 hover:text-white"
           >
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
               <Bath className="w-4 h-4" />
             </div>
             <span className="text-xs">{property.bathrooms} Baths</span>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            whileHover={{ y: -3, color: 'rgba(255, 255, 255, 0.9)' }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-1"
+          <div 
+            className="flex flex-col items-center gap-1 transition-all duration-200 hover:-translate-y-1 hover:text-white"
           >
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
               <Square className="w-4 h-4" />
             </div>
             <span className="text-xs">{property.area}m²</span>
-          </motion.div>
+          </div>
         </div>
         
         {/* View Details Button */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.3 }}
-          className="mt-auto pt-4 w-full"
+        <div 
+          className="mt-auto pt-4 w-full transition-all duration-300"
         >
           <button 
             className="w-full h-10 bg-transparent border border-white/20 rounded-lg text-white text-sm group-hover:bg-white group-hover:text-black transition-all duration-300"
           >
             View Details
           </button>
-        </motion.div>
+        </div>
       </div>
       
       {/* Animated border effect */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
+      <div 
         className="absolute inset-0 border-2 border-white/0 group-hover:border-white/30 rounded-xl pointer-events-none transition-colors duration-300"
-      ></motion.div>
-    </motion.div>
+      ></div>
+    </div>
   );
 };

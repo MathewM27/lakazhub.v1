@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { FiFilter, FiX, FiInfo, FiHome } from 'react-icons/fi';
+import { FiFilter, FiX, FiHome } from 'react-icons/fi';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion } from 'framer-motion';
 import { supabase } from '../../utils/supabase/client';
@@ -14,7 +14,6 @@ import AvailableProperties from './AvailableProperties';
 import RentedProperties from './RentedProperties';
 import MessagedProperties from './MessagedProperties'; // Import the new component
 import { Property } from '@/utils/types/property'; 
-import { ImageOff } from 'lucide-react';
 
 // Constants - Modified for better performance
 const CACHE_KEY = 'property_cache';
@@ -36,7 +35,6 @@ const PropertiesSection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [cacheStats, setCacheStats] = useState({ size: 0, properties: 0 });
   
   // Filter states
   const [activeFilters, setActiveFilters] = useState({
@@ -49,7 +47,6 @@ const PropertiesSection = () => {
   // Pagination states
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Check and load from cache
@@ -62,13 +59,6 @@ const PropertiesSection = () => {
         
         // Check if cache is still valid (not expired)
         if (now - timestamp < CACHE_EXPIRY) {
-          // Calculate cache size for monitoring
-          const cacheSize = new Blob([cacheData]).size;
-          setCacheStats({ 
-            size: Math.round(cacheSize / 1024), // Size in KB
-            properties: properties.length 
-          });
-          
           // console.log(`Loading ${properties.length} properties from cache (${Math.round(cacheSize / 1024)} KB)`);
           return { properties, totalCount, fromCache: true };
         } else {
@@ -77,8 +67,7 @@ const PropertiesSection = () => {
           localStorage.removeItem(CACHE_KEY);
         }
       }
-    } catch (err) {
-      // console.error("Error loading from cache:", err);
+    } catch {
       // Reset cache on error
       localStorage.removeItem(CACHE_KEY);
     }
@@ -101,16 +90,10 @@ const PropertiesSection = () => {
       // Only cache if it's a reasonable size (under 2MB)
       if (cacheSize < 2 * 1024 * 1024) {
         localStorage.setItem(CACHE_KEY, cacheStr);
-        setCacheStats({ 
-          size: Math.round(cacheSize / 1024), // Size in KB
-          properties: properties.length 
-        });
         // console.log(`Saved ${properties.length} properties to cache (${Math.round(cacheSize / 1024)} KB)`);
-      } else {
-        // console.warn(`Cache size too large (${Math.round(cacheSize / 1024)} KB), not caching`);
       }
-    } catch (err) {
-      // console.error("Error saving to cache:", err);
+    } catch {
+      // ignore
     }
   };
 
@@ -124,7 +107,7 @@ const PropertiesSection = () => {
     try {
       // First check if we have cached conversations in chat system
       const CONVERSATIONS_CACHE_KEY = `conversations-${userId}`;
-      let conversationsData = null;
+      let conversationsData: Array<{ property_id: string }> | null = null;
       
       try {
         // Try to get conversations from localStorage first
@@ -137,11 +120,9 @@ const PropertiesSection = () => {
             conversationsData = parsedData.data;
             // console.log(`Using ${conversationsData.length} cached conversations`);
           }
-        } else {
-          // console.log('No cached conversations found in localStorage');
         }
-      } catch (cacheError) {
-        // console.error("Error reading cached conversations:", cacheError);
+      } catch {
+        // ignore
       }
       
       // If no cached conversations, fetch directly from the database
@@ -153,18 +134,12 @@ const PropertiesSection = () => {
           .eq('tenant_id', userId);
           
         if (error) {
-          // console.error('Error fetching property conversations:', error);
           return;
         }
         
-        conversationsData = data;
+        conversationsData = data as Array<{ property_id: string }>;
         // console.log(`Fetched ${conversationsData?.length || 0} conversations from database`);
       }
-      
-      // Log conversations data for debugging
-      /* if (conversationsData && conversationsData.length > 0) {
-        console.log('Sample conversation data:', conversationsData[0]);
-      } */
       
       if (!conversationsData || conversationsData.length === 0) {
         // console.log('No conversations found for user');
@@ -174,8 +149,8 @@ const PropertiesSection = () => {
       
       // Extract unique property IDs from conversations
       const propertyIds = [...new Set(
-        conversationsData.map((conv: any) => 
-          conv.property_id || (conv.property && conv.property.id)
+        conversationsData.map((conv) => 
+          conv.property_id || (conv as any).property?.id
         ).filter(Boolean)
       )];
       
@@ -196,59 +171,47 @@ const PropertiesSection = () => {
         );
         
         // console.log(`Matched ${matchedProperties.length} properties with existing data`);
-        /* if (matchedProperties.length > 0) {
-          console.log('Sample matched property:', {
-            id: matchedProperties[0].id,
-            name: matchedProperties[0].name
-          });
-        } */
       }
       
       if (matchedProperties.length > 0) {
-        // console.log(`Setting ${matchedProperties.length} messaged properties from already loaded data`);
         setMessagedProperties(matchedProperties);
         return;
       }
       
       // If we couldn't match with loaded properties, fetch them separately
-      // console.log(`Fetching ${propertyIds.length} properties by IDs`);
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select('*')
         .in('id', propertyIds);
         
       if (propertiesError) {
-        // console.error('Error fetching properties:', propertiesError);
         return;
       }
       
       if (!propertiesData || propertiesData.length === 0) {
-        // console.log('No properties found for the conversations');
         setMessagedProperties([]);
         return;
       }
       
-      // console.log(`Fetched ${propertiesData.length} properties for conversations`);
-      
       // Transform properties to match our format
-      const transformedProperties = propertiesData.map((item: any) => {
+      const transformedProperties: Property[] = (propertiesData as Array<Record<string, unknown>>).map((item) => {
         // Make sure we have a valid image URL
-        const imageUrl = item.images && item.images.length > 0 
-          ? item.images[0] 
-          : item.image || '/placeholder-property.jpg';
+        const imageUrl = Array.isArray(item.images) && item.images.length > 0 
+          ? item.images[0] as string
+          : (item.image as string) || '/placeholder-property.jpg';
           
         return {
-          id: item.id,
-          landlord_id: item.landlord_id,
-          name: item.name || 'Unnamed Property',
-          location: item.location || 'Unknown Location',
-          property_type: item.property_type || 'apartment',
-          bedrooms: item.bedrooms || 0,
-          bathrooms: item.bathrooms || 0,
-          description: item.description || '',
-          monthly_rent: item.monthly_rent || 0,
-          security_deposit: item.security_deposit || 0,
-          utilities: item.utilities || {
+          id: item.id as string,
+          landlord_id: item.landlord_id as string,
+          name: (item.name as string) || 'Unnamed Property',
+          location: (item.location as string) || 'Unknown Location',
+          property_type: (item.property_type as string) || 'apartment',
+          bedrooms: Number(item.bedrooms) || 0,
+          bathrooms: Number(item.bathrooms) || 0,
+          description: (item.description as string) || '',
+          monthly_rent: Number(item.monthly_rent) || 0,
+          security_deposit: Number(item.security_deposit) || 0,
+          utilities: (item.utilities as Property['utilities']) || {
             water: false,
             electricity: false,
             internet: false,
@@ -256,39 +219,27 @@ const PropertiesSection = () => {
             trash: false,
             cable: false
           },
-          images: Array.isArray(item.images) ? item.images : ['/placeholder-property.jpg'],
+          images: Array.isArray(item.images) ? item.images as string[] : ['/placeholder-property.jpg'],
           image: imageUrl,
           available: !!item.available,
-          status: item.status as 'active' | 'archived' | 'pending' | 'rented' || 'active',
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          amenities: parseAmenities(item.amenities),
-          rules: item.rules || [],
-          next_available_date: item.next_available_date,
-          availability: getAvailabilityLabel(!!item.available, item.status || ''),
+          status: (item.status as 'active' | 'archived' | 'pending' | 'rented') || 'active',
+          created_at: item.created_at as string,
+          updated_at: item.updated_at as string,
+          amenities: parseAmenities(item.amenities as string[]),
+          rules: (item.rules as string[]) || [],
+          next_available_date: item.next_available_date as string,
+          availability: getAvailabilityLabel(!!item.available, (item.status as string) || ''),
           imageErrorHandler: (e: React.SyntheticEvent<HTMLImageElement>) => {
             e.currentTarget.src = '/placeholder-property.jpg';
           }
         };
       });
       
-      // console.log(`Setting ${transformedProperties.length} messaged properties:`);
-      /* if (transformedProperties.length > 0) {
-        console.log('First property:', {
-          id: transformedProperties[0].id,
-          name: transformedProperties[0].name,
-          images: transformedProperties[0].images?.length
-        });
-      } */
-      
       setMessagedProperties(transformedProperties);
       
-    } catch (err) {
-      // console.error('Error in fetchMessagedProperties:', err);
-      // Don't break the whole component if this fails
+    } catch {
       setMessagedProperties([]);
     }
-    // console.log('=== END FETCH MESSAGED PROPERTIES ===');
   };
 
   // Get the current user
@@ -324,8 +275,6 @@ const PropertiesSection = () => {
       const from = (pageNum - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
       
-      // console.log(`Fetching properties page ${pageNum} (items ${from}-${to})...`);
-      
       // Get properties with pagination
       const { data, error, count } = await supabase
         .from('properties')
@@ -334,21 +283,18 @@ const PropertiesSection = () => {
         .range(from, to);
           
       if (error) {
-        // console.error("Error fetching properties:", error);
-        throw error;
+        setError(error.message || 'Failed to load properties');
+        setLoading(false);
+        setIsLoadingMore(false);
+        return;
       }
       
-      // console.log(`Received ${data?.length || 0} properties from database (page ${pageNum})`);
-      
       if (!data || data.length === 0) {
-        // console.log("No properties found in database or reached the end");
         if (pageNum === 1) {
           setAllProperties([]);
           setPreferredProperties([]);
-          setTotalCount(0);
           setHasMore(false);
         } else {
-          // Just mark that there are no more properties to load
           setHasMore(false);
         }
         setLoading(false);
@@ -382,24 +328,24 @@ const PropertiesSection = () => {
       };
 
       // Transform database properties to match our Property interface
-      const transformedProperties: Property[] = data.map((item: any) => {
+      const transformedProperties: Property[] = (data as Array<Record<string, unknown>>).map((item) => {
         // Get first image or fallback
-        const imageUrl = item.images && item.images.length > 0 
-          ? item.images[0] 
+        const imageUrl = Array.isArray(item.images) && item.images.length > 0 
+          ? item.images[0] as string
           : '/placeholder-property.jpg';
           
         return {
-          id: item.id,
-          landlord_id: item.landlord_id,
-          name: item.name || 'Unnamed Property',
-          location: item.location || 'Unknown Location',
-          property_type: item.property_type || 'apartment',
-          bedrooms: item.bedrooms || 0,
-          bathrooms: item.bathrooms || 0,
-          description: item.description || '',
-          monthly_rent: item.monthly_rent || 0,
-          security_deposit: item.security_deposit || 0,
-          utilities: item.utilities || {
+          id: item.id as string,
+          landlord_id: item.landlord_id as string,
+          name: (item.name as string) || 'Unnamed Property',
+          location: (item.location as string) || 'Unknown Location',
+          property_type: (item.property_type as string) || 'apartment',
+          bedrooms: Number(item.bedrooms) || 0,
+          bathrooms: Number(item.bathrooms) || 0,
+          description: (item.description as string) || '',
+          monthly_rent: Number(item.monthly_rent) || 0,
+          security_deposit: Number(item.security_deposit) || 0,
+          utilities: (item.utilities as Property['utilities']) || {
             water: false,
             electricity: false,
             internet: false,
@@ -407,16 +353,16 @@ const PropertiesSection = () => {
             trash: false,
             cable: false
           },
-          images: Array.isArray(item.images) ? item.images : ['/placeholder-property.jpg'], // Ensure this is always a non-empty array
+          images: Array.isArray(item.images) ? item.images as string[] : ['/placeholder-property.jpg'], // Ensure this is always a non-empty array
           image: imageUrl,
           available: !!item.available,
-          status: item.status as 'active' | 'archived' | 'pending' | 'rented' || 'active',
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          amenities: parseAmenities(item.amenities),
-          rules: item.rules || [],
-          next_available_date: item.next_available_date,
-          availability: getAvailabilityLabel(!!item.available, item.status || ''),
+          status: (item.status as 'active' | 'archived' | 'pending' | 'rented') || 'active',
+          created_at: item.created_at as string,
+          updated_at: item.updated_at as string,
+          amenities: parseAmenities(item.amenities as string[]),
+          rules: (item.rules as string[]) || [],
+          next_available_date: item.next_available_date as string,
+          availability: getAvailabilityLabel(!!item.available, (item.status as string) || ''),
           imageErrorHandler: handleImageError
         };
       });
@@ -437,18 +383,15 @@ const PropertiesSection = () => {
         fetchMessagedProperties(userId);
       }
       
-    } catch (err: any) {
-      // console.error('Error in fetchProperties:', err);
-      setError(err.message || 'Failed to load properties');
+    } catch {
+      setError('Failed to load properties');
       setLoading(false);
       setIsLoadingMore(false);
     }
   };
   
   const processProperties = (properties: Property[], count: number) => {
-    // console.log("Processing properties:", properties.length);
     setAllProperties(properties);
-    setTotalCount(count);
     setHasMore(properties.length < count);
     
     // 1. Your Preferences - based on filters (initially empty)
@@ -503,55 +446,44 @@ const PropertiesSection = () => {
   }, []);
 
   // Filter handlers - with optimization to avoid unnecessary fetch
-  const handleFilterChange = (filters: any) => {
-    // console.log("== FILTER PROCESS START ==");
-    // console.log("Received filters:", filters);
-    // console.log("Current allProperties count:", allProperties.length);
-    
-    // Update filter state
-    setActiveFilters(filters);
+  const handleFilterChange = (filters: Record<string, string>) => {
+    setActiveFilters({
+      minPrice: filters.minPrice || '',
+      maxPrice: filters.maxPrice || '',
+      bedrooms: filters.bedrooms || '',
+      location: filters.location || ''
+    });
     
     // Apply filters to currently loaded properties
     const filteredResults = applyFiltersToProperties(allProperties, filters);
-    // console.log("Final filtered results count:", filteredResults.length);
     
     // Check if we need to fetch more properties based on filter results
     if (filteredResults.length < MIN_FILTERED_RESULTS && hasMore) {
-      // console.log(`Found only ${filteredResults.length} results, which is below minimum (${MIN_FILTERED_RESULTS}). Loading more...`);
-      // If we have too few results and there might be more, load more
       const nextPage = page + 1;
       setPage(nextPage);
       fetchProperties(nextPage);
     }
     
-    // console.log("== FILTER PROCESS END ==");
     setIsFilterOpen(false);
   };
 
   // Separate filter application from state updates for better control
-  const applyFiltersToProperties = (properties: Property[], filters: any): Property[] => {
-    // console.log("Filter debugging in applyFiltersToProperties:");
-    // console.log("Initial properties:", properties.length);
-    // console.log("Bedrooms filter value:", filters.bedrooms, typeof filters.bedrooms);
-    
+  const applyFiltersToProperties = (properties: Property[], filters: Record<string, string>): Property[] => {
     // Start with a deep copy of properties to avoid reference issues
     let filtered = [...properties];
     
     // First, filter for available properties only
     filtered = filtered.filter(p => p.available === true && p.status === 'active');
-    // console.log("After availability filtering:", filtered.length);
     
     // Apply price filters
     if (filters.minPrice) {
       const minPriceValue = parseInt(filters.minPrice);
       filtered = filtered.filter(p => p.monthly_rent >= minPriceValue);
-      // console.log(`After min price (${minPriceValue}) filtering:`, filtered.length);
     }
     
     if (filters.maxPrice) {
       const maxPriceValue = parseInt(filters.maxPrice);
       filtered = filtered.filter(p => p.monthly_rent <= maxPriceValue);
-      // console.log(`After max price (${maxPriceValue}) filtering:`, filtered.length);
     }
     
     // Apply bedroom filter with exact matching for bedrooms
@@ -559,23 +491,10 @@ const PropertiesSection = () => {
       if (filters.bedrooms === '5+') {
         // For 5+ bedrooms, use >= 5
         filtered = filtered.filter(p => p.bedrooms >= 5);
-        // console.log("After 5+ bedroom filtering:", filtered.length);
       } else {
         // For 1-4 bedrooms, use exact match with parseInt
         const bedroomValue = parseInt(filters.bedrooms);
-        // console.log("Exact bedroom value to match:", bedroomValue, typeof bedroomValue);
-        
-        // Use strict equality with the parsed integer
         filtered = filtered.filter(p => p.bedrooms === bedroomValue);
-        
-        // Debug: Show all bedroom values for verification
-        /* console.log("Sample after bedroom filtering:", filtered.map(p => ({
-          id: p.id.substring(0, 8),
-          bedrooms: p.bedrooms,
-          type: typeof p.bedrooms
-        }))); */
-        
-        // console.log("After specific bedroom filtering:", filtered.length);
       }
     }
     
@@ -584,31 +503,25 @@ const PropertiesSection = () => {
       const locationLower = filters.location.toLowerCase();
       filtered = filtered.filter(p => 
         p.location.toLowerCase().includes(locationLower));
-      // console.log(`After location (${filters.location}) filtering:`, filtered.length);
     }
-    
-    // console.log("Final filtered properties:", filtered.length);
     
     // Return only the filtered results
     return filtered;
   };
 
-  const applyFilters = (properties: Property[], filters: any) => {
+  const applyFilters = (properties: Property[], filters: Record<string, string>) => {
     // Only run filter logic if there are active filters
     if (hasActiveFilters()) {
       const filtered = applyFiltersToProperties(properties, filters);
-      // console.log("Setting preferred properties:", filtered.length);
       setPreferredProperties(filtered);
     } else {
       // No active filters, clear preferred properties
-      // console.log("No active filters, clearing preferred properties");
       setPreferredProperties([]);
     }
   };
 
   // Force preferred properties to update when filters change
   useEffect(() => {
-    // console.log("Active filters changed, reapplying filters");
     applyFilters(allProperties, activeFilters);
   }, [activeFilters]);
 
@@ -694,17 +607,9 @@ const PropertiesSection = () => {
     visible: { opacity: 1, transition: { duration: 0.3 } }
   };
 
-  // Add function to refresh messaged properties
-  const refreshMessagedProperties = () => {
-    if (userId) {
-      fetchMessagedProperties(userId);
-    }
-  };
-
   // Update the useEffect to ensure we call fetchMessagedProperties with userId
   useEffect(() => {
     if (userId) {
-      // console.log('User ID available, fetching messaged properties');
       fetchMessagedProperties(userId);
     }
   }, [userId]);
@@ -712,16 +617,14 @@ const PropertiesSection = () => {
   // Also make sure we fetch/refresh messaged properties when all properties change
   useEffect(() => {
     if (userId && allProperties.length > 0) {
-      // console.log('Properties loaded, checking for messaged properties');
       fetchMessagedProperties(userId);
     }
-  }, [allProperties.length, userId]);
+  }, [allProperties, userId]);
 
   // Add a listener for conversation updates
   useEffect(() => {
     const handleConversationUpdate = () => {
       if (userId) {
-        // console.log('Conversation update detected, refreshing messaged properties');
         fetchMessagedProperties(userId);
       }
     };
@@ -852,18 +755,18 @@ const PropertiesSection = () => {
             // Property sections with improved styling
             <>
               <Preferences 
-                preferredProperties={preferredProperties as any} // Type assertion for now
+                preferredProperties={preferredProperties} 
                 hasActiveFilters={hasActiveFilters()}
                 clearFilters={clearFilters}
               />
 
               <RecentlyAdded 
-                recentlyAddedProperties={recentlyAddedProperties as any} // Type assertion for now
+                recentlyAddedProperties={recentlyAddedProperties}
               />
               
     
               <AvailableProperties 
-                availableProperties={availableProperties as any} // Type assertion for now
+                availableProperties={availableProperties}
               />
 
                {/* Explicitly check if messagedProperties has length before rendering */}
@@ -877,7 +780,7 @@ const PropertiesSection = () => {
               )}
               
               <RentedProperties 
-                rentedProperties={rentedProperties as any} 
+                rentedProperties={rentedProperties}
               />
               
               {/* No properties message */}
