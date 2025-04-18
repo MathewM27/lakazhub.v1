@@ -69,8 +69,7 @@ export default function PropertyGrid({
         });
       }
     } catch (error) {
-      // Comment out console.error
-      // console.error('Error during property deletion:', error);
+      console.error('Error during property deletion:', error);
       toast({
         title: "Delete failed",
         description: "Unexpected error occurred. Please try again.",

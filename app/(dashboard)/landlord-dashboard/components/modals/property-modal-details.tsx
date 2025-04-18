@@ -8,7 +8,7 @@ import { FormData, PropertyData } from "./property-modal/types"
 
 // Define a proper type for the property object that extends PropertyData
 interface Property extends PropertyData {
-  [key: string]: any; // For any additional properties not explicitly defined
+  [key: string]: unknown; // Use unknown instead of any for better type safety
 }
 
 interface PropertyDetailsModalProps {
@@ -109,23 +109,23 @@ export default function PropertyModal({
       try {
         if (property?.id) {
           // Update existing property
-          const { error } = await supabase
+          const { error: updateError } = await supabase
             .from('properties')
             .update(propertyData)
             .eq('id', property.id)
             .select()
             .single()
             
-          if (error) throw error
+          if (updateError) throw updateError
         } else {
           // Create new property
-          const { error } = await supabase
+          const { error: insertError } = await supabase
             .from('properties')
             .insert([propertyData])
             .select()
             .single()
             
-          if (error) throw error
+          if (insertError) throw insertError
         }
         
         // Success notification
@@ -143,20 +143,18 @@ export default function PropertyModal({
         onOpenChangeAction(false)
         
       } catch (error) {
-        // Comment out the console.error
-        // console.error("Database operation failed:", error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
         toast({
           title: "Database Error",
-          description: "Failed to save property details. Please try again.",
+          description: `Failed to save property details: ${errorMessage}`,
           variant: "destructive"
         })
       }
     } catch (error) {
-      // Comment out the console.error
-      // console.error("Error submitting property:", error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: `An unexpected error occurred: ${errorMessage}`,
         variant: "destructive"
       })
     } finally {

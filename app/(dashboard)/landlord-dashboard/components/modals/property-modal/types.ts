@@ -84,16 +84,3 @@ export function convertPropertyToFormData(property: PropertyData): FormData {
     status: property.status || 'active'
   };
 }
-
-// Helper function to determine room type from URL
-function determineRoomTypeFromUrl(url: string): string {
-  const lowercaseUrl = url.toLowerCase();
-  
-  for (const roomType of ROOM_TYPES) {
-    if (lowercaseUrl.includes(roomType.toLowerCase().replace(' ', '-'))) {
-      return roomType;
-    }
-  }
-  
-  return "Exterior"; // Default room type
-}

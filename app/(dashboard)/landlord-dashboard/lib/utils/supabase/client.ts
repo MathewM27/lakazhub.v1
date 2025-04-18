@@ -58,6 +58,7 @@ export async function getUserProfile(userId: string) {
     
     // First check if the user is authenticated
     const { data: sessionData } = await supabase.auth.getSession();
+    void sessionData;
     // console.log('[SUPABASE_CLIENT] Current session exists:', !!sessionData.session);
     
     // Make the request with explicit headers
@@ -100,8 +101,8 @@ export async function getUserProfile(userId: string) {
           } else {
             // console.error('[SUPABASE_CLIENT] Alternative fetch failed:', response.status, response.statusText);
           }
-        } catch (altError) {
-          // console.error('[SUPABASE_CLIENT] Alternative fetch error:', altError);
+        } catch (_altError) {
+          // console.error('[SUPABASE_CLIENT] Alternative fetch error:', _altError);
         }
       }
       
@@ -189,8 +190,8 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative update succeeded:', updatedData);
               return updatedData[0] || null;
             }
-          } catch (altError) {
-            // console.error('[SUPABASE_CLIENT] Alternative update failed:', altError);
+          } catch (_altError) {
+            // console.error('[SUPABASE_CLIENT] Alternative update failed:', _altError);
           }
         }
         
@@ -231,8 +232,8 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative insert succeeded:', insertedData);
               return insertedData[0] || null;
             }
-          } catch (altError) {
-            // console.error('[SUPABASE_CLIENT] Alternative insert failed:', altError);
+          } catch (_altError) {
+            // console.error('[SUPABASE_CLIENT] Alternative insert failed:', _altError);
           }
         }
         
@@ -299,7 +300,7 @@ export async function checkAuthStatus() {
           if ((Date.now() - parseInt(cacheTime)) < 60 * 1000) {
             return authStatus;
           }
-        } catch (_) {
+        } catch (_unused) {
           // Invalid cache, continue with API call
         }
       }

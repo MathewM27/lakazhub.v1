@@ -62,16 +62,16 @@ export default function PropertyCard({
         if (!userData?.user) return;
 
         // Use the property_conversations table to get unread count
-        const { data, error } = await supabase
+        const { data, error: unreadError } = await supabase
           .from('property_conversations')
           .select('id, landlord_unread_count')
           .eq('property_id', property.id)
           .eq('landlord_id', userData.user.id)
           .eq('is_archived', false);
 
-        if (error) {
-          // Comment out console error
-          // console.error('Error fetching unread count:', error);
+        if (unreadError) {
+          // Log error but continue execution
+          console.error('Error fetching unread count:', unreadError);
           return;
         }
 
@@ -91,8 +91,7 @@ export default function PropertyCard({
           setUnreadCount(totalUnread);
         }
       } catch (error) {
-        // Comment out console error
-        // console.error('Error in unread count fetch:', error);
+        console.error('Error in unread count fetch:', error);
       }
     };
 
@@ -101,7 +100,7 @@ export default function PropertyCard({
     // Set up real-time subscription for conversation updates
     const conversationUpdateSubscription = supabase
       .channel('property_conversations_update')
-      .on('postgres_changes' as any, {
+      .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'property_conversations',

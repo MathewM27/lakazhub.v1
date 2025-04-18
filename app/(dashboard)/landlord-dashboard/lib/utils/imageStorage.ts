@@ -27,6 +27,8 @@ export class ImageStorage {
    * Validate an image file before upload
    */
   static validateImage(file: File): { valid: boolean; error?: string } {
+    // Use file parameter to avoid unused var error
+    void file;
     // Your existing validation code
     return { valid: true };
   }
@@ -35,6 +37,8 @@ export class ImageStorage {
    * Get dimensions of an image file
    */
   static async getImageDimensions(file: File): Promise<ImageDimensions> {
+    // Use file parameter to avoid unused var error
+    void file;
     // Your existing code
     return { width: 0, height: 0 };
   }
@@ -83,7 +87,7 @@ export class ImageStorage {
       const folderPath = `${sanitizedPropertyId}/${sanitizedRoomType}`;
       
       // Upload each file with progress tracking
-      let totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
       let uploadedSize = 0;
       
       for (let i = 0; i < files.length; i++) {
@@ -123,7 +127,6 @@ export class ImageStorage {
           
           console.log(`Converting file to binary buffer: ${file.name} (${fileBuffer.length} bytes)`);
           
-          // Upload the file using binary buffer - no bucket creation attempts
           let { data, error } = await supabase.storage
             .from(this.BUCKET_NAME)
             .upload(filePath, fileBuffer, {
@@ -318,9 +321,12 @@ export class ImageStorage {
       upsert?: boolean;
     } = {},
     maxRetries: number = 3
-  ): Promise<any> {
+  ): Promise<{
+    data: any;
+    error: Error | null;
+  }> {
     let attempt = 0;
-    let lastError: any = null;
+    let lastError: Error | null = null;
     
     while (attempt < maxRetries) {
       try {
@@ -347,12 +353,12 @@ export class ImageStorage {
         }
         
         console.warn(`Upload collision detected (attempt ${attempt+1}), retrying with new name`);
-      } catch (error: any) {
-        lastError = error;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
         
         // If it's a different error that's not "already exists", don't retry
-        if (!error.message?.includes('already exists')) {
-          throw error;
+        if (!(lastError.message?.includes('already exists'))) {
+          throw lastError;
         }
       }
       
@@ -365,7 +371,7 @@ export class ImageStorage {
   /**
    * Compress an image to reduce file size
    */
-  static async compressImage(file: File, maxSizeMB = 1): Promise<File | null> {
+  static async compressImage(file: File, _maxSizeMB = 1): Promise<File | null> {
     // Implement compression with a library like browser-image-compression
     // For now, just return the original file
     return file;

@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { FormData } from "../types"
-import { X, Camera, Info, Edit, Trash2 } from "lucide-react"
+import { Camera, Info, Edit, Trash2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import Image from "next/image"
 import { ImageStorage } from "@/app/(dashboard)/landlord-dashboard/lib/utils/imageStorage"
@@ -36,16 +36,6 @@ export default function PhotosTab({
   const [dragOver, setDragOver] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
-  
-  // Process existing images on component mount
-  useEffect(() => {
-    // If we have existing images but they're not properly processed, process them
-    if (formData.existingImages && formData.existingImages.length > 0 && 
-        (!formData.images || formData.images.filter(img => img.existingUrl).length === 0)) {
-      
-      processExistingImages();
-    }
-  }, [formData.existingImages]);
   
   // Function to process existing image URLs into the formData.images format
   const processExistingImages = () => {
@@ -90,6 +80,16 @@ export default function PhotosTab({
       images: newImages
     });
   };
+
+  // Process existing images on component mount
+  useEffect(() => {
+    // If we have existing images but they're not properly processed, process them
+    if (formData.existingImages && formData.existingImages.length > 0 && 
+        (!formData.images || formData.images.filter(img => img.existingUrl).length === 0)) {
+      
+      processExistingImages();
+    }
+  }, [formData.existingImages, formData.images, processExistingImages]);
   
   // Group images by category
   const imagesByCategory = ROOM_CATEGORIES.reduce((acc, category) => {

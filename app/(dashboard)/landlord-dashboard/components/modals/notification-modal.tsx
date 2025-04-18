@@ -1086,7 +1086,7 @@ export default function NotificationsModal({
   const renderChatMessages = () => {
     if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
       return (
-        <div className="flex items-center justify-center h-32">
+        <div className="flex items-center justify-center h-32" key="loading-container">
           <div className="animate-pulse flex space-x-2" key="loading-pulse">
             <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
             <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
@@ -1098,7 +1098,7 @@ export default function NotificationsModal({
 
     if (!selectedTenant) {
       return (
-        <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
+        <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-tenant-selected">
           <p>Select a conversation to view messages</p>
         </div>
       );
@@ -1106,7 +1106,7 @@ export default function NotificationsModal({
 
     if (!selectedTenant.messages || selectedTenant.messages.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
+        <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-messages">
           <p>No messages in this conversation yet</p>
           <p className="text-xs mt-2">Send a message to get started</p>
         </div>
@@ -1117,7 +1117,7 @@ export default function NotificationsModal({
       <div ref={messagesContainerRef} className="space-y-3">
         {/* Load more button - show if there are more messages */}
         {selectedTenant.hasMoreMessages && (
-          <div className="flex justify-center py-2">
+          <div className="flex justify-center py-2" key="load-more-container">
             <button 
               onClick={() => loadMoreMessages()}
               className="text-xs text-zinc-400 hover:text-white px-3 py-1 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors"
@@ -1287,15 +1287,15 @@ export default function NotificationsModal({
 
             <div className="overflow-y-auto flex-1 ">
               {loading && tenants.length === 0 ? (
-                <div className="flex items-center justify-center h-48">
+                <div className="flex items-center justify-center h-48" key="mobile-loading-container">
                   <div className="animate-pulse flex space-x-2" key="mobile-loading-pulse">
-                    <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                    <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                    <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
+                    <div key="mobile-pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
+                    <div key="mobile-pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
+                    <div key="mobile-pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
                   </div>
                 </div>
               ) : tenants.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-zinc-500 px-4 text-center">
+                <div className="flex flex-col items-center justify-center h-48 text-zinc-500 px-4 text-center" key="mobile-no-messages">
                   <p>No messages</p>
                   <p className="text-sm mt-2">You have no message inquiries for this property yet</p>
                 </div>

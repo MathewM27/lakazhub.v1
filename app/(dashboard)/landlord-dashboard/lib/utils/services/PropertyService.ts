@@ -151,8 +151,8 @@ export const PropertyService = {
         PropertyCache.setProperties([], undefined);
         
         return newProperty;
-      } catch (apiError) {
-        // console.warn('API approach failed, falling back to direct Supabase:', apiError);
+      } catch (_apiError) {
+        // console.warn('API approach failed, falling back to direct Supabase:', _apiError);
         
         // Fallback to direct Supabase approach
         // Check auth status
@@ -243,8 +243,8 @@ export const PropertyService = {
         PropertyCache.setProperties([], undefined);
         
         return updatedProperty;
-      } catch (apiError) {
-        // console.warn('API approach failed, falling back to direct Supabase:', apiError);
+      } catch (_apiError) {
+        // console.warn('API approach failed, falling back to direct Supabase:', _apiError);
         
         // Fallback to direct Supabase approach
         // Ensure images array is handled properly if present
