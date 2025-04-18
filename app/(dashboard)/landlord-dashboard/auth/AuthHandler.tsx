@@ -4,7 +4,6 @@ import { useEffect, useState, createContext, useContext, useCallback } from 'rea
 import { supabase, getUserProfile, createUserProfile } from '../lib/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
-import * as Sentry from '@sentry/nextjs';
 import { logDebug, logError, categorizeAuthError, AuthErrorType } from '@/utils/auth/errorHandling';
 import { SessionManager } from '@/utils/auth/sessionManager';
 import AuthLoadingScreen from '@/components/auth/AuthLoadingScreen';
@@ -98,10 +97,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const signOut = useCallback(async () => {
     try {
       logDebug(PREFIX, 'Signing out user');
-      
-      // Clear user data from Sentry when signing out
-      Sentry.setUser(null);
-      Sentry.setContext('auth', null);
       
       await supabase.auth.signOut();
       // Clear any cached auth data
@@ -396,9 +391,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             sessionStorage.setItem('auth_status_time', Date.now().toString());
           }
           
-          // SECURITY IMPROVEMENT: No role parameter handling from client-side code
-          // Roles are now managed through secure server-side operations via middleware
-          // The middleware handles role verification with the database as the source of truth
           logDebug(PREFIX, 'User authenticated:', userData.user.id);
         } else {
           logDebug(PREFIX, 'User not authenticated');
@@ -410,11 +402,9 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
       } catch (error) {
         logError(PREFIX, 'Auth error:', error);
         
-        // Enhanced error handling
         const errorType = categorizeAuthError(error);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         
-        // Set more user-friendly error messages based on error type
         if (errorType === AuthErrorType.SESSION_MISSING) {
           setAuthError('Authentication required: Please sign in to access this page.');
         } else if (errorType === AuthErrorType.SESSION_EXPIRED) {
@@ -423,8 +413,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
           setAuthError(errorMessage);
         }
         
-        // Track authentication failures with user context
-        Sentry.setContext('auth', {
+        console.error('Authentication failure context:', {
           isAuthenticated: false,
           hasError: true,
           errorType: errorType,

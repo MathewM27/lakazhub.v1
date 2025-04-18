@@ -1,6 +1,5 @@
 import { SupabaseClient, Session } from '@supabase/supabase-js';
 import { logDebug, logError } from './errorHandling';
-import * as Sentry from '@sentry/nextjs';
 
 // Constants
 const PREFIX = 'SESSION_MANAGER';
@@ -95,11 +94,9 @@ export class SessionManager {
         // If refresh failed, session is likely expired - handle accordingly
         this.onSessionExpired();
         
-        // Report to monitoring
-        Sentry.captureMessage('Session refresh failed', {
-          level: 'warning',
-          tags: { component: PREFIX },
-          extra: { error: error.message }
+        console.error('Session refresh failed:', {
+          component: PREFIX,
+          error: error.message
         });
         
         return;

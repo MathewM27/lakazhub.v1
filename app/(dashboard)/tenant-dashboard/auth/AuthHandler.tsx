@@ -4,7 +4,6 @@ import { useEffect, useState, createContext, useContext, useCallback } from 'rea
 import { supabase, getUserProfile, createUserProfile, checkAuthStatus } from '../utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '@/utils/types/user';
-import * as Sentry from '@sentry/nextjs';
 
 import { useRouter } from 'next/navigation';
 import { categorizeAuthError, AuthErrorType } from '../utils/errorHandling';
@@ -37,25 +36,6 @@ const logError = (message: string, error?: any) => {
     // } else {
     //   console.error(`[AUTH_HANDLER] ${message}`);
     // }
-  }
-  
-  // Report errors to Sentry in all environments
-  if (error) {
-    Sentry.captureException(error, {
-      tags: {
-        component: 'AuthHandler',
-      },
-      extra: {
-        message,
-      },
-    });
-  } else {
-    Sentry.captureMessage(`[AUTH_HANDLER] ${message}`, {
-      level: 'error',
-      tags: {
-        component: 'AuthHandler',
-      },
-    });
   }
 };
 
@@ -94,10 +74,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const signOut = useCallback(async () => {
     try {
       logDebug('Signing out user');
-      
-      // Clear user data from Sentry when signing out
-      Sentry.setUser(null);
-      Sentry.setContext('auth', null);
       
       await supabase.auth.signOut();
       // Clear any cached auth data
@@ -355,14 +331,6 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
         } else {
           setAuthError(errorMessage);
         }
-        
-        // Track authentication failures with user context
-        Sentry.setContext('auth', {
-          isAuthenticated: false,
-          hasError: true,
-          errorType: errorType,
-          timestamp: new Date().toISOString(),
-        });
         
         setIsAuthenticated(false);
         setUser(null);

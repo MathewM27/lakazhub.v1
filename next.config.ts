@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['dtfjgotmshpzwixxpwhe.supabase.co'],
   },
+  productionBrowserSourceMaps: true,
   // Add any other Next.js config options here
 };
 
@@ -17,3 +18,4 @@ export default withBundleAnalyzer(nextConfig);
 
 // If NOT using bundle analyzer, use this instead:
 // export default nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

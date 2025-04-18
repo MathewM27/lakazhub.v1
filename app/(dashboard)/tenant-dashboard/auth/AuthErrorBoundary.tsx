@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import * as Sentry from '@sentry/nextjs';
 
 type AuthErrorBoundaryState = {
   hasError: boolean;
@@ -23,18 +22,9 @@ export default class AuthErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log the error to Sentry
-    Sentry.captureException(error, {
-      extra: {
-        componentStack: errorInfo.componentStack,
-        location: 'AuthErrorBoundary'
-      },
-      tags: {
-        component: 'AuthErrorBoundary'
-      },
-    });
-    
-    // You can also log the error to your monitoring service
+    // Log the error to console
+    console.error('AuthErrorBoundary caught an error:', error);
+    console.error('Component stack:', errorInfo.componentStack);
     if (process.env.NODE_ENV === 'development') {
       // Comment out console errors but keep them for reference
       // console.error('[AUTH_ERROR_BOUNDARY] Error caught in AuthErrorBoundary:', error);

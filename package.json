@@ -60,6 +60,7 @@
     "eslint-config-next": "15.1.7",
     "postcss": "^8.5.3",
     "postcss-import": "^16.1.0",
+    "source-map-explorer": "^2.5.3",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"

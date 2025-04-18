@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { SessionManager } from '@/utils/auth/sessionManager';
-import * as Sentry from '@sentry/nextjs';
 
 export default function AuthLoadingPage() {
   const router = useRouter();
@@ -106,9 +105,7 @@ export default function AuthLoadingPage() {
         
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Authentication failed');
-          Sentry.captureException(err, { 
-            tags: { component: 'AuthLoadingPage' }
-          });
+          console.error('Authentication error in AuthLoadingPage:', err);
         }
       }
     };
