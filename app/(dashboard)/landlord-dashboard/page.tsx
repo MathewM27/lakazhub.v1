@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import ClientWrapper from "./components/client-wrapper"
+
 import LandlordDashboard from "./components/landlord-dashboard"
 
 export const metadata: Metadata = {

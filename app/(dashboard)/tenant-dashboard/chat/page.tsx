@@ -1,27 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { MessageCircle, Home, Send, RefreshCw, Check } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { MessageCircle, Send, RefreshCw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/utils/lib/utils";
 import Navigation from "../components/navigation/Navbar";
 import { supabase } from "../utils/supabase/client";
 import { useToast } from "../hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
-import Image from "next/image";
 
 // Import types from our centralized type definitions
 import {
-  Conversation,
   ConversationWithExtras,
   LandlordGroup,
   Message,
-  Property,
   Profile,
-  RealtimePayload
 } from '@/utils/types/chat';
 
 // Create a simple cache for conversations
@@ -172,11 +168,6 @@ export default function ChatPage() {
       }
       
       // Determine the image column name from the first property
-      const hasImageColumn = propertiesColumns && propertiesColumns.length > 0 && 
-        (Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') || 
-         Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'images'));
-      
-      // Default to using 'images' if the column can't be determined
       const imageColumnName = propertiesColumns && propertiesColumns.length > 0 && 
         Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') ? 'image' : 'images';
       
@@ -226,13 +217,23 @@ export default function ChatPage() {
       }
       
       // Create lookup map for landlords
-      const landlordsMap = landlordsData.reduce((acc: Record<string, any>, landlord: Profile) => {
+      const landlordsMap = landlordsData.reduce((acc: Record<string, Profile>, landlord: Profile) => {
         acc[landlord.id] = landlord;
         return acc;
       }, {});
       
       // Structure the conversations with all necessary data
-      const conversationsWithExtras = data.map((conv: any) => {
+      const conversationsWithExtras = data.map((conv: {
+        id: string;
+        property_id: string;
+        tenant_id: string;
+        landlord_id: string;
+        last_message_text: string;
+        last_message_at: string;
+        tenant_unread_count: number;
+        messages: Message[];
+        properties?: { id: string; name: string; image?: string; images?: string[]; location?: string };
+      }) => {
         const property = conv.properties || { 
           id: conv.property_id,
           name: 'Unknown Property',
@@ -240,8 +241,12 @@ export default function ChatPage() {
         };
         
         // Map the image property correctly based on which column exists
-        if (property && !property.image && property[imageColumnName]) {
-          property.image = property[imageColumnName];
+        if (property) {
+          if (!property.image && Array.isArray(property['images'])) {
+            property.image = property['images'][0] || undefined;
+          } else if (!property.image && typeof property['images'] === 'string') {
+            property.image = property['images'];
+          }
         }
         
         const landlord = landlordsMap[conv.landlord_id] || {
@@ -253,7 +258,7 @@ export default function ChatPage() {
         let lastMessage = null;
         if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
           // Sort to get the latest message (may already be sorted, but just in case)
-          const sortedMessages = [...conv.messages].sort((a, b) => {
+          const sortedMessages = [...conv.messages].sort((a: Message, b: Message) => {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
           lastMessage = sortedMessages[0];
@@ -372,7 +377,7 @@ export default function ChatPage() {
         
         setConversations(conversationsWithExtras);
         groupConversationsByLandlord(conversationsWithExtras);
-      } catch (fallbackError) {
+      } catch (error: unknown) {
         
         toast({
           title: "Error loading conversations",
@@ -385,7 +390,7 @@ export default function ChatPage() {
       setLastRefreshed(new Date());
       setInitialPageLoad(false);
     }
-  }, [user?.id, toast]);
+  }, [user?.id, toast, user?.user_metadata?.full_name]);
 
   // Use prefetching to load data earlier
   useEffect(() => {
@@ -450,7 +455,7 @@ export default function ChatPage() {
           table: 'property_conversations',
           filter: `tenant_id=eq.${user.id}`
         },
-        (payload: { new: any; old: any; eventType: string }) => {
+        (_payload: { new: ConversationWithExtras; old: ConversationWithExtras; eventType: string }) => {
           // Invalidate cache and refetch data on any change
           const cacheKey = `conversations-${user.id}`;
           conversationsCache.delete(cacheKey);
@@ -533,7 +538,7 @@ export default function ChatPage() {
           table: 'property_conversations',
           filter: `id=eq.${selectedConversation.id}`
         },
-        (payload: { new: any; old: any; eventType: string }) => {
+        (payload: { new: { messages: Message[]; tenant_unread_count: number }; old: unknown; eventType: string }) => {
           const updatedConversation = payload.new;
           
           // Update messages if the messages array has changed
@@ -585,7 +590,7 @@ export default function ChatPage() {
       
       // Update current page
       setCurrentPage(nextPage);
-    } catch (error: unknown) {
+    } catch (error) {
       toast({
         title: "Error loading more messages",
         description: error instanceof Error ? error.message : "Could not load older messages",
@@ -620,7 +625,7 @@ export default function ChatPage() {
       
       // Otherwise show date
       return format(date, 'MMM d');
-    } catch (e) {
+    } catch {
       return 'Unknown';
     }
   };
@@ -658,10 +663,10 @@ export default function ChatPage() {
       // Clear the input
       setNewMessage("");
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error sending message",
-        description: error.message || "Could not send your message",
+        description: error instanceof Error ? error.message : "Could not send your message",
       });
     } finally {
       setSendingMessage(false);
@@ -757,7 +762,7 @@ export default function ChatPage() {
                       <MessageCircle className="h-12 w-12 mb-3 text-white/30" />
                       <p>No conversations yet</p>
                       <p className="text-sm mt-1">
-                        Messages about properties you've inquired about will appear here
+                        Messages about properties you&apos;ve inquired about will appear here
                       </p>
                     </div>
                   ) : (
@@ -954,7 +959,7 @@ export default function ChatPage() {
                 <MessageCircle className="h-16 w-16 text-white/30 mx-auto mb-4" />
                 <h3 className="text-2xl font-semibold text-white mb-2">Your property messages</h3>
                 <p className="text-white/60 mb-4">Select a conversation to start chatting</p>
-                <p className="text-sm text-white/40">Messages about properties you've inquired about will appear here</p>
+                <p className="text-sm text-white/40">Messages about properties you&apos;ve inquired about will appear here</p>
               </div>
             </div>
           )}

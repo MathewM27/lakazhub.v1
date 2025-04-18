@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { 
     Home, 
     MessageCircle, 
@@ -255,18 +254,9 @@ const Navigation = () => {
         setIsProfileModalOpen(true);
     };
 
-    // Animation variants
-    const navVariants = {
-        hidden: { opacity: 0, y: -10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-    };
-
     return (
         <>
-            <motion.nav 
-                initial="hidden"
-                animate="visible"
-                variants={navVariants}
+            <nav 
                 className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
                     isScrolled 
                         ? "bg-black/90 backdrop-blur-md shadow-md border-b border-white/10" 
@@ -366,11 +356,9 @@ const Navigation = () => {
                             <span className="text-2xl font-bold tracking-tight transition-colors text-white">
                                 Lakaz<span className="opacity-70">Hub</span>
                             </span>
-                            <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: '100%' }}
-                                transition={{ delay: 0.3, duration: 0.8 }}
-                                className="h-1 w-0 bg-white/30 group-hover:bg-white/50 transition-colors ml-1 mt-1 rounded-full"
+                            <div 
+                                className="h-1 w-0 bg-white/30 group-hover:w-full group-hover:bg-white/50 transition-all duration-700 ml-1 mt-1 rounded-full"
+                                style={{ width: '100%' }}
                             />
                         </Link>
                     </div>
@@ -481,13 +469,11 @@ const Navigation = () => {
                     {/* User avatar dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="h-9 w-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all"
+                            <button
+                                className="h-9 w-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all hover:scale-105 active:scale-95"
                             >
                                 <User className="h-4 w-4 text-white" />
-                            </motion.button>
+                            </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent 
                             align="end" 
@@ -520,7 +506,7 @@ const Navigation = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-            </motion.nav>
+            </nav>
             
             {/* Profile Modal */}
             <ProfileModal 

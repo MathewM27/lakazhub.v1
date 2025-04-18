@@ -6,11 +6,9 @@ import {
     Home, 
     MessageCircle, 
     Bell, 
-    Settings, 
     User,
     Menu,
     ChevronRight,
-    LogOut
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -22,18 +20,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "../lib/utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import NotificationsModal from "../components/modals/notification-modal";
 import ProfileModal from "./ProfileModal"; // Import ProfileModal
 import { format, formatDistanceToNow } from "date-fns";
-import { useRouter } from "next/navigation";
-import { Message, Conversation } from "../types/index";
 
 // Add at the top of the file
 declare global {
@@ -58,26 +50,8 @@ interface MessageNotification {
   latestMessageId: string;
 }
 
-interface MessageData {
-  id: string;
-  message: string;
-  created_at: string;
-  is_read: boolean;
-  conversation_id: string;
-  property_id: string;
-  sender_id: string;
-  recipient_id: string;
-  properties: {
-    id: string;
-    name: string;
-  } | null;
-}
-
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [bedrooms, setBedrooms] = useState("");
-    const [location, setLocation] = useState("");
-    const [budget, setBudget] = useState("");
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // State for ProfileModal
     const [user, setUser] = useState<SupabaseUser | null>(null);
     const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -86,7 +60,6 @@ const Header = () => {
     const [selectedProperty, setSelectedProperty] = useState<any>(null);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const messageSubscriptionRef = useRef<any>(null);
-    const router = useRouter();
 
     // Add this new state for notifications
     const [notifications, setNotifications] = useState<Array<any>>([]);
@@ -105,7 +78,7 @@ const Header = () => {
                 if (!error && data.user) {
                     setUser(data.user);
                 }
-            } catch (err) {
+            } catch {
                 // console.error('Error loading user in navbar:', err);
             }
         }
@@ -114,11 +87,6 @@ const Header = () => {
         
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    // Function to check if a message is unread
-    const isMessageUnread = (message: any) => {
-        return message.recipient_id === user?.id && !message.is_read;
-    };
 
     // Fetch unread messages and notifications
     const fetchUnreadMessagesAndNotifications = useCallback(async () => {
@@ -162,25 +130,32 @@ const Header = () => {
             }
 
             // Get tenant profiles for display names
-            const tenantIds = [...new Set(filteredConversations.map((conv: any) => conv.tenant_id))];
-            const { data: profilesData, error: profilesError } = await supabase
+            const tenantIds = [...new Set(filteredConversations.map((conv: { tenant_id: string }) => conv.tenant_id))];
+            const { data: profilesData } = await supabase
               .from('profiles')
               .select('*')
               .in('id', tenantIds);
 
             // console.log('Tenant profiles:', profilesData);
-            // console.log('Profiles error:', profilesError);
 
             // Create a map of tenant IDs to profiles for easy lookup
-            const tenantProfiles: Record<string, any> = {};
+            const tenantProfiles: Record<string, { full_name?: string }> = {};
             if (profilesData) {
-              profilesData.forEach((profile: any) => {
+              profilesData.forEach((profile: { id: string; full_name?: string }) => {
                 tenantProfiles[profile.id] = profile;
               });
             }
 
             // Create notification objects from conversations
-            const notifications: MessageNotification[] = filteredConversations.map((conv: any) => {
+            const notifications: MessageNotification[] = filteredConversations.map((conv: {
+              id: string;
+              property_id: string;
+              properties?: { name?: string };
+              tenant_id: string;
+              messages?: { message: string; created_at: string; id: string }[];
+              landlord_unread_count?: number;
+              created_at: string;
+            }) => {
               const tenantProfile = tenantProfiles[conv.tenant_id] || {};
               const tenantName = tenantProfile?.full_name || 'Unknown User';
               
@@ -212,7 +187,7 @@ const Header = () => {
             
             // console.log('Final notifications to display:', notifications);
             setMessageNotifications(notifications);
-        } catch (error) {
+        } catch {
             // console.error('Error fetching message notifications:', error);
         }
     }, [user?.id]);
@@ -240,7 +215,7 @@ const Header = () => {
             
             // Open the notification modal
             setNotificationModalOpen(true);
-        } catch (error) {
+        } catch {
             // console.error('Error handling notification click:', error);
         }
     };
@@ -260,9 +235,9 @@ const Header = () => {
             schema: 'public',
             table: 'property_conversations',
             filter: `landlord_id=eq.${user.id}`,
-          }, (payload: { new: any }) => {
+          }, (payload: { new: unknown }) => {
             // console.log('Conversation updated:', payload);
-            const updatedConversation = payload.new;
+            const updatedConversation = (payload as { new: { landlord_unread_count: number } }).new;
             
             // Only update if there are unread messages
             if (updatedConversation.landlord_unread_count > 0) {
@@ -272,7 +247,7 @@ const Header = () => {
           .subscribe();
           
         // Listen for the custom event when messages are marked as read in other components
-        const handleMessagesRead = (event: CustomEvent) => {
+        const handleMessagesRead = (_event: CustomEvent) => {
         //   console.log('Header received messagesMarkedAsRead event:', event.detail);
           // Refresh notifications to update the UI
           fetchUnreadMessagesAndNotifications();
@@ -321,7 +296,7 @@ const Header = () => {
 
             // Otherwise show date
             return format(date, "MMM d");
-        } catch (e) {
+        } catch {
             return "Unknown";
         }
     };
@@ -351,7 +326,7 @@ const Header = () => {
             
             // Reset unread count
             setUnreadMessagesCount(0);
-        } catch (error) {
+        } catch {
             // console.error('Error marking messages as read:', error);
         }
     };
@@ -375,23 +350,17 @@ const Header = () => {
             //   .update({ is_read: true })
             //   .eq('recipient_id', user?.id);
             
-        } catch (error) {
+        } catch {
             // console.error('Error marking notifications as read:', error);
         }
     };
 
-    const handleSavePreferences = () => {
-        // Here you would typically save to backend/database
-        // console.log("Saving preferences:", { bedrooms, location, budget });
-        // Add toast notification or feedback here
-    };
-    
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
             window.location.href = 'http://localhost:3000'; 
-        } catch (err) {
-            console.error('Error logging out:', err);
+        } catch {
+            // console.error('Error logging out:', err);
         }
     };
 

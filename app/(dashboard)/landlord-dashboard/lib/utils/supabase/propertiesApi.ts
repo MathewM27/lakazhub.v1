@@ -25,8 +25,8 @@ export interface PropertyFormData {
 export class PropertyAPI {
   private static API_URL = process.env.NEXT_PUBLIC_API_URL;
   private static cache: { 
-    properties?: { data: any[], timestamp: number },
-    propertyDetails?: { [id: string]: { data: any, timestamp: number } }
+    properties?: { data: PropertyFormData[], timestamp: number },
+    propertyDetails?: { [id: string]: { data: PropertyFormData, timestamp: number } }
   } = {};
   
   // Cache time in milliseconds (5 minutes)
@@ -35,7 +35,7 @@ export class PropertyAPI {
   /**
    * Get all properties for the current landlord with caching
    */
-  static async getProperties(forceRefresh = false): Promise<any[]> {
+  static async getProperties(forceRefresh = false): Promise<PropertyFormData[]> {
     try {
       // Check cache first if not forcing refresh
       const now = Date.now();
@@ -72,11 +72,11 @@ export class PropertyAPI {
       
       // Update cache with direct Supabase data
       this.cache.properties = {
-        data: propertiesData || [],
+        data: (propertiesData as PropertyFormData[]) || [],
         timestamp: now
       };
       
-      return propertiesData || [];
+      return (propertiesData as PropertyFormData[]) || [];
     } catch (error) {
       // console.error('Error fetching properties:', error);
       return []; // Return empty array on error
@@ -86,7 +86,7 @@ export class PropertyAPI {
   /**
    * Get a single property by ID with caching
    */
-  static async getProperty(id: string, forceRefresh = false): Promise<any> {
+  static async getProperty(id: string, forceRefresh = false): Promise<PropertyFormData> {
     try {
       // Check cache first if not forcing refresh
       const now = Date.now();
@@ -119,7 +119,7 @@ export class PropertyAPI {
       }
 
       const data = await response.json();
-      const property = data.property;
+      const property = data.property as PropertyFormData;
       
       // Initialize propertyDetails cache if it doesn't exist
       if (!this.cache.propertyDetails) {
@@ -133,16 +133,16 @@ export class PropertyAPI {
       };
       
       return property;
-    } catch (error) {
+    } catch (_error) {
       // console.error(`Error fetching property ${id}:`, error);
-      throw error;
+      throw _error;
     }
   }
 
   /**
    * Create a new property
    */
-  static async createProperty(propertyData: PropertyFormData): Promise<any> {
+  static async createProperty(propertyData: PropertyFormData): Promise<PropertyFormData> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -177,17 +177,17 @@ export class PropertyAPI {
       // Clear cache to ensure fresh data on next fetch
       this.invalidateCache();
       
-      return data;
-    } catch (error) {
+      return data as PropertyFormData;
+    } catch (_error) {
       // console.error('Error in property creation:', error);
-      throw error;
+      throw _error;
     }
   }
 
   /**
    * Update an existing property
    */
-  static async updateProperty(id: string, propertyData: Partial<PropertyFormData>): Promise<any> {
+  static async updateProperty(id: string, propertyData: Partial<PropertyFormData>): Promise<PropertyFormData> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -218,10 +218,10 @@ export class PropertyAPI {
       // Clear cache to ensure fresh data on next fetch
       this.invalidateCache();
       
-      return data;
-    } catch (error) {
+      return data as PropertyFormData;
+    } catch (_error) {
       // console.error(`Error in property update for ${id}:`, error);
-      throw error;
+      throw _error;
     }
   }
 
@@ -268,7 +268,7 @@ export class PropertyAPI {
   /**
    * Upload property images
    */
-  static async uploadPropertyImages(propertyId: string, files: File[]): Promise<any> {
+  static async uploadPropertyImages(propertyId: string, files: File[]): Promise<string[]> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -280,7 +280,8 @@ export class PropertyAPI {
       const formData = new FormData();
       
       // Add all files
-      files.forEach((file, index) => {
+      files.forEach((file, _index) => {
+        void _index;
         formData.append(`images`, file);
       });
       
@@ -308,7 +309,7 @@ export class PropertyAPI {
         this.cache.propertyDetails[propertyId].timestamp = 0;
       }
       
-      return data.images;
+      return data.images as string[];
     } catch (error) {
       // console.error('Error uploading images:', error);
       throw error;
@@ -318,7 +319,7 @@ export class PropertyAPI {
   /**
    * Update property availability
    */
-  static async updateAvailability(id: string, available: boolean): Promise<any> {
+  static async updateAvailability(id: string, available: boolean): Promise<PropertyFormData> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -351,7 +352,7 @@ export class PropertyAPI {
         this.cache.propertyDetails[id].timestamp = 0;
       }
       
-      return data.property;
+      return data.property as PropertyFormData;
     } catch (error) {
       // console.error(`Error updating property availability ${id}:`, error);
       throw error;

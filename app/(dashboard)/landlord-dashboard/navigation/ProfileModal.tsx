@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Mail, User as UserIcon, X } from "lucide-react";
+import { AlertCircle, Mail, User as UserIcon } from "lucide-react";
 import { supabase } from "../lib/utils/supabase/client";
 import { useAuth } from "../auth/AuthHandler";
 
@@ -41,9 +41,10 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
       if (error) throw error;
       setIsChangingEmail(false);
       alert('Verification email sent. Please check your inbox to confirm email change.');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
       console.error('Error changing email:', err);
-      setError(err.message || 'Failed to change email');
+      setError(errorObj.message || 'Failed to change email');
     }
   };
 
@@ -57,8 +58,9 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
           alert('Account deletion request submitted. Support will contact you.');
           onClose();
         }, 2000);
-      } catch (err: any) {
-        setError(err.message || 'Failed to delete account');
+      } catch (err: unknown) {
+        const errorObj = err as { message?: string };
+        setError(errorObj.message || 'Failed to delete account');
         setIsDeleting(false);
       }
     }

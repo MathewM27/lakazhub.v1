@@ -73,7 +73,7 @@ export interface LandlordProperty {
     trash: boolean;
     cable: boolean;
   };
-  images?: any[]; // Optional in the dashboard
+  images?: string[]; 
   available?: boolean; // Optional in the dashboard
 }
 
