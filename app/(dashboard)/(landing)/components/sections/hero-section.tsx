@@ -8,7 +8,7 @@ export const HeroSection = () => {
       {/* Simple gradient overlay instead of canvas background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black to-black/95 pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 mt-12">
+      <div className="container mx-auto px-4 sm:px-4 lg:px-4 relative z-10 mt-12">
         {/* Convert from flex to grid for better performance */}
         <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
           {/* Left content column */}
@@ -19,7 +19,7 @@ export const HeroSection = () => {
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
               <span className="block opacity-0 animate-slide-up delay-100">
                 Where Homes &
               </span>
@@ -85,7 +85,7 @@ export const HeroSection = () => {
                 href="#signup"
                 className="group min-h-[50px] flex items-center justify-center px-8 py-3 bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300 text-base font-medium focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                Get Started
+                Join Today
                 <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               
@@ -103,14 +103,14 @@ export const HeroSection = () => {
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                   <FiCheck className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-sm text-white/80">Streamlined Application Process</p>
+                <p className="text-sm text-white/80">Smart Property Management</p>
               </div>
 
               <div className="flex items-center gap-3 opacity-0 animate-slide-up delay-600">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                   <FiCheck className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-sm text-white/80">Smart Property Management</p>
+                <p className="text-sm text-white/80">Smart Property Search</p>
               </div>
             </div>
           </div>

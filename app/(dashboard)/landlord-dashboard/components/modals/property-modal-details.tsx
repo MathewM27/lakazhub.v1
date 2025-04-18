@@ -65,7 +65,8 @@ export default function PropertyModal({
       available: property.available ?? true,
       landlord_id: property.landlord_id || '',
       updated_at: property.updated_at || new Date().toISOString(),
-      status: property.status || 'active'
+      status: property.status || 'active',
+      created_at: property.created_at || new Date().toISOString()
     };
   }
 

@@ -37,7 +37,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative"
+      className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative h-full flex flex-col"
       onClick={onClick}
     >
       {/* Availability indicator at top left (moved from right) */}
@@ -95,21 +95,21 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
       </div>
 
       {/* Content Container */}
-      <div className="p-5">
+      <div className="p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors">
-              {truncateString(property.name, 2)}
+          <div className="max-w-[60%]">
+            <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors truncate">
+              {property.name}
             </h3>
-            <p className="text-white/70 flex items-center gap-1 text-sm mt-1">
-              <Home className="w-3.5 h-3.5" />
-              {property.location}
+            <p className="text-white/70 flex items-center gap-1 text-sm mt-1 truncate">
+              <Home className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">{property.location}</span>
             </p>
           </div>
           
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <div className="bg-white/10 rounded-lg px-3 py-1 backdrop-blur-sm">
-              <p className="text-white font-bold">
+              <p className="text-white font-bold whitespace-nowrap">
                 Rs {(property.price || property.monthly_rent || 0).toLocaleString()}
               </p>
               <p className="text-white/60 text-xs">per month</p>
@@ -161,10 +161,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick, f
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.3 }}
-          className="mt-4 w-full"
+          className="mt-auto pt-4 w-full"
         >
           <button 
-            className="w-full py-2 bg-transparent border border-white/20 rounded-lg text-white text-sm group-hover:bg-white group-hover:text-black transition-all duration-300"
+            className="w-full h-10 bg-transparent border border-white/20 rounded-lg text-white text-sm group-hover:bg-white group-hover:text-black transition-all duration-300"
           >
             View Details
           </button>

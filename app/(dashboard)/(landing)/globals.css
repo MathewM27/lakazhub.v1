@@ -13,10 +13,10 @@
 
 @keyframes breathe {
   0%, 100% {
-    font-weight: 300; /* Lighter weight */
+    font-weight: 300; 
   }
   50% {
-    font-weight: 700; /* Bolder weight */
+    font-weight: 700; 
   }
 }
 

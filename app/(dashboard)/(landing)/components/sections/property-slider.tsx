@@ -1,10 +1,11 @@
 'use client'; // Keep client directive as we need interactivity for the slider
 
-import { useState, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Home, ImageOff } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Home, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../../ui/property-card';
 import Image from 'next/image';
+import useEmblaCarousel from 'embla-carousel-react';
 
 // Create a component for handling image errors with proper TypeScript types
 interface ImageWithFallbackProps {
@@ -76,29 +77,32 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ src, alt, classNa
 };
 
 export const PropertySlider = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [activeFilters, setActiveFilters] = useState('all');
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-  
-  // Simplify logic - remove unnecessary state
-  const canScrollLeft = currentIndex > 0;
-  const canScrollRight = currentIndex + 3 < properties.length;
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(true);
 
-  const scrollLeft = () => {
-    if (canScrollLeft) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
+  // Update scroll buttons state
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
 
-  const scrollRight = () => {
-    if (canScrollRight) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
+  // Initialize and cleanup
+  useEffect(() => {
+    if (!emblaApi) return;
 
-  // Calculate current progress
-  const progress = (currentIndex / (properties.length - 3)) * 100;
-  
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
   // Handle property card click - scroll to signup section
   const handlePropertyClick = useCallback(() => {
     const signupSection = document.getElementById('signup');
@@ -107,14 +111,22 @@ export const PropertySlider = () => {
     const offsetTop = signupSection.offsetTop;
     
     // On mobile, we need to account for the height of the navbar
-    const offset = window.innerWidth < 768 ? -70 : 0;
+    const offset = typeof window !== 'undefined' && window.innerWidth < 768 ? -70 : 0;
     
     window.scrollTo({
       top: offsetTop + offset,
       behavior: 'smooth'
     });
   }, []);
-  
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
   return (
     <section 
       id="properties" 
@@ -172,68 +184,44 @@ export const PropertySlider = () => {
             </div>
           </div>
 
-          <div 
-            className="relative" 
-            ref={sliderRef}
-          >
-            <div className="overflow-hidden rounded-xl">
-              {/* Use CSS transition instead of Framer Motion */}
-              <div
-                className="flex gap-6 transition-transform duration-500 ease-out"
-                style={{ transform: `translateX(-${currentIndex * (100 / 3)}%)` }}
-              >
+          <div className="relative">
+            <div className="overflow-hidden rounded-xl" ref={emblaRef}>
+              <div className="flex">
                 {properties.map((property, index) => (
                   <div 
-                    key={property.id} 
-                    className="flex-none w-full md:w-1/3 opacity-0 animate-slide-up transition-transform duration-300"
+                    key={property.id}
+                    className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6 opacity-0 animate-slide-up"
                     style={{animationDelay: `${400 + (index * 50)}ms`}}
                   >
                     <div 
-                      className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300"
+                      className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300 h-full"
                       onClick={handlePropertyClick}
                     >
-                      {/* Pass the property without the custom ImageComponent */}
-                      <PropertyCard
-                        property={property}
-                        onClick={handlePropertyClick}
-                        // Pass the ImageWithFallback component as a separate prop if needed
-                        fallbackImage={ImageWithFallback}
-                      />
+                      <div className="h-full w-full max-w-[400px] mx-auto">
+                        <PropertyCard
+                          property={property}
+                          onClick={handlePropertyClick}
+                          fallbackImage={ImageWithFallback}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Interactive progress bar */}
-            <div className="mt-8 flex items-center gap-6">
-              <div className="flex-1 h-0.5 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-white transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              
-              <div className="text-white/70 text-sm">{currentIndex + 1} / {properties.length - 2}</div>
-            </div>
-
-            {/* Navigation Buttons */}
-            <button
-              onClick={scrollLeft}
-              className={`absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
-                !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'
-              }`}
-              disabled={!canScrollLeft}
+            
+            <button 
+              onClick={scrollPrev}
+              className={`absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'}`}
+              disabled={!canScrollPrev}
             >
               <ChevronLeft className="w-5 h-5 group-hover:scale-95 transition-transform" />
             </button>
-
-            <button
-              onClick={scrollRight}
-              className={`absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
-                !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'
-              }`}
-              disabled={!canScrollRight}
+            
+            <button 
+              onClick={scrollNext}
+              className={`absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'}`}
+              disabled={!canScrollNext}
             >
               <ChevronRight className="w-5 h-5 group-hover:scale-95 transition-transform" />
             </button>

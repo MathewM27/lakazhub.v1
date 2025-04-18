@@ -225,23 +225,6 @@ export const Navbar = () => {
                 <User className="h-4 w-4" />
                 Sign Up
               </a>
-              
-              <div className="mt-3 flex flex-col space-y-2">
-                <a
-                  href="#faq"
-                  className="px-3 py-2 rounded-lg text-sm text-white/70 hover:underline text-center"
-                  onClick={() => setIsOpen(false)}
-                >
-                  FAQ
-                </a>
-                <a
-                  href="#help"
-                  className="px-3 py-2 rounded-lg text-sm text-white/70 hover:underline text-center"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Help Center
-                </a>
-              </div>
             </div>
           </div>
         </div>

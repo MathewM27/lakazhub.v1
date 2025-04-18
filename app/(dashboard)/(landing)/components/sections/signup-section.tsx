@@ -93,7 +93,7 @@ export const SignupSection = () => {
 
   return (
     <section id="signup" className="bg-black text-white py-16 relative overflow-hidden">
-      {/* Simpler static background */}
+    
       <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black to-black/95"></div>
       <StaticBackground />
       
@@ -107,7 +107,7 @@ export const SignupSection = () => {
           {formMode === "signup" ? "Join Our Community" : "Welcome Back"}
         </motion.h2>
         
-        {/* Role selector - top center - horizontal toggle */}
+        
         <div className="max-w-sm mx-auto mb-8">
           <div className="flex rounded-lg border border-white/10 p-1 bg-black/40 backdrop-blur-sm">
             <button
@@ -146,7 +146,7 @@ export const SignupSection = () => {
             )}
             
             <div className="flex justify-between items-center mb-6">
-              <h3 className={`text-xl font-semibold ${userType === 'tenant' ? 'text-blue-400' : 'text-amber-400'}`}>
+              <h3 className={`text-sm font-semibold ${userType === 'tenant' ? 'text-blue-400' : 'text-amber-400'}`}>
                 {formMode === "signup" ? "Create Account" : "Sign In"}
               </h3>
               
@@ -157,7 +157,7 @@ export const SignupSection = () => {
                   userType === "tenant" ? "text-blue-400" : "text-amber-400"
                 }`}
               >
-                {formMode === "signup" ? "Already have an account?" : "Create new account"}
+                {formMode === "signup" ? "Sign in?" : "Sign up?"}
               </button>
             </div>
             
