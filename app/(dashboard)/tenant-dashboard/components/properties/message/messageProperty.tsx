@@ -3,10 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Send, MessageSquare, RefreshCw, Check, X } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { supabase } from "../../../utils/supabase/client"
 import { useToast } from "../../../hooks/use-toast"
 import { format, formatDistanceToNow } from "date-fns"
@@ -36,17 +34,16 @@ interface ToastOptions {
 interface TenantMessageProps {
   open: boolean;
   onOpenChangeAction: (open: boolean) => void;
-  property: any;
+  property: Record<string, unknown>;
 }
 
 export default function TenantMessage({ open, onOpenChangeAction, property }: TenantMessageProps) {
-  const [user, setUser] = useState<any>(null)
-  const [landlord, setLandlord] = useState<any>(null)
+  const [user, setUser] = useState<Record<string, unknown> | null>(null)
   const [messageText, setMessageText] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(false)
   const [sendingMessage, setSendingMessage] = useState(false)
-  const [conversation, setConversation] = useState<any>(null)
+  const [conversation, setConversation] = useState<{ id: string } | null>(null)
   const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [refreshStatus, setRefreshStatus] = useState<'idle' | 'refreshing' | 'updated'>("idle")
@@ -99,23 +96,20 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     return () => {
       if (staleCheckInterval) clearInterval(staleCheckInterval)
     }
-  }, [open, lastRefreshAt])
+  }, [open, lastRefreshAt, CACHE_TIMEOUT])
 
   // Effect to handle refresh status timeouts
   useEffect(() => {
     let statusTimer: NodeJS.Timeout;
     
     if (refreshStatus === 'updated') {
-      console.log("Setting timer to reset refresh status");
       statusTimer = setTimeout(() => {
-        console.log("Timer expired, setting refresh status to idle");
         setRefreshStatus('idle');
       }, 3000);
     }
     
     return () => {
       if (statusTimer) {
-        console.log("Clearing refresh status timer on cleanup");
         clearTimeout(statusTimer);
       }
     };
@@ -124,7 +118,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
   // Get the current user (tenant)
   useEffect(() => {
     const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       
       if (data?.user) {
         setUser(data.user);
@@ -150,24 +144,90 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     fetchUser();
   }, [onOpenChangeAction, toast]);
 
-  // Get landlord info
-  useEffect(() => {
-    if (!property?.landlord_id) return
-    
-    const fetchLandlord = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, profile_photo')
-        .eq('id', property.landlord_id)
-        .single()
-        
-      if (!error && data) {
-        setLandlord(data)
-      }
+  // Function to manually check for new messages
+  const refreshMessages = async () => {
+    if (!conversation?.id) {
+      return;
     }
     
-    fetchLandlord()
-  }, [property])
+    setIsRefreshing(true);
+    setRefreshStatus('refreshing');
+    
+    try {
+      const { data, error } = await supabase
+        .from('property_conversations')
+        .select('id, messages')
+        .eq('id', conversation.id)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.messages && Array.isArray(data.messages)) {
+        const existingIds = new Set(messages.map(m => m.id));
+        
+        const allMessages = data.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
+          id: msg.id,
+          sender_id: msg.sender_id,
+          recipient_id: msg.recipient_id,
+          message: msg.message,
+          created_at: msg.created_at,
+          is_read: msg.is_read,
+          sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
+          text: msg.message,
+          time: formatMessageTime(msg.created_at),
+        }));
+        
+        const newMessages = allMessages.filter((msg: Message) => !existingIds.has(msg.id));
+        
+        if (newMessages.length > 0) {
+          setMessages(allMessages);
+          
+          const hasUnreadMessagesForUser = allMessages.some(
+            (msg: Message) => msg.sender === 'landlord' && !msg.is_read
+          );
+          
+          if (hasUnreadMessagesForUser) {
+            if (conversation?.id) {
+              markMessagesAsRead(conversation.id);
+            }
+          }
+          
+          toast({
+            title: `${newMessages.length} new message${newMessages.length > 1 ? 's' : ''}`,
+            description: "New messages have been loaded",
+          } as ToastOptions);
+        } else {
+          toast({
+            title: "No new messages",
+            description: "You're all caught up!",
+          } as ToastOptions);
+        }
+        
+        // Fix: merge previous conversation state, preserving other fields
+        setConversation(prev => prev ? { ...prev, messages: data.messages as Message[] } : prev);
+        
+        const now = new Date();
+        setLastRefreshAt(now);
+        setStaleData(false);
+      } else {
+        throw new Error("Invalid response format from server");
+      }
+      
+      setRefreshStatus('updated');
+      
+    } catch (error) {
+      toast({
+        title: "Error refreshing messages",
+        description: error instanceof Error ? error.message : "Could not refresh messages",
+        variant: "destructive",
+      } as ToastOptions);
+      setRefreshStatus('idle');
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
 
   // Refresh data automatically when page visibility changes
   useEffect(() => {
@@ -183,7 +243,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [open, conversation?.id, staleData])
+  }, [open, conversation?.id, staleData, refreshMessages])
 
   // Find or create conversation and fetch messages when opened
   useEffect(() => {
@@ -205,9 +265,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         if (convError) throw convError
         
         if (existingConv) {
-          // Conversation exists
           setConversation(existingConv)
-          // Format messages from the JSONB array
           if (existingConv.messages && Array.isArray(existingConv.messages)) {
             const formattedMessages = existingConv.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
               id: msg.id,
@@ -222,7 +280,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
             }));
             setMessages(formattedMessages);
             
-            // Mark messages as read if needed
             if (formattedMessages.some((m: Message) => m.sender === 'landlord' && !m.is_read)) {
               markMessagesAsRead(existingConv.id);
             }
@@ -230,13 +287,12 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
             setMessages([]);
           }
         } else {
-          // No conversation yet - we'll create one when first message is sent
           setMessages([])
         }
-      } catch (error: any) {
+      } catch (error) {
         toast({
           title: "Error loading conversation",
-          description: error.message || "Could not load conversation data",
+          description: error instanceof Error ? error.message : "Could not load conversation data",
           variant: "destructive",
         } as ToastOptions)
       } finally {
@@ -246,7 +302,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     
     fetchOrCreateConversation()
     
-    // Clean up function
     return () => {
       setMessages([])
       setConversation(null)
@@ -255,170 +310,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     }
   }, [open, user?.id, property?.id, property?.landlord_id, toast])
 
-  // Function to manually check for new messages
-  const refreshMessages = async () => {
-    if (!conversation?.id) {
-      console.log("No conversation ID found, cannot refresh");
-      return;
-    }
-    
-    console.log("Starting refresh with conversation ID:", conversation.id);
-    setIsRefreshing(true);
-    setRefreshStatus('refreshing');
-    
-    try {
-      console.log("Fetching updated conversation data...");
-      // More specific selection to improve query performance
-      const { data, error } = await supabase
-        .from('property_conversations')
-        .select('id, messages')
-        .eq('id', conversation.id)
-        .single();
-      
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-      
-      console.log("Received conversation data:", data);
-      
-      if (data && data.messages && Array.isArray(data.messages)) {
-        console.log("Processing messages array, current messages count:", messages.length);
-        
-        // Find new messages that aren't already in our state
-        const existingIds = new Set(messages.map(m => m.id));
-        console.log("Existing message IDs count:", existingIds.size);
-        
-        const allMessages = data.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
-          id: msg.id,
-          sender_id: msg.sender_id,
-          recipient_id: msg.recipient_id,
-          message: msg.message,
-          created_at: msg.created_at,
-          is_read: msg.is_read,
-          sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
-          text: msg.message,
-          time: formatMessageTime(msg.created_at),
-        }));
-        
-        console.log("All messages from response:", allMessages.length);
-        const newMessages = allMessages.filter((msg: Message) => !existingIds.has(msg.id));
-        console.log("New messages found:", newMessages.length);
-        
-        if (newMessages.length > 0) {
-          console.log("Setting messages with new content");
-          setMessages(allMessages);
-          
-          // Mark messages as read if user is recipient
-          const hasUnreadMessagesForUser = allMessages.some(
-            (msg: Message) => msg.sender === 'landlord' && !msg.is_read
-          );
-          
-          if (hasUnreadMessagesForUser) {
-            console.log("Marking messages as read");
-            markMessagesAsRead(conversation.id);
-          }
-          
-          toast({
-            title: `${newMessages.length} new message${newMessages.length > 1 ? 's' : ''}`,
-            description: "New messages have been loaded",
-          } as ToastOptions);
-        } else {
-          console.log("No new messages found");
-          toast({
-            title: "No new messages",
-            description: "You're all caught up!",
-          } as ToastOptions);
-        }
-        
-        // Update conversation data - only update the messages part to avoid losing other conversation data
-        setConversation((prev: typeof conversation) => ({...prev, messages: data.messages as Message[]}));
-        
-        // Update last refreshed time
-        const now = new Date();
-        console.log("Setting last refresh time to:", now);
-        setLastRefreshAt(now);
-        setStaleData(false);
-      } else {
-        console.log("No message array in response or it's not an array");
-        throw new Error("Invalid response format from server");
-      }
-      
-      // Show "up to date" status for 3 seconds
-      console.log("Setting refresh status to 'updated'");
-      setRefreshStatus('updated');
-      
-    } catch (error: any) {
-      console.error("Error in refreshMessages:", error);
-      toast({
-        title: "Error refreshing messages",
-        description: error.message || "Could not refresh messages",
-        variant: "destructive",
-      } as ToastOptions);
-      setRefreshStatus('idle');
-    } finally {
-      console.log("Finishing refresh, setting isRefreshing to false");
-      setIsRefreshing(false);
-    }
-  }
-
-  // Fetch messages for conversation with pagination
-  const fetchMessages = async (conversationId: string) => {
-    setLoading(true)
-    
-    try {
-      // Reset pagination state
-      setCurrentPage(0)
-      
-      // Get messages for this conversation with pagination
-      const { data, error, count } = await supabase
-        .from('property_messages')
-        .select('*', { count: 'exact' })
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: false }) // Descending to get newest first
-        .range(0, PAGE_SIZE - 1) // Get first page
-        
-      if (error) throw error
-      
-      // Check if there are more messages to load
-      setHasMoreMessages(count ? count > PAGE_SIZE : false)
-      
-      // Reverse the array to get chronological order (oldest first)
-      const chronologicalMessages = [...(data || [])].reverse()
-      
-      // Format messages for UI
-      const formattedMessages = chronologicalMessages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
-        id: msg.id,
-        sender_id: msg.sender_id,
-        recipient_id: msg.recipient_id,
-        message: msg.message,
-        created_at: msg.created_at,
-        is_read: msg.is_read,
-        sender: msg.sender_id === user.id ? 'tenant' as const : 'landlord' as const,
-        text: msg.message,
-        time: formatMessageTime(msg.created_at),
-      }));
-      
-      setMessages(formattedMessages)
-      
-      // Mark messages as read
-      markMessagesAsRead(conversationId)
-      
-    } catch (error: any) {
-      toast({
-        title: "Error loading messages",
-        description: error.message || "Could not load messages",
-        variant: "destructive",
-      } as ToastOptions)
-    } finally {
-      setLoading(false)
-    }
-
-    // Update last refreshed time
-    setLastRefreshAt(new Date())
-    setStaleData(false)
-  }
-  
   // Function to load more messages
   const loadMoreMessages = async () => {
     if (!conversation?.id || !hasMoreMessages || loadingMoreMessages) return
@@ -439,13 +330,10 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
       if (error) throw error
       
-      // Check if there are more messages to load after this batch
       setHasMoreMessages(count ? count > endRange + 1 : false)
       
-      // Add older messages to the beginning of the array (reverse to maintain chronological order)
       const olderMessages = [...(data || [])].reverse()
       
-      // Format messages for UI
       const formattedMessages = olderMessages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
         id: msg.id,
         sender_id: msg.sender_id,
@@ -453,19 +341,18 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         message: msg.message,
         created_at: msg.created_at,
         is_read: msg.is_read,
-        sender: msg.sender_id === user.id ? 'tenant' as const : 'landlord' as const,
+        sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
         text: msg.message,
         time: formatMessageTime(msg.created_at),
       }));
       
       setMessages(prev => [...formattedMessages, ...prev])
       
-      // Update current page
       setCurrentPage(nextPage)
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error loading more messages",
-        description: error.message || "Could not load older messages",
+        description: error instanceof Error ? error.message : "Could not load older messages",
         variant: "destructive",
       } as ToastOptions)
     } finally {
@@ -478,12 +365,10 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     try {
       if (!user?.id) return;
       
-      // Use the consolidated mark_conversation_messages_read RPC function
       await supabase.rpc("mark_conversation_messages_read", {
         p_conversation_id: conversationId
       });
       
-      // Update the UI to show messages as read
       setMessages(prev => 
         prev.map(message => 
           message.sender === 'landlord' 
@@ -505,9 +390,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     setSendingMessage(true);
     
     try {
-      // If no conversation exists, we need to create one and send the first message
       if (!conversation) {
-        // Using the create_property_inquiry RPC function
         const { data: convId, error: convError } = await supabase.rpc('create_property_inquiry', {
           p_property_id: property.id,
           p_tenant_id: user.id,
@@ -516,7 +399,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         if (convError) throw convError;
         
-        // Get the full conversation data
         const { data: convData, error: fetchError } = await supabase
           .from('property_conversations')
           .select('*')
@@ -527,7 +409,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         setConversation(convData);
         
-        // Format and add the message to UI
         if (convData.messages && Array.isArray(convData.messages) && convData.messages.length > 0) {
           const formattedMessages = convData.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
             id: msg.id,
@@ -543,7 +424,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
           setMessages(formattedMessages);
         }
       } else {
-        // Conversation exists, add a new message using the add_message_to_conversation function
         const { data, error } = await supabase.rpc('add_message_to_conversation', {
           p_conversation_id: conversation.id,
           p_sender_id: user.id,
@@ -553,11 +433,10 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         if (error) throw error;
         
-        // Add message to UI immediately
         const newMessage: Message = {
           id: data || Date.now().toString(),
-          sender_id: user.id,
-          recipient_id: property.landlord_id,
+          sender_id: user.id as string,
+          recipient_id: property.landlord_id as string,
           message: messageText.trim(),
           created_at: new Date().toISOString(),
           is_read: false,
@@ -568,18 +447,15 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         setMessages(prev => [...prev, newMessage]);
         
-        // Refresh conversation to get the updated messages array
         setTimeout(() => {
           refreshMessages();
         }, 500);
 
-        // Update cache for MessagedProperties component
         try {
           if (user?.id) {
-            const CONVERSATIONS_CACHE_KEY = `conversations-${user.id}`;
-            localStorage.removeItem(CONVERSATIONS_CACHE_KEY); // Invalidate cache to force refresh
+            const CONVERSATIONS_CACHE_KEY = `conversations-${String(user.id)}`;
+            localStorage.removeItem(CONVERSATIONS_CACHE_KEY);
             
-            // Dispatch a custom event that PropertySelection can listen for
             const event = new CustomEvent('conversationUpdated', { 
               detail: { propertyId: property.id } 
             });
@@ -590,10 +466,8 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         }
       }
       
-      // Clear the input
       setMessageText("");
       
-      // Update last refreshed time
       setLastRefreshAt(new Date());
       setStaleData(false);
       
@@ -602,10 +476,10 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         description: "Your message has been sent to the landlord",
       } as ToastOptions);
       
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error sending message",
-        description: error.message || "Could not send your message",
+        description: error instanceof Error ? error.message : "Could not send your message",
         variant: "destructive",
       } as ToastOptions);
     } finally {
@@ -618,26 +492,22 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       const date = new Date(timestamp)
       const now = new Date()
       
-      // If today, show time
       if (date.toDateString() === now.toDateString()) {
         return format(date, 'h:mm a')
       }
       
-      // If within last 7 days, show day name
       const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
       if (daysDiff < 7) {
         return formatDistanceToNow(date, { addSuffix: true })
       }
       
-      // Otherwise show date
       return format(date, 'MMM d')
-    } catch (e) {
+    } catch {
       return 'Unknown'
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Only send on Enter without Shift
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
@@ -700,7 +570,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
 
     return (
       <div className="space-y-3">
-        {/* Load More button */}
         {hasMoreMessages && (
           <div className="flex justify-center my-2">
             <Button
@@ -758,7 +627,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       open={open} 
       onOpenChange={(openState) => {
         if (openState && conversation?.id) {
-          // Refresh messages when the dialog is opened
           refreshMessages();
         }
         onOpenChangeAction(openState);
@@ -767,20 +635,16 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       <DialogContent className="p-0 max-w-[800px] h-[600px] max-h-[90vh] overflow-hidden flex flex-col bg-black border-white/10 text-zinc-100">
         <DialogTitle className="sr-only">{modalTitle}</DialogTitle>
         
-        {/* Fixed header - matches the notification-modal header style */}
         <div className="bg-black border-b border-white/10 p-3 flex items-center justify-between sticky top-0 z-10">
-          {/* Mobile header - simplified */}
           <div className="flex flex-col sm:hidden">
             <span className="font-bold text-white truncate max-w-[120px]">{modalTitle}</span>
           </div>
           
-          {/* Desktop header - full content */}
           <div className="items-center space-x-2 hidden sm:flex">
             <span className="font-bold text-white">LakazHub</span>
             <span className="text-xs text-zinc-400">Messenger</span>
           </div>
 
-          {/* Title area - desktop only */}
           <div className="text-center hidden sm:block">
             <h3 className="text-sm font-medium truncate text-white">{modalTitle}</h3>
             {lastRefreshAt && (
@@ -790,7 +654,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex justify-center items-center space-x-2">
             <Button
               variant="outline"
@@ -806,41 +669,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
               {refreshStatusInfo.icon}
               <span className="text-xs hidden sm:inline">{refreshStatusInfo.text}</span>
             </Button>
-            
-            {/* Debug button - commented out for production
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-red-900/20 border-red-800"
-              onClick={() => {
-                console.log("Debug - current state:", {
-                  conversation,
-                  messages: messages.length,
-                  user,
-                  refreshStatus
-                });
-                
-                // Test direct fetch without state changes
-                if (conversation?.id) {
-                    Promise.resolve(
-                      supabase
-                        .from('property_conversations')
-                        .select('id, messages')
-                        .eq('id', conversation.id)
-                        .single()
-                    )
-                    .then((res: { data: { id: string; messages: Message[] } | null; error: any }) => {
-                      console.log("Debug fetch result:", res);
-                    })
-                    .catch((err: any) => {
-                      console.error("Debug fetch error:", err);
-                    });
-                }
-              }}
-            >
-              Debug
-            </Button>
-            */}
 
             <Button
               variant="ghost"
@@ -854,7 +682,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
           </div>
         </div>
 
-        {/* Main chat area */}
         <div 
           className="flex-1 overflow-y-auto p-4"
           ref={messagesContainerRef}
@@ -862,7 +689,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
           {renderChatMessages()}
         </div>
 
-        {/* Message input - fixed at bottom */}
         <div className="border-t border-white/10 p-3 flex gap-2 bg-black/80 sticky bottom-0">
           <Textarea
             ref={messageInputRef}
