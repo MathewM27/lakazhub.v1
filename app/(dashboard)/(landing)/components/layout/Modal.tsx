@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Check, AlertCircle, X } from 'lucide-react';
 
+
 interface ModalProps {
   isOpen: boolean;
   message: string;

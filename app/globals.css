@@ -269,3 +269,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Move all shared variables, Tailwind layers, and keyframes here */
+/* Remove duplicate definitions from other global.css files */
+/* For unique page styles, use CSS modules or scoped styles in components */
