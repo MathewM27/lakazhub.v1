@@ -213,10 +213,19 @@ export const PropertySlider = () => {
                       >
                         <div className="h-full w-full max-w-[400px] mx-auto">
                           <PropertyCard
-                            property={property}
+                            id={property.id}
+                            name={property.name}
+                            location={property.location}
+                            price={property.price ?? 0}
+                            monthly_rent={property.monthly_rent}
+                            bedrooms={property.bedrooms ?? 0}
+                            bathrooms={property.bathrooms ?? 0}
+                            area={property.area ?? 0}
+                            type={property.type}
+                            imageUrl={property.imageUrl}
+                            isAvailable={property.isAvailable}
                             onClick={handlePropertyClick}
                             fallbackImage={ImageWithFallback}
-                            // Ensure images use loading="lazy" and proper sizes
                           />
                         </div>
                       </div>

@@ -2,11 +2,15 @@ export type Property = {
   id: string;
   name: string;
   location: string;
-  bedrooms: number;
-  bathrooms: number;
+  price: number; // ensure not optional
+  imageUrl?: string; // For backward compatibility
   image: string;
   images: string[]; // Changed from optional to required
-  imageUrl?: string; // For backward compatibility
+  bedrooms: number; // ensure not optional
+  bathrooms: number; // ensure not optional
+  area: number; // ensure not optional
+  type?: string; // Kept for backward compatibility
+  isAvailable?: boolean; // For backward compatibility
   
   // Additional properties needed
   landlord_id: string;
@@ -23,7 +27,6 @@ export type Property = {
     cable: boolean;
   };
   available: boolean;
-  isAvailable?: boolean; // For backward compatibility
   status: 'active' | 'archived' | 'pending' | 'rented';
   created_at: string;
   updated_at: string;
@@ -31,7 +34,4 @@ export type Property = {
   rules?: string[];
   next_available_date?: string;
   availability?: 'Available' | 'Rented' | 'Coming Soon';
-  area?: number; // Kept for backward compatibility
-  type?: string; // Kept for backward compatibility
-  price?: number; // Kept for backward compatibility
 };
