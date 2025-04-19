@@ -127,7 +127,7 @@ const HeroSection = () => {
                 <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
                   <div className="absolute inset-0 z-10">
                     <Image 
-                      src="/bg5.jpg" 
+                      src="/bg5.webp" 
                       alt="Featured Property"
                       fill
                       className="object-cover"

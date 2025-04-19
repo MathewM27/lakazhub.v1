@@ -122,7 +122,7 @@ export const HeroSection = () => {
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
                   {/* Progressive image loading for desktop */}
                   <Image
-                    src="/home0.jpg"
+                    src="/bg5.webp"
                     alt="Home interior"
                     fill
                     priority

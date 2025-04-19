@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+
 import { useAuth } from '../auth/AuthHandler';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
