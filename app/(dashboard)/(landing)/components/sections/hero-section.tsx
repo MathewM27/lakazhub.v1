@@ -6,7 +6,7 @@ export const HeroSection = () => {
   return (
     <section id="hero" className="relative min-h-[90svh] py-8 sm:py-12 bg-black text-white overflow-hidden">
       {/* Simple gradient overlay instead of canvas background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black to-black/95 pointer-events-none"></div>
+      
 
       <div className="container mx-auto px-4 sm:px-4 lg:px-4 relative z-10 mt-12">
         {/* Convert from flex to grid for better performance */}
@@ -39,7 +39,7 @@ export const HeroSection = () => {
                   <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
                     {/* Progressive image loading with priority for hero image */}
                     <Image
-                      src="/home0.jpg"
+                      src="/hero.webp"
                       alt="Home background"
                       fill
                       priority

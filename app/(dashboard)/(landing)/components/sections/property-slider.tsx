@@ -6,6 +6,7 @@ import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../../ui/property-card';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
+import dynamic from 'next/dynamic';
 
 // Create a component for handling image errors with proper TypeScript types
 interface ImageWithFallbackProps {
@@ -81,12 +82,14 @@ export const PropertySlider = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: 'start' });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Update scroll buttons state
+  // Update scroll buttons state and current index
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
+    setCurrentIndex(emblaApi.selectedScrollSnap() || 0);
   }, [emblaApi]);
 
   // Initialize and cleanup
@@ -126,6 +129,12 @@ export const PropertySlider = () => {
   const scrollNext = useCallback(() => {
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
+
+  // Only render a window of slides around the current index for performance
+  const visibleWindow = 2;
+  const visibleProperties = properties.filter((_, idx) =>
+    Math.abs(idx - currentIndex) <= visibleWindow
+  );
 
   return (
     <section 
@@ -187,26 +196,33 @@ export const PropertySlider = () => {
           <div className="relative">
             <div className="overflow-hidden rounded-xl" ref={emblaRef}>
               <div className="flex">
-                {properties.map((property, index) => (
-                  <div 
-                    key={property.id}
-                    className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6 opacity-0 animate-slide-up"
-                    style={{animationDelay: `${400 + (index * 50)}ms`}}
-                  >
+                {properties.map((property, index) => {
+                  // Only render slides within the visible window
+                  if (Math.abs(index - currentIndex) > visibleWindow) {
+                    return <div key={property.id} className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6" style={{ minHeight: 300 }} />;
+                  }
+                  return (
                     <div 
-                      className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300 h-full"
-                      onClick={handlePropertyClick}
+                      key={property.id}
+                      className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6 opacity-0 animate-slide-up"
+                      style={{animationDelay: `${400 + (index * 50)}ms`}}
                     >
-                      <div className="h-full w-full max-w-[400px] mx-auto">
-                        <PropertyCard
-                          property={property}
-                          onClick={handlePropertyClick}
-                          fallbackImage={ImageWithFallback}
-                        />
+                      <div 
+                        className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300 h-full"
+                        onClick={handlePropertyClick}
+                      >
+                        <div className="h-full w-full max-w-[400px] mx-auto">
+                          <PropertyCard
+                            property={property}
+                            onClick={handlePropertyClick}
+                            fallbackImage={ImageWithFallback}
+                            // Ensure images use loading="lazy" and proper sizes
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             
@@ -291,3 +307,6 @@ export const PropertySlider = () => {
     </section>
   );
 };
+
+// For optimal performance, import this component using next/dynamic in the parent page:
+// const PropertySlider = dynamic(() => import('.../property-slider'), { ssr: false });

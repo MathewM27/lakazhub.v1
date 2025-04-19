@@ -6,9 +6,9 @@ export const properties: Property[] = [
     name: "Luxury Beachfront Villa",
     location: "Miami Beach, FL",
     price: 5000,
-    imageUrl: "/bg1.jpg", // Updated to use images in public folder
-    image: "/bg1.jpg",
-    images: ["/bg1.jpg", "/bg2.jpg", "/bg3.jpg"], // Using existing images in public folder
+    imageUrl: "/bg1.webp", // Updated to use images in public folder
+    image: "/bg1.webp",
+    images: ["/bg1.webp", "/bg2.webp", "/bg3.webp"], // Using existing images in public folder
     bedrooms: 4,
     bathrooms: 3,
     area: 3200,
@@ -43,9 +43,9 @@ export const properties: Property[] = [
     name: "Downtown Apartment",
     location: "New York, NY",
     price: 3500,
-    imageUrl: "/bg2.jpg", // Updated to use images in public folder
-    image: "/bg2.jpg",
-    images: ["/bg2.jpg", "/bg3.jpg", "/bg1.jpg"], // Using existing images in public folder
+    imageUrl: "/bg2.webp", // Updated to use images in public folder
+    image: "/bg2.webp",
+    images: ["/bg2.webp", "/bg3.webp", "/bg1.webp"], // Using existing images in public folder
     bedrooms: 2,
     bathrooms: 2,
     area: 1100,
@@ -79,9 +79,9 @@ export const properties: Property[] = [
     name: "Suburban Family Home",
     location: "Austin, TX",
     price: 2800,
-    imageUrl: "/bg3.jpg", // Updated to use images in public folder
-    image: "/bg3.jpg",
-    images: ["/bg3.jpg", "/bg1.jpg", "/bg2.jpg"], // Using existing images in public folder
+    imageUrl: "/bg3.webp", // Updated to use images in public folder
+    image: "/bg3.webp",
+    images: ["/bg3.webp", "/bg1.webp", "/bg2.webp"], // Using existing images in public folder
     bedrooms: 3,
     bathrooms: 2,
     area: 2000,
@@ -115,9 +115,9 @@ export const properties: Property[] = [
     name: "Mountain Retreat Cabin",
     location: "Aspen, CO",
     price: 4200,
-    imageUrl: "/bg1.jpg", // Updated to use images in public folder
-    image: "/bg1.jpg",
-    images: ["/bg1.jpg", "/bg2.jpg"], // Using existing images in public folder
+    imageUrl: "/bg1.webp", // Updated to use images in public folder
+    image: "/bg1.webp",
+    images: ["/bg1.webp", "/bg2.webp"], // Using existing images in public folder
     bedrooms: 3,
     bathrooms: 2,
     area: 1800,
@@ -151,9 +151,9 @@ export const properties: Property[] = [
     name: "Lakeside Cottage",
     location: "Lake Tahoe, CA",
     price: 3800,
-    imageUrl: "/bg2.jpg", // Updated to use images in public folder
-    image: "/bg2.jpg",
-    images: ["/bg2.jpg", "/bg3.jpg", "/bg1.jpg"], // Using existing images in public folder
+    imageUrl: "/bg2.webp", // Updated to use images in public folder
+    image: "/bg2.webp",
+    images: ["/bg2.webp", "/bg3.webp", "/bg1.webp"], // Using existing images in public folder
     bedrooms: 2,
     bathrooms: 1,
     area: 1500,
