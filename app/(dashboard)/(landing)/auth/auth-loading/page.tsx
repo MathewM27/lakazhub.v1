@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
-import { SessionManager } from '@/utils/auth/sessionManager';
 
 export default function AuthLoadingPage() {
   const router = useRouter();
@@ -12,108 +10,57 @@ export default function AuthLoadingPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const error = searchParams?.get('error');
     const description = searchParams?.get('description');
     const redirect = searchParams?.get('redirect');
     const role = searchParams?.get('user_role');
-    
-    if (role) {
-      setUserRole(role);
-    }
-    
+
+    if (role) setUserRole(role);
+
     if (error) {
       setError(`${error}${description ? `: ${description}` : ''}`);
       return;
     }
-    
+
     if (!redirect) {
       setError('No redirect destination specified');
       return;
     }
-    
+
     let cancelled = false;
-    
-    const completeAuthentication = async () => {
-      // Define progressInterval outside the try/catch block so it's accessible in both
-      let progressInterval: NodeJS.Timeout | undefined;
-      
-      try {
-        // Create Supabase client
-        const supabase = createClient();
-        
-        // Initialize progress animation
-        progressInterval = setInterval(() => {
-          setProgress(prev => {
-            // Cap progress at 90% until we complete auth
-            if (prev < 90) return prev + 5;
-            return prev;
-          });
-        }, 100);
-        
-        // Show starting message
-        if (!cancelled) setMessage('Establishing your session...');
-        
-        // Verify session is active
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          throw new Error('No active session found');
-        }
-        
-        // Update message and progress
-        if (!cancelled) {
-          setMessage('Session established, preparing dashboard...');
-          setProgress(60);
-        }
-        
-        // Create session manager to ensure token stays fresh
-        const manager = new SessionManager(supabase);
-        await manager.initialize();
-        
-        // Update progress
-        if (!cancelled) {
-          setMessage('Almost ready...');
-          setProgress(80);
-        }
-        
-        // Small delay to ensure everything is ready and show smooth progress
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Finish up
-        if (!cancelled) {
-          setProgress(100);
-          setMessage('Redirecting to your dashboard...');
-        }
-        
-        // Allow progress indicator to reach 100% before redirect
+    let progressInterval: NodeJS.Timeout | undefined;
+
+    // Animate progress bar, then redirect
+    setMessage('Preparing your dashboard...');
+    setProgress(0);
+
+    progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev < 90) return prev + 5;
+        return prev;
+      });
+    }, 80);
+
+    // Simulate loading, then redirect
+    setTimeout(() => {
+      if (!cancelled) {
+        setProgress(100);
+        setMessage('Redirecting to your dashboard...');
         setTimeout(() => {
           if (!cancelled) {
-            // Redirect to the dashboard with cleaned parameters
             const dashboardUrl = `${redirect}${redirect.includes('?') ? '&' : '?'}auth=success`;
             router.push(dashboardUrl);
           }
         }, 300);
-        
-        if (progressInterval) {
-          clearInterval(progressInterval);
-        }
-      } catch (err) {
-        if (progressInterval) {
-          clearInterval(progressInterval);
-        }
-        
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Authentication failed');
-          console.error('Authentication error in AuthLoadingPage:', err);
-        }
       }
-    };
-    
-    completeAuthentication();
-    
+      if (progressInterval) clearInterval(progressInterval);
+    }, 1200);
+
     return () => {
       cancelled = true;
+      if (progressInterval) clearInterval(progressInterval);
     };
   }, [router, searchParams]);
 
