@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Home, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
-import { PropertyCard } from '../../ui/property-card';
+import { PropertyCard } from '../ui/property-card';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import dynamic from 'next/dynamic';

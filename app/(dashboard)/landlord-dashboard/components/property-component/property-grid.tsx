@@ -1,13 +1,15 @@
 "use client";
 
+import React, { useState, useCallback, useEffect } from "react";
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
 import { Plus, Home, RefreshCw } from "lucide-react";
-import { useState, useCallback, useEffect } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import { deleteProperty } from "../../lib/utils/services/PropertyService";
 import { useToast } from "../../hooks/use-toast";
-import NotificationsModal from "../modals/notification-modal";
+// Dynamic import for rarely-used modal
+import dynamic from "next/dynamic";
+const NotificationsModal = dynamic(() => import("../modals/notification-modal"), { ssr: false });
 
 interface PropertyGridProps {
   onPropertyDetailsAction: (property: Property) => void;
@@ -16,13 +18,14 @@ interface PropertyGridProps {
   onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
 }
 
-export default function PropertyGrid({ 
+const PAGE_SIZE = 9;
+
+const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
   onPropertyDetailsAction, 
   onAvailabilityAction, 
   onAddNewPropertyAction,
   onRefreshNeeded 
-}: PropertyGridProps) {
-  // Removed activeFilter state since we're removing the filter buttons
+}) => {
   const { properties, loading, error, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -30,10 +33,9 @@ export default function PropertyGrid({
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   // Pagination state
-  const PAGE_SIZE = 9;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Handle refresh button click
+  // Memoized refresh handler
   const handleRefresh = useCallback(() => {
     refreshProperties().then(() => {
       toast({
@@ -49,21 +51,17 @@ export default function PropertyGrid({
     });
   }, [refreshProperties, toast]);
 
-  // Add this function to handle property deletion
-  const handleDeleteProperty = async (propertyId: string) => {
+  // Memoized delete handler
+  const handleDeleteProperty = useCallback(async (propertyId: string) => {
     try {
       setDeletingPropertyId(propertyId);
-      
       const result = await deleteProperty(propertyId);
-      
       if (result.success) {
         toast({
           title: "Property deleted",
           description: "The property has been successfully deleted",
           variant: "default"
         });
-        
-        // Refresh the properties list
         refreshProperties();
       } else {
         toast({
@@ -73,7 +71,6 @@ export default function PropertyGrid({
         });
       }
     } catch (error) {
-      console.error('Error during property deletion:', error);
       toast({
         title: "Delete failed",
         description: "Unexpected error occurred. Please try again.",
@@ -82,14 +79,14 @@ export default function PropertyGrid({
     } finally {
       setDeletingPropertyId(null);
     }
-  };
+  }, [refreshProperties, toast]);
 
-  const handleNotificationClick = (property: Property) => {
+  // Memoized notification click handler
+  const handleNotificationClick = useCallback((property: Property) => {
     setSelectedProperty(property);
     setNotificationModalOpen(true);
-  };
+  }, []);
 
-  // When the component mounts, expose the refresh function to parent components
   useEffect(() => {
     if (onRefreshNeeded) {
       onRefreshNeeded(refreshProperties);
@@ -242,4 +239,6 @@ export default function PropertyGrid({
       />
     </section>
   );
-}
+});
+
+export default PropertyGrid;
