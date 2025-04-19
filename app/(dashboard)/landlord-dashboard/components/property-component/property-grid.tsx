@@ -29,6 +29,10 @@ export default function PropertyGrid({
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
+  // Pagination state
+  const PAGE_SIZE = 9;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   // Handle refresh button click
   const handleRefresh = useCallback(() => {
     refreshProperties().then(() => {
@@ -171,23 +175,35 @@ export default function PropertyGrid({
                 </button>
               </div>
             ) : Array.isArray(properties) && properties.length > 0 ? (
-              properties.map((property, index) => (
-                <div 
-                  key={property.id}
-                  className={`transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
-                    deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
-                  }`}
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <PropertyCard
-                    property={property}
-                    onDetailsAction={() => onPropertyDetailsAction(property)}
-                    onAvailabilityAction={() => onAvailabilityAction(property)}
-                    onNotificationsAction={handleNotificationClick}
-                    onDeleteAction={handleDeleteProperty}
-                  />
-                </div>
-              ))
+              <>
+                {properties.slice(0, visibleCount).map((property, index) => (
+                  <div 
+                    key={property.id}
+                    className={`transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
+                      deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <PropertyCard
+                      property={property}
+                      onDetailsAction={() => onPropertyDetailsAction(property)}
+                      onAvailabilityAction={() => onAvailabilityAction(property)}
+                      onNotificationsAction={handleNotificationClick}
+                      onDeleteAction={handleDeleteProperty}
+                    />
+                  </div>
+                ))}
+                {visibleCount < properties.length && (
+                  <div className="col-span-3 flex justify-center mt-6">
+                    <button
+                      onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, properties.length))}
+                      className="px-6 py-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <p 
                 className="text-white col-span-3 text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in"

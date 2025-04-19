@@ -14,6 +14,7 @@ import AvailableProperties from './AvailableProperties';
 import RentedProperties from './RentedProperties';
 import MessagedProperties from './MessagedProperties'; // Import the new component
 import { Property } from '@/utils/types/property'; 
+import { toast } from "@/app/(dashboard)/tenant-dashboard/hooks/use-toast";
 
 // Constants - Modified for better performance
 const CACHE_KEY = 'property_cache';
@@ -281,9 +282,13 @@ const PropertiesSection = () => {
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
-          
+        
       if (error) {
         setError(error.message || 'Failed to load properties');
+        toast({
+          title: 'Error fetching properties',
+          description: error.message || 'Failed to load properties. Please try again.'
+        });
         setLoading(false);
         setIsLoadingMore(false);
         return;
@@ -383,8 +388,13 @@ const PropertiesSection = () => {
         fetchMessagedProperties(userId);
       }
       
-    } catch {
-      setError('Failed to load properties');
+    } catch (err) {
+      console.error('Unexpected error fetching properties:', err);
+      setError('An unexpected error occurred while fetching properties.');
+      toast({
+        title: 'Unexpected error',
+        description: 'An unexpected error occurred while fetching properties. Please try again.'
+      });
       setLoading(false);
       setIsLoadingMore(false);
     }

@@ -7,11 +7,18 @@ import { PageWrapper } from "./components/layouts/PageWrapper";
 import PropertiesSection from "./components/properties/PropertySelection";
 import { Footer } from './components/navigation/Footer';
 import Navigation from "./components/navigation/Navbar";
-import Link from 'next/link'; // Import Link component
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import PremiumFeatures from './components/layouts/Premium';
+// Dynamically import PremiumFeatures for better FCP/LCP
+const PremiumFeatures = dynamic(() => import('./components/layouts/Premium'), {
+  loading: () => <div className="text-white/70 py-12 text-center">Loading premium features...</div>,
+  ssr: false,
+});
 
-// Function to render the welcome screen
+// Example: If you have a map component, import it dynamically like this:
+// const MapComponent = dynamic(() => import('./components/MapComponent'), { ssr: false });
+
 const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") => {
   return (
     <div className="flex flex-col h-screen bg-black text-white">
@@ -81,8 +88,6 @@ export default function Home() {
     return renderWelcomeScreen();
   }
 
-  // FIXED: Added proper authentication check to prevent unauthorized access
-  // Show login prompt if not authenticated
   if (!isAuthenticated || !user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
@@ -108,16 +113,13 @@ export default function Home() {
     );
   }
 
-  // If authenticated but role check is still pending or failed, show welcome screen first
   if (isAuthenticated && user && !hasCorrectRole) {
-    // Check if we're still in the process of validating the role
     const isStillValidating = profile === null;
     
     if (isStillValidating) {
       return renderWelcomeScreen("Verifying your account permissions...");
     }
     
-    // If we've completed validation and still don't have the correct role, show access denied
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
         <div className="text-center max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-lg border border-zinc-800">
@@ -146,8 +148,11 @@ export default function Home() {
     <PageWrapper>
       <Navigation />
       <Hero />
+      {/* Remove pageSize prop, PropertiesSection paginates internally */}
       <PropertiesSection />
       <PremiumFeatures />
+      {/* Example: Render MapComponent if needed */}
+      {/* <MapComponent /> */}
       <Footer />
     </PageWrapper>
   );
