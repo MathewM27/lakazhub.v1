@@ -30,18 +30,16 @@ export default function AuthLoadingPage() {
     }
 
     let cancelled = false;
-    let progressInterval: NodeJS.Timeout | undefined;
-
-    // Animate progress bar, then redirect
-    setMessage('Preparing your dashboard...');
-    setProgress(0);
-
-    progressInterval = setInterval(() => {
+    const progressInterval: NodeJS.Timeout | undefined = setInterval(() => {
       setProgress(prev => {
         if (prev < 90) return prev + 5;
         return prev;
       });
     }, 80);
+
+    // Animate progress bar, then redirect
+    setMessage('Preparing your dashboard...');
+    setProgress(0);
 
     // Simulate loading, then redirect
     setTimeout(() => {

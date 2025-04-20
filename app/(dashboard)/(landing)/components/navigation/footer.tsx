@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, ArrowUp, Mail } from 'lucide-react';
-import dynamic from 'next/dynamic';
+
 
 // Custom TikTok icon since it's not in lucide-react by default
 const TiktokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -98,15 +98,7 @@ export const Footer = () => {
             <p className="text-white/70 leading-relaxed">
               Simplifying the rental experience for landlords and tenants across Mauritius with our innovative platform and dedicated service.
             </p>
-            <div className="pt-2">
-              <Link 
-                href="/about" 
-                className="inline-flex items-center text-white hover:text-white/80 font-medium text-sm group"
-              >
-                Learn more 
-                <span className="ml-2 text-xs group-hover:translate-x-1 transition-transform">→</span>
-              </Link>
-            </div>
+            
           </div>
 
           {/* Quick Links */}

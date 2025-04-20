@@ -139,9 +139,9 @@ export const PropertySlider = () => {
 
   // Only render a window of slides around the current index for performance
   const visibleWindow = 2;
-  const visibleProperties = filteredProperties.filter((_, idx) =>
-    Math.abs(idx - currentIndex) <= visibleWindow
-  );
+  // const visibleProperties = filteredProperties.filter((_, idx) =>
+  //   Math.abs(idx - currentIndex) <= visibleWindow
+  // );
 
   return (
     <section 

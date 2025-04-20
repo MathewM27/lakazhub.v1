@@ -2,9 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [
-      'dtfjgotmshpzwixxpwhe.supabase.co',
-      'qqqes0fuio.ufs.sh',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'dtfjgotmshpzwixxpwhe.supabase.co',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qqqes0fuio.ufs.sh',
+        pathname: '/**',
+      },
     ],
   },
   productionBrowserSourceMaps: true,

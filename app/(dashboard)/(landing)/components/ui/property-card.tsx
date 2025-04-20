@@ -4,15 +4,6 @@ import Image from 'next/image';
 import { Bed, Bath, Square, Home } from 'lucide-react';
 import React, { memo } from 'react';
 
-type FallbackImageComponent = React.ComponentType<{
-  src: string;
-  alt: string;
-  className?: string;
-  width?: number;
-  height?: number;
-  [key: string]: unknown;
-}>;
-
 export interface PropertyCardProps {
   id: string;
   name: string;
@@ -170,3 +161,4 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
     );
   }
 );
+PropertyCard.displayName = 'PropertyCard';

@@ -76,7 +76,7 @@ export const WhyUsSection = () => {
               <span className="absolute -bottom-2 left-0 h-1 bg-white/20 rounded-full w-full"></span>
             </h2>
             <p className="text-lg text-white/70 max-w-2xl mx-auto mt-6">
-              We're redefining the rental experience by creating a seamless connection 
+              We&apos;re redefining the rental experience by creating a seamless connection 
               between landlords and tenants.
             </p>
           </div>
