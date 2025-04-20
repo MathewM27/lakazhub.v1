@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/app/(dashboard)/landlord-dashboard/hooks/use-toast"
 import { FormData, PropertyData, convertPropertyToFormData } from "./types"
+import { PropertyCache } from "../../../lib/utils/cache/propertyCache"; // Add this import
 
 import BasicInfoTab from "./tabs/BasicInfoTab"
 import PhotosTab from "./tabs/PhotosTab"
@@ -208,7 +209,11 @@ export default function PropertyFormTabs({
       
       // Submit the form with all image URLs
       await onSubmit(formData, allImageUrls);
-      // console.log('Property submission complete');
+      
+      // Mark property as updated in cache if we're editing an existing property
+      if (property?.id) {
+        PropertyCache.markPropertyUpdated(property.id);
+      }
       
       // Call the onSuccess callback if provided
       if (onSuccess) {

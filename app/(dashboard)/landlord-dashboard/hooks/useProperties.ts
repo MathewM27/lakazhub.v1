@@ -1,102 +1,87 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Property } from '../types/index';
-import { PropertyService } from '../lib/utils/services/PropertyService';
+"use client";
 
-export function useProperties() {
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { PropertyService } from '../lib/utils/services/PropertyService';
+import { Property } from '../types';
+import { PropertyCache } from '../lib/utils/cache/propertyCache';
+
+export const useProperties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  
-  // Load properties with caching
-  const loadProperties = useCallback(async (forceRefresh = false) => {
-    // console.log('loadProperties called, forceRefresh:', forceRefresh);
-    setLoading(true);
-    setError(null);
+  // Add a ref to track refresh operations in progress
+  const refreshInProgress = useRef<boolean>(false);
+
+  const fetchProperties = useCallback(async (forceRefresh = false) => {
+    // Check if a refresh operation is already in progress
+    if (refreshInProgress.current) {
+      console.log('[useProperties] Refresh already in progress, skipping duplicate request');
+      return properties; // Return current properties to avoid triggering re-renders
+    }
     
     try {
-      // console.log('Loading properties, forceRefresh:', forceRefresh);
-      const propertiesData = await PropertyService.getAllProperties(forceRefresh);
-      // console.log('Properties loaded successfully:', propertiesData.length);
-      setProperties(propertiesData);
-      return propertiesData;
+      refreshInProgress.current = true;
+      setLoading(true);
+      setError(null);
+
+      // Use enhanced PropertyService that now supports stale-while-revalidate
+      const result = await PropertyService.getAllProperties(forceRefresh);
+      setProperties(result);
+      return result;
     } catch (err) {
-      // console.error('Error loading properties:', err);
-      setError(err instanceof Error ? err : new Error('Failed to load properties'));
-      // Return empty array to prevent further errors
+      console.error('Error fetching properties:', err);
+      setError(err as Error);
       return [];
     } finally {
-      // console.log('Setting loading to false');
       setLoading(false);
+      // Add a small delay before allowing another refresh
+      setTimeout(() => {
+        refreshInProgress.current = false;
+      }, 500);
     }
-  }, []);
-  
-  // Load properties on mount
+  }, [properties]); // Include properties in dependency array
+
+  // Initial fetch
   useEffect(() => {
-    // console.log('useProperties useEffect running');
-    loadProperties();
-  }, [loadProperties]);
-  
-  // Refresh properties
-  const refreshProperties = useCallback(() => {
-    return loadProperties(true);
-  }, [loadProperties]);
-  
-  // Create a property
-  const createProperty = useCallback(async (property: Omit<Property, 'id'>) => {
-    try {
-      const newProperty = await PropertyService.createProperty(property);
-      
-      // Update local state
-      setProperties(prev => [...prev, newProperty]);
-      
-      return newProperty;
-    } catch (err) {
-      // console.error('Error creating property:', err);
-      throw err;
-    }
-  }, []);
-  
-  // Update a property
-  const updateProperty = useCallback(async (id: string, property: Partial<Property>) => {
-    try {
-      const updatedProperty = await PropertyService.updateProperty(id, property);
-      
-      // Update state
-      setProperties(prev => 
-        prev.map(p => p.id === id ? updatedProperty : p)
-      );
-      
-      return updatedProperty;
-    } catch (err) {
-      // console.error('Error updating property:', err);
-      throw err;
-    }
-  }, []);
-  
-  // Delete a property
-  const deleteProperty = useCallback(async (id: string) => {
-    try {
-      const success = await PropertyService.deleteProperty(id);
-      
-      if (success) {
-        // Update state
-        setProperties(prev => prev.filter(p => p.id !== id));
+    fetchProperties();
+  }, []); // Empty dependency array to run only once on mount
+
+  // Listen for cache updates
+  useEffect(() => {
+    const handleCacheUpdate = (data: any) => {
+      // Only process updates if we're not already refreshing
+      if (refreshInProgress.current) {
+        console.log('[useProperties] Ignoring cache update while refresh in progress');
+        return;
       }
       
-      return success;
-    } catch (err) {
-      // console.error('Error deleting property:', err);
-      throw err;
-    }
-  }, []);
-  
+      if (data.type === 'properties') {
+        setProperties(data.data);
+      } else if (data.type === 'property') {
+        // If a single property was updated, refresh the list
+        // Add a slight delay to avoid multiple refreshes
+        setTimeout(() => {
+          fetchProperties(true);
+        }, 100);
+      } else if (data.type === 'clear') {
+        // If cache was cleared, refresh from server after a delay
+        setTimeout(() => {
+          fetchProperties(true);
+        }, 300);
+      }
+    };
+
+    PropertyCache.addEventListener('update', handleCacheUpdate);
+    
+    return () => {
+      PropertyCache.removeEventListener('update', handleCacheUpdate);
+    };
+  }, [fetchProperties]);
+
   return {
     properties,
     loading,
     error,
-    refreshProperties,
-    createProperty,
-    updateProperty,
-    deleteProperty
+    refreshProperties: fetchProperties
   };
-}
+};

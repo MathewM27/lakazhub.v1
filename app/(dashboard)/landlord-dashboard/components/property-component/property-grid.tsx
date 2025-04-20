@@ -5,7 +5,8 @@ import PropertyCard from "./property-card";
 import { Property } from "../../types";
 import { Plus, Home, RefreshCw } from "lucide-react";
 import { useProperties } from "../../hooks/useProperties";
-import { deleteProperty } from "../../lib/utils/services/PropertyService";
+import { supabase } from "../../lib/utils/supabase/client"; // Use direct Supabase
+import { PropertyCache } from "../../lib/utils/cache/propertyCache"; // Add this for cache operations
 import { useToast } from "../../hooks/use-toast";
 // Dynamic import for rarely-used modal
 import dynamic from "next/dynamic";
@@ -20,12 +21,12 @@ interface PropertyGridProps {
 
 const PAGE_SIZE = 9;
 
-const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
+export default function PropertyGrid({ 
   onPropertyDetailsAction, 
   onAvailabilityAction, 
   onAddNewPropertyAction,
   onRefreshNeeded 
-}) => {
+}: PropertyGridProps) {
   const { properties, loading, error, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -51,25 +52,38 @@ const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
     });
   }, [refreshProperties, toast]);
 
-  // Memoized delete handler
+  // Memoized delete handler - update to use direct Supabase
   const handleDeleteProperty = useCallback(async (propertyId: string) => {
     try {
       setDeletingPropertyId(propertyId);
-      const result = await deleteProperty(propertyId);
-      if (result.success) {
-        toast({
-          title: "Property deleted",
-          description: "The property has been successfully deleted",
-          variant: "default"
-        });
-        refreshProperties();
-      } else {
+      
+      // Delete the property using direct Supabase query
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+      
+      if (error) {
         toast({
           title: "Delete failed",
-          description: "There was an error deleting the property. Please try again.",
+          description: `Error: ${error.message}`,
           variant: "destructive"
         });
+        return;
       }
+      
+      // Update cache
+      PropertyCache.invalidatePropertyCache(propertyId);
+      PropertyCache.setProperties([], undefined);
+      
+      toast({
+        title: "Property deleted",
+        description: "The property has been successfully deleted",
+        variant: "default"
+      });
+      
+      // Refresh properties list
+      refreshProperties();
     } catch (error) {
       toast({
         title: "Delete failed",
@@ -86,6 +100,12 @@ const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
     setSelectedProperty(property);
     setNotificationModalOpen(true);
   }, []);
+
+  // Handle availability action to capture the property and provide a refresh callback
+  const handleAvailabilityAction = useCallback((property: Property) => {
+    onAvailabilityAction(property);
+    // Make sure onAvailabilityAction receives this property
+  }, [onAvailabilityAction]);
 
   useEffect(() => {
     if (onRefreshNeeded) {
@@ -184,7 +204,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
                     <PropertyCard
                       property={property}
                       onDetailsAction={() => onPropertyDetailsAction(property)}
-                      onAvailabilityAction={() => onAvailabilityAction(property)}
+                      onAvailabilityAction={() => handleAvailabilityAction(property)}
                       onNotificationsAction={handleNotificationClick}
                       onDeleteAction={handleDeleteProperty}
                     />
@@ -239,6 +259,4 @@ const PropertyGrid: React.FC<PropertyGridProps> = React.memo(({
       />
     </section>
   );
-});
-
-export default PropertyGrid;
+}

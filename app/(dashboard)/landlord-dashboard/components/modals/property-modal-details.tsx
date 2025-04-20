@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import PropertyOnboarding from "./property-modal/PropertyOnboarding"
 import PropertyFormTabs from "./property-modal/PropertyFormTabs"
 import { supabase } from "../../lib/utils/supabase/client"
+import { PropertyCache } from "../../lib/utils/cache/propertyCache" // Adjust the path as needed
 import { useToast } from "../../hooks/use-toast"
 import { FormData, PropertyData } from "./property-modal/types" 
 
@@ -113,19 +114,31 @@ export default function PropertyModal({
             .from('properties')
             .update(propertyData)
             .eq('id', property.id)
-            .select()
-            .single()
-            
-          if (updateError) throw updateError
+          
+          if (updateError) {
+            throw new Error(`Failed to update property: ${updateError.message}`)
+          }
+          
+          // Update cache
+          PropertyCache.markPropertyUpdated(property.id)
+          
         } else {
-          // Create new property
-          const { error: insertError } = await supabase
+          // Create new property with created_at timestamp
+          const createData = {
+            ...propertyData,
+            created_at: new Date().toISOString(),
+          }
+          
+          const { error: createError } = await supabase
             .from('properties')
-            .insert([propertyData])
-            .select()
-            .single()
-            
-          if (insertError) throw insertError
+            .insert(createData)
+          
+          if (createError) {
+            throw new Error(`Failed to create property: ${createError.message}`)
+          }
+          
+          // Invalidate properties list cache
+          PropertyCache.setProperties([], undefined)
         }
         
         // Success notification

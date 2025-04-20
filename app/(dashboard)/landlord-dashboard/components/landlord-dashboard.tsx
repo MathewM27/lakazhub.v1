@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
-
 
 import PropertyModal from './modals/property-modal-details';
 import AvailabilityModal from './modals/availability-modal';
@@ -26,7 +25,8 @@ export default function LandlordDashboard() {
     title: "",
     message: "",
   });
-  
+  const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
+
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
     setSelectedProperty(property);
@@ -50,9 +50,20 @@ export default function LandlordDashboard() {
     });
   }, [toast]);
 
-  // Handler for refreshing properties
+  // Handler for refreshing properties - store the refresh function
+  const handleRefreshNeeded = useCallback((refreshFn: () => Promise<Property[] | void>) => {
+    refreshPropertiesRef.current = refreshFn;
+  }, []);
+
+  // Function to refresh properties
   const refreshProperties = async () => {
-    // Your code to fetch updated properties
+    if (refreshPropertiesRef.current) {
+      try {
+        await refreshPropertiesRef.current();
+      } catch (error) {
+        console.error("Failed to refresh properties:", error);
+      }
+    }
   };
   
   // Function to render the welcome screen
@@ -92,6 +103,7 @@ export default function LandlordDashboard() {
         onPropertyDetailsAction={handlePropertyDetails}
         onAvailabilityAction={handleAvailability}
         onAddNewPropertyAction={handleAddNewProperty}
+        onRefreshNeeded={handleRefreshNeeded}
       />
       
       <PropertyModal

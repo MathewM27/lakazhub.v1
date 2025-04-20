@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { supabase } from "../../lib/utils/supabase/client";
+import { PropertyCache } from "../../lib/utils/cache/propertyCache";
 import { useToast } from "../../hooks/use-toast";
 import { Property } from "../../types";
 
@@ -104,7 +105,6 @@ export default function AvailabilityModal({
       // Prepare the update data
       const isAvailable = availabilityStatus === "available";
       
-      // Using a proper type for the update data
       interface PropertyUpdateData {
         available: boolean;
         status: 'active' | 'rented';
@@ -123,12 +123,24 @@ export default function AvailabilityModal({
       }
       
       // Update the property in Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('properties')
         .update(updateData)
-        .eq('id', property.id);
+        .eq('id', property.id)
+        .select('*')
+        .single();
         
       if (error) throw error;
+      
+      // Update the property in cache
+      if (data) {
+        // Update the property in cache
+        PropertyCache.markPropertyUpdated(property.id);
+        PropertyCache.setProperty(data);
+        
+        // Log the cache update
+        console.log(`[AVAILABILITY] Updated property ${property.id} in cache with new availability: ${isAvailable ? 'Available' : 'Rented'}`);
+      }
       
       toast({
         title: "Availability updated",
@@ -136,7 +148,9 @@ export default function AvailabilityModal({
       });
       
       // Call the update callback if provided
-      if (onUpdate) onUpdate();
+      if (onUpdate) {
+        onUpdate();
+      }
       
       // Close the modal
       onOpenChangeAction(false);

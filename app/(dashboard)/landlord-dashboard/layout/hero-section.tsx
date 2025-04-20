@@ -131,6 +131,9 @@ const HeroSection = () => {
                       alt="Featured Property"
                       fill
                       className="object-cover"
+                      sizes="(max-width: 788px) 100vw, (min-width: 788px) 50vw"
+                      priority={true}
+                      
                     />
                   </div>
                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>

@@ -1,4 +1,5 @@
 import { supabase } from './client';
+import { PropertyCache } from '../cache/propertyCache';
 
 export interface PropertyFormData {
   name: string;
@@ -23,7 +24,6 @@ export interface PropertyFormData {
 }
 
 export class PropertyAPI {
-  private static API_URL = process.env.NEXT_PUBLIC_API_URL;
   private static cache: { 
     properties?: { data: PropertyFormData[], timestamp: number },
     propertyDetails?: { [id: string]: { data: PropertyFormData, timestamp: number } }
@@ -42,11 +42,8 @@ export class PropertyAPI {
       if (!forceRefresh && 
           this.cache.properties && 
           (now - this.cache.properties.timestamp) < this.CACHE_TIME) {
-        // console.log("Using cached properties data");
         return this.cache.properties.data;
       }
-
-      // console.log("Fetching fresh properties data from API");
       
       // Get current user session
       const { data: { session } } = await supabase.auth.getSession();
@@ -55,20 +52,15 @@ export class PropertyAPI {
         throw new Error('Not authenticated');
       }
 
-      // console.log("Making direct Supabase query instead of API call");
-      
-      // IMPORTANT FIX: Let's directly query Supabase instead of the API endpoint
+      // Direct Supabase query 
       const { data: propertiesData, error } = await supabase
         .from('properties')
         .select('*')
         .eq('landlord_id', session.user.id);
       
       if (error) {
-        // console.error("Supabase query error:", error);
         throw new Error(error.message);
       }
-      
-      // console.log("Raw Supabase properties result:", propertiesData);
       
       // Update cache with direct Supabase data
       this.cache.properties = {
@@ -78,7 +70,6 @@ export class PropertyAPI {
       
       return (propertiesData as PropertyFormData[]) || [];
     } catch (error) {
-      // console.error('Error fetching properties:', error);
       return []; // Return empty array on error
     }
   }
@@ -94,7 +85,6 @@ export class PropertyAPI {
           this.cache.propertyDetails && 
           this.cache.propertyDetails[id] && 
           (now - this.cache.propertyDetails[id].timestamp) < this.CACHE_TIME) {
-        // console.log(`Using cached property data for id: ${id}`);
         return this.cache.propertyDetails[id].data;
       }
 
@@ -105,21 +95,16 @@ export class PropertyAPI {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${this.API_URL}/api/properties/${id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Direct Supabase query
+      const { data: property, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || `Server responded with status: ${response.status}`);
+      if (error) {
+        throw error;
       }
-
-      const data = await response.json();
-      const property = data.property as PropertyFormData;
       
       // Initialize propertyDetails cache if it doesn't exist
       if (!this.cache.propertyDetails) {
@@ -128,14 +113,13 @@ export class PropertyAPI {
       
       // Update cache
       this.cache.propertyDetails[id] = {
-        data: property,
+        data: property as PropertyFormData,
         timestamp: now
       };
       
-      return property;
-    } catch (_error) {
-      // console.error(`Error fetching property ${id}:`, error);
-      throw _error;
+      return property as PropertyFormData;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -157,8 +141,6 @@ export class PropertyAPI {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-
-      // console.log('Creating property with data:', completePropertyData);
       
       // Direct database insert
       const { data, error } = await supabase
@@ -168,19 +150,15 @@ export class PropertyAPI {
         .single();
         
       if (error) {
-        // console.error('Error creating property:', error);
         throw new Error(`Failed to create property: ${error.message}`);
       }
-      
-      // console.log('Property created successfully:', data);
       
       // Clear cache to ensure fresh data on next fetch
       this.invalidateCache();
       
       return data as PropertyFormData;
-    } catch (_error) {
-      // console.error('Error in property creation:', error);
-      throw _error;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -194,8 +172,6 @@ export class PropertyAPI {
       if (!session) {
         throw new Error('Not authenticated');
       }
-
-      // console.log(`Updating property ${id} with data:`, propertyData);
       
       // Direct database update
       const { data, error } = await supabase
@@ -209,19 +185,21 @@ export class PropertyAPI {
         .single();
         
       if (error) {
-        // console.error(`Error updating property ${id}:`, error);
         throw new Error(`Failed to update property: ${error.message}`);
       }
-      
-      // console.log('Property updated successfully:', data);
       
       // Clear cache to ensure fresh data on next fetch
       this.invalidateCache();
       
+      // Also update in PropertyCache
+      if (data) {
+        PropertyCache.markPropertyUpdated(id);
+        PropertyCache.setProperty(data);
+      }
+      
       return data as PropertyFormData;
-    } catch (_error) {
-      // console.error(`Error in property update for ${id}:`, error);
-      throw _error;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -236,17 +214,13 @@ export class PropertyAPI {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${this.API_URL}/api/properties/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', id);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete property');
+      if (error) {
+        throw new Error(`Failed to delete property: ${error.message}`);
       }
       
       // Invalidate properties cache
@@ -259,102 +233,9 @@ export class PropertyAPI {
         delete this.cache.propertyDetails[id];
       }
       
+      // Also update PropertyCache
+      PropertyCache.invalidatePropertyCache(id);
     } catch (error) {
-      // console.error(`Error deleting property ${id}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Upload property images
-   */
-  static async uploadPropertyImages(propertyId: string, files: File[]): Promise<string[]> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Create form data
-      const formData = new FormData();
-      
-      // Add all files
-      files.forEach((file, _index) => {
-        void _index;
-        formData.append(`images`, file);
-      });
-      
-      const response = await fetch(`${this.API_URL}/api/properties/${propertyId}/images`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to upload images');
-      }
-      
-      const data = await response.json();
-      
-      // Invalidate both caches
-      if (this.cache.properties) {
-        this.cache.properties.timestamp = 0;
-      }
-      
-      if (this.cache.propertyDetails && this.cache.propertyDetails[propertyId]) {
-        this.cache.propertyDetails[propertyId].timestamp = 0;
-      }
-      
-      return data.images as string[];
-    } catch (error) {
-      // console.error('Error uploading images:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Update property availability
-   */
-  static async updateAvailability(id: string, available: boolean): Promise<PropertyFormData> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${this.API_URL}/api/properties/${id}/availability`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ available })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update property availability');
-      }
-
-      const data = await response.json();
-      
-      // Invalidate both caches
-      if (this.cache.properties) {
-        this.cache.properties.timestamp = 0;
-      }
-      
-      if (this.cache.propertyDetails && this.cache.propertyDetails[id]) {
-        this.cache.propertyDetails[id].timestamp = 0;
-      }
-      
-      return data.property as PropertyFormData;
-    } catch (error) {
-      // console.error(`Error updating property availability ${id}:`, error);
       throw error;
     }
   }
@@ -364,7 +245,6 @@ export class PropertyAPI {
    */
   static clearCache(): void {
     this.cache = {};
-    // console.log("API cache cleared");
   }
 
   /**
@@ -374,6 +254,5 @@ export class PropertyAPI {
     if (this.cache.properties) {
       this.cache.properties.timestamp = 0;
     }
-    // console.log("API cache invalidated");
   }
 }
