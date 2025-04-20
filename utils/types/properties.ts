@@ -6,15 +6,18 @@ export const properties: Property[] = [
     name: "Luxury Beachfront Villa",
     location: "Miami Beach, FL",
     price: 5000,
-    imageUrl: "/bg1.webp", // Updated to use images in public folder
-    image: "/bg1.webp",
-    images: ["/bg1.webp", "/bg2.webp", "/bg3.webp"], // Using existing images in public folder
+    imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+    image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+    images: [
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M"
+    ],
     bedrooms: 4,
     bathrooms: 3,
     area: 3200,
     type: "villa",
     isAvailable: true,
-    // Added required properties
     landlord_id: "landlord-123",
     property_type: "villa",
     description: "Beautiful beachfront villa with stunning ocean views",
@@ -43,15 +46,18 @@ export const properties: Property[] = [
     name: "Downtown Apartment",
     location: "New York, NY",
     price: 3500,
-    imageUrl: "/bg2.webp", // Updated to use images in public folder
-    image: "/bg2.webp",
-    images: ["/bg2.webp", "/bg3.webp", "/bg1.webp"], // Using existing images in public folder
+    imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+    image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+    images: [
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF"
+    ],
     bedrooms: 2,
     bathrooms: 2,
     area: 1100,
     type: "apartment",
     isAvailable: false,
-    // Added required properties
     landlord_id: "landlord-124",
     property_type: "apartment",
     description: "Modern apartment in the heart of downtown",
@@ -79,15 +85,18 @@ export const properties: Property[] = [
     name: "Suburban Family Home",
     location: "Austin, TX",
     price: 2800,
-    imageUrl: "/bg3.webp", // Updated to use images in public folder
-    image: "/bg3.webp",
-    images: ["/bg3.webp", "/bg1.webp", "/bg2.webp"], // Using existing images in public folder
+    imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
+    image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
+    images: [
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67"
+    ],
     bedrooms: 3,
     bathrooms: 2,
     area: 2000,
     type: "house",
     isAvailable: true,
-    // Added required properties
     landlord_id: "landlord-125",
     property_type: "house",
     description: "Spacious family home in a quiet suburb",
@@ -115,15 +124,17 @@ export const properties: Property[] = [
     name: "Mountain Retreat Cabin",
     location: "Aspen, CO",
     price: 4200,
-    imageUrl: "/bg1.webp", // Updated to use images in public folder
-    image: "/bg1.webp",
-    images: ["/bg1.webp", "/bg2.webp"], // Using existing images in public folder
+    imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+    image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+    images: [
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67"
+    ],
     bedrooms: 3,
     bathrooms: 2,
     area: 1800,
     type: "cabin",
     isAvailable: true,
-    // Added required properties
     landlord_id: "landlord-126",
     property_type: "cabin",
     description: "Cozy mountain cabin with breathtaking views",
@@ -151,15 +162,18 @@ export const properties: Property[] = [
     name: "Lakeside Cottage",
     location: "Lake Tahoe, CA",
     price: 3800,
-    imageUrl: "/bg2.webp", // Updated to use images in public folder
-    image: "/bg2.webp",
-    images: ["/bg2.webp", "/bg3.webp", "/bg1.webp"], // Using existing images in public folder
+    imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+    image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+    images: [
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
+      "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF"
+    ],
     bedrooms: 2,
     bathrooms: 1,
     area: 1500,
     type: "cottage",
     isAvailable: true,
-    // Added required properties
     landlord_id: "landlord-127",
     property_type: "cottage",
     description: "Charming cottage with private lake access",

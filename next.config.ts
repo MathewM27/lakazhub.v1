@@ -1,21 +1,19 @@
 import type { NextConfig } from "next";
 
-// If you use bundle analyzer, keep this:
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-
 const nextConfig: NextConfig = {
   images: {
-    domains: ['dtfjgotmshpzwixxpwhe.supabase.co'],
+    domains: [
+      'dtfjgotmshpzwixxpwhe.supabase.co',
+      'qqqes0fuio.ufs.sh',
+    ],
   },
   productionBrowserSourceMaps: true,
-  // Add any other Next.js config options here
 };
 
-// If using bundle analyzer, export like this:
-export default withBundleAnalyzer(nextConfig);
+const isAnalyze = process.env.ANALYZE === 'true';
 
-// If NOT using bundle analyzer, use this instead:
-// export default nextConfig;
-module.exports = withBundleAnalyzer(nextConfig);
+const config = isAnalyze
+  ? require('@next/bundle-analyzer')({ enabled: true })(nextConfig)
+  : nextConfig;
+
+export default config;

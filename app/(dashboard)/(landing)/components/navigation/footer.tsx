@@ -72,7 +72,7 @@ export const Footer = () => {
               {/* Inner content with logo */}
               <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center overflow-hidden">
                 <Image 
-                  src="/X.webp" 
+                  src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rloBGUTUKas6W9TwJvzOH7X2rSPMt5dQbjqo4" 
                   alt="FutureX Design Logo" 
                   width={80}
                   height={80}

@@ -39,11 +39,11 @@ export const HeroSection = () => {
                   <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
                     {/* Progressive image loading with priority for hero image */}
                     <Image
-                      src="/hero.webp"
+                      src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rKK7Ddt1IOoyT7XcfgWzM5StlhDCGFRdBvaUm"
                       alt="Home background"
                       fill
                       priority
-                      fetchPriority="high" // <--- Add this line for browsers that support it
+                      fetchPriority="high" 
                       sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-contain transform scale-105 hover:scale-110 transition-transform duration-700"
                       quality={85}
@@ -123,7 +123,7 @@ export const HeroSection = () => {
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
                   {/* Progressive image loading for desktop */}
                   <Image
-                    src="/hero.webp"
+                    src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rKK7Ddt1IOoyT7XcfgWzM5StlhDCGFRdBvaUm"
                     alt="Home interior"
                     fill
                     priority

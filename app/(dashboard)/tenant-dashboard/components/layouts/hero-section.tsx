@@ -31,20 +31,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[90vh] py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
-      {/* Removed gradient overlay and decorative elements */}
-      {/* 
-      <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black to-black/90 pointer-events-none"></div>
-      <div 
-        className={`absolute top-[20%] right-[10%] w-64 h-64 rounded-full bg-white/3 transition-all duration-1000 ease-out ${
-          isVisible ? 'opacity-15 scale-100' : 'opacity-0 scale-90'
-        }`}
-      />
-      <div 
-        className={`absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-white/2 transition-all duration-1000 delay-300 ease-out ${
-          isVisible ? 'opacity-10 scale-100' : 'opacity-0 scale-90'
-        }`}
-      />
-      */}
+     
 
       <div className="container mx-auto relative z-10">
         {isLoading ? (
@@ -126,7 +113,7 @@ const HeroSection = () => {
                 <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
                   <div className="absolute inset-0 z-10">
                     <Image 
-                      src="/bg5.webp" 
+                      src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rtck9gM4M5F0Eg9U6YQvHh2Gnc1e3Wr4dbuLj" 
                       alt="Featured Property"
                       fill
                       className="object-cover"
