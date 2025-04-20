@@ -2,29 +2,23 @@
 
 import type React from "react"
 import { Conversation } from "../../types/index";  
+import { v4 as uuidv4 } from 'uuid';
 
-import { useState, useEffect, useRef, useCallback, memo } from "react"
-import { Send, RefreshCw, Check, Trash2, X } from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import {  RefreshCw, Check,  } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+
+
 import { supabase } from "../../lib/utils/supabase/client"
 import { useToast } from "../../hooks/use-toast"
 import { format, formatDistanceToNow } from "date-fns"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { cn } from "@/utils/lib/utils"
-import { v4 as uuidv4 } from 'uuid';
+
 import type { User } from '@supabase/supabase-js';
+import TenantList from "./message-component/TenantList";
+import ChatHeader from "./message-component/ChatHeader";
+import ChatMessages from "./message-component/ChatMessages";
+import MessageInput from "./message-component/MessageInput";
+import DeleteDialog from "./message-component/DeleteDialog";
 
 // Define types for better TypeScript support
 interface UIMessage {
@@ -105,9 +99,9 @@ export default function NotificationsModal({
   const [isCacheStale, setIsCacheStale] = useState(false)
   
   // Refs
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messageInputRef = useRef<HTMLTextAreaElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const messageSubscriptionRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   
   // Supabase client is already imported from the client utility
@@ -1082,136 +1076,6 @@ export default function NotificationsModal({
     }, 100);
   }, [selectedTenant?.id, fetchMessages, property?.id, user?.id, markMessagesAsRead, updateMessagesCache]);
 
-  // Helper function to render chat messages
-  const renderChatMessages = () => {
-    if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
-      return (
-        <div className="flex items-center justify-center h-32" key="loading-container">
-          <div className="animate-pulse flex space-x-2" key="loading-pulse">
-            <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-            <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-            <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-          </div>
-        </div>
-      );
-    }
-
-    if (!selectedTenant) {
-      return (
-        <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-tenant-selected">
-          <p>Select a conversation to view messages</p>
-        </div>
-      );
-    }
-
-    if (!selectedTenant.messages || selectedTenant.messages.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-messages">
-          <p>No messages in this conversation yet</p>
-          <p className="text-xs mt-2">Send a message to get started</p>
-        </div>
-      );
-    }
-
-    return (
-      <div ref={messagesContainerRef} className="space-y-3">
-        {/* Load more button - show if there are more messages */}
-        {selectedTenant.hasMoreMessages && (
-          <div className="flex justify-center py-2" key="load-more-container">
-            <button 
-              onClick={() => loadMoreMessages()}
-              className="text-xs text-zinc-400 hover:text-white px-3 py-1 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors"
-            >
-              Load earlier messages
-            </button>
-          </div>
-        )}
-        
-        {selectedTenant.messages.map((message) => (
-          <div 
-            key={message.id} 
-            className={cn("flex", message.sender === "landlord" ? "justify-end" : "justify-start")}
-          >
-            <div
-              className={cn(
-                "max-w-[80%] rounded-lg px-4 py-2",
-                message.sender === "landlord"
-                  ? "bg-indigo-600 text-white rounded-br-none"
-                  : "bg-zinc-800 text-zinc-100 rounded-bl-none",
-              )}
-            >
-              <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
-              <div
-                className={cn(
-                  "text-xs mt-1 flex justify-end items-center gap-1",
-                  message.sender === "landlord" ? "text-indigo-200" : "text-zinc-400",
-                )}
-              >
-                <span>{message.time}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-    );
-  };
-
-  // Memoized TenantListItem component to reduce unnecessary renders
-  interface TenantListItemProps {
-    tenant: Tenant
-    isSelected: boolean
-    onSelect: (tenant: Tenant) => Promise<void>
-    onDelete: (tenantId: string) => void
-  }
-
-  const TenantListItem = memo(({ tenant, isSelected, onSelect, onDelete }: TenantListItemProps) => {
-    return (
-      <div
-        className={cn(
-          "group flex items-center gap-3 p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors",
-          isSelected && "bg-zinc-900",
-        )}
-        onClick={() => onSelect(tenant)}
-      >
-        <div className="relative flex-shrink-0">
-          <Avatar className="h-10 w-10 border border-zinc-700">
-            <AvatarImage src={tenant.avatar} alt={tenant.name} />
-            <AvatarFallback className="bg-zinc-800 text-zinc-300">
-              {tenant.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-sm truncate text-white">{tenant.name}</span>
-            <span className="text-[10px] text-zinc-500">{tenant.time}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-zinc-400 truncate max-w-[100px]">{tenant.lastMessage}</p>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-zinc-300 hover:bg-zinc-700"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(tenant.id)
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-              <span className="sr-only">Archive conversation</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  });
-
-  
   // Handle key down event for message input
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Only send on Enter without Shift
@@ -1236,311 +1100,105 @@ export default function NotificationsModal({
         {/* Add DialogTitle (can be visually hidden if needed) */}
         <DialogTitle className="sr-only">{modalTitle}</DialogTitle>
         
-        {/* Fixed header - responsive design */}
-        <div className="bg-black border-b border-white p-3 flex items-center justify-between">
-         
-          {/* Mobile header - simplified */}
-          <div className="flex flex-col sm:hidden">
-            <span className="font-bold text-white truncate max-w-[120px]">{modalTitle}</span>
-          </div>
-          
-          {/* Desktop header - full content */}
-          <div className="items-center space-x-2 hidden sm:flex">
-            <span className="font-bold text-white">LakazHub</span>
-            <span className="text-xs text-zinc-400">Messenger</span>
-          </div>
+        {/* Header */}
+        <ChatHeader
+          modalTitle={modalTitle}
+          lastRefreshAt={lastRefreshAt}
+          onClose={() => onOpenChangeAction(false)}
+        />
 
-          {/* Title area - desktop only */}
-          <div className="text-center hidden sm:block">
-            <h3 className="text-sm font-medium truncate text-white">{modalTitle}</h3>
-            {lastRefreshAt && (
-              <div className="text-[10px] text-zinc-400">
-                Last updated {formatDistanceToNow(lastRefreshAt, { addSuffix: true })}
-              </div>
-            )}
-          </div>
-
-          {/* Action buttons - adapted for mobile and desktop */}
-          <div className="flex justify-center items-center space-x-2 ">
-            
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 mt-4 rounded-full text-black hover:text-white hover:bg-zinc-800"
-              onClick={() => onOpenChangeAction(false)}
-            >
-              
-              <span className="sr-only">Close</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Main content area with fixed height */}
+        {/* Main content area */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar - responsive width */}
-          <div className="w-full sm:w-1/3 md:w-1/4 border-r  hidden sm:flex flex-col h-full bg-black">
-            <div className="p-2 border-b border-zinc-900 flex items-center justify-between">
-              <h3 className="text-xs font-medium text-zinc-400">Conversations</h3>
-              
-            </div>
-
-            <div className="overflow-y-auto flex-1 ">
-              {loading && tenants.length === 0 ? (
-                <div className="flex items-center justify-center h-48" key="mobile-loading-container">
-                  <div className="animate-pulse flex space-x-2" key="mobile-loading-pulse">
-                    <div key="mobile-pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                    <div key="mobile-pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                    <div key="mobile-pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                  </div>
-                </div>
-              ) : tenants.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-zinc-500 px-4 text-center" key="mobile-no-messages">
-                  <p>No messages</p>
-                  <p className="text-sm mt-2">You have no message inquiries for this property yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-zinc-800/50 ">
-                  {tenants.map((tenant) => (
-                    <TenantListItem
-                      key={tenant.id}
-                      tenant={tenant}
-                      isSelected={selectedTenant?.id === tenant.id}
-                      onSelect={handleTenantSelect}
-                      onDelete={(tenantId) => confirmDeleteChat(tenantId)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* Sidebar */}
+          <div className="w-full sm:w-1/3 md:w-1/4 border-r hidden sm:flex flex-col h-full bg-black">
+            <TenantList
+              tenants={tenants}
+              loading={loading}
+              selectedTenant={selectedTenant}
+              onSelect={handleTenantSelect}
+              onDelete={confirmDeleteChat}
+            />
           </div>
 
-          {/* Mobile view - conversation selector */}
+          {/* Mobile view */}
           <div className="sm:hidden w-full flex flex-col h-full bg-black">
             {!selectedTenant ? (
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-2 border-b border-white flex items-center bg-black">
-                  <h3 className="text-xs font-medium text-zinc-400">Conversations</h3>
-                  <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "h-8 px-2 bg-black border-white text-zinc-300 hover:bg-zinc-700 hover:text-white",
-                refreshStatus === "updated" && "text-green-400 border-green-800 bg-green-900/20",
-              )}
-              onClick={refreshAll}
-              disabled={isRefreshing}
-            >
-              {refreshStatusInfo.icon}
-              {/* Only show text on desktop */}
-              <span className="text-xs hidden sm:inline">{refreshStatusInfo.text}</span>
-            </Button>
-                </div>
-
-                {loading && tenants.length === 0 ? (
-                  <div className="flex items-center justify-center h-48">
-                    <div className="animate-pulse flex space-x-2">
-                      <div key="pulse-1" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                      <div key="pulse-2" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                      <div key="pulse-3" className="h-2 w-2 bg-zinc-600 rounded-full"></div>
-                    </div>
-                  </div>
-                ) : tenants.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-48 text-zinc-500 px-4 text-center">
-                    <p>No messages</p>
-                    <p className="text-sm mt-2">You have no message inquiries for this property yet</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-zinc-800/50">
-                    {tenants.map((tenant) => (
-                      <TenantListItem
-                        key={tenant.id}
-                        tenant={tenant}
-                        isSelected={selectedTenant === tenant.id}
-                        onSelect={handleTenantSelect}
-                        onDelete={(tenantId) => confirmDeleteChat(tenantId)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TenantList
+                tenants={tenants}
+                loading={loading}
+                selectedTenant={selectedTenant}
+                onSelect={handleTenantSelect}
+                onDelete={confirmDeleteChat}
+                mobile
+                refreshAll={refreshAll}
+                refreshStatusInfo={refreshStatusInfo}
+                isRefreshing={isRefreshing}
+              />
             ) : (
-              /* Mobile chat view */
               <div className="flex flex-col h-full">
-                {/* Mobile chat header with back button */}
-                <div className="border-b border-white p-2 flex items-center bg-black">
-                  
-
-                  <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800"
-                    onClick={() => setSelectedTenant(null)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                    <Avatar className="h-8 w-8 mr-2 border border-white">
-                      <AvatarImage src={selectedTenant.avatar} alt={selectedTenant.name} />
-                      <AvatarFallback className="bg-black text-zinc-300">
-                        {selectedTenant.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium text-sm text-white">{selectedTenant.name}</div>
-                      <p className="text-xs text-zinc-400">Inquiring about {property?.name || "your property"}</p>
-                      
-                    </div>
-                    
-                  </div>
-                  <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 w-8 bg-black text-zinc-300 hover:bg-zinc-700 hover:text-white rounded-full",
-              refreshStatus === "updated" && "text-green-400",
-            )}
-            onClick={refreshAll}
-            disabled={isRefreshing}
-          >
-            {refreshStatus === "refreshing" ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : refreshStatus === "updated" ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            <span className="sr-only">Refresh</span>
-          </Button>
-                </div>
-                
-
-                {/* Mobile chat messages */}
-                <div 
-                  ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-3 bg-black"
-                >
-                  {renderChatMessages()}
-                </div>
-
-                {/* Mobile message input */}
-                <div className="border-t border-zinc-800 p-2 flex gap-2 h-[60px] min-h-[60px]">
-                  <Textarea
-                    ref={messageInputRef}
-                    placeholder="Type your message here... (Shift+Enter for new line)"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 min-h-[40px] max-h-[100px] resize-none bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-700"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={handleSendMessage}
-                    disabled={!messageText.trim()}
-                    className="h-10 w-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-zinc-800 disabled:text-zinc-500"
-                  >
-                    <Send className="h-4 w-4" />
-                    <span className="sr-only">Send message</span>
-                  </Button>
-                </div>
+                <ChatHeader
+                  selectedTenant={selectedTenant}
+                  property={property}
+                  onBack={() => setSelectedTenant(null)}
+                  refreshAll={refreshAll}
+                  refreshStatus={refreshStatus}
+                  isRefreshing={isRefreshing}
+                  mobile
+                />
+                <ChatMessages
+                  loading={loading}
+                  selectedTenant={selectedTenant}
+                  messagesContainerRef={messagesContainerRef}
+                  messagesEndRef={messagesEndRef}
+                  loadMoreMessages={loadMoreMessages}
+                  userHasScrolledUp={userHasScrolledUp}
+                />
+                <MessageInput
+                  messageText={messageText}
+                  setMessageText={setMessageText}
+                  handleSendMessage={handleSendMessage}
+                  handleKeyDown={handleKeyDown}
+                  disabled={!selectedTenant}
+                  ref={messageInputRef}
+                />
               </div>
             )}
           </div>
 
           {/* Desktop chat area */}
           <div className="hidden sm:flex flex-col flex-1 h-full bg-black">
-            {/* Chat header */}
-            <div className="border-b border-zinc-800 justify-between p-2 flex items-center h-[50px] min-h-[50px]">
-              {selectedTenant ? (
-                <div className="flex  items-center">
-                  <Avatar className="h-8 w-8 mr-2 border border-zinc-700 bg-orange-500">
-                    <AvatarImage src={selectedTenant.avatar} alt={selectedTenant.name} />
-                    <AvatarFallback className="bg-zinc-800 text-zinc-300">
-                      {selectedTenant.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="">
-                    <div className="font-medium text-sm text-white">{selectedTenant.name}</div>
-                    <p className="text-xs text-zinc-400">Inquiring about {property?.name || "your property"}</p>
-                  </div>
-                  
-                </div>
-              ) : (
-                <div className="font-medium text-sm text-zinc-300"></div>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "h-8 px-2 bg-black border-white text-zinc-300 hover:bg-zinc-700 hover:text-white",
-                  refreshStatus === "updated" && "text-green-400 border-green-800 bg-green-900/20",
-                )}
-                onClick={refreshAll}
-                disabled={isRefreshing}
-              >
-                {refreshStatusInfo.icon}
-                <span className="text-xs">{refreshStatusInfo.text}</span>
-              </Button>
-            </div>
-
-            {/* Messages area - fixed height with scrolling */}
-            <div 
-              ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-3"
-            >
-              {renderChatMessages()}
-            </div>
-
-            {/* Message input - fixed height */}
-            <div className="border-t border-zinc-800 p-2 flex gap-2 h-[60px] min-h-[60px]">
-              <Textarea
-                ref={messageInputRef}
-                placeholder={selectedTenant ? "Type your message here... (Shift+Enter for new line)" : "Select a tenant to message"}
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={!selectedTenant}
-                className="flex-1 min-h-[40px] max-h-[40px] resize-none bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-zinc-700"
-              />
-              <Button
-                size="icon"
-                onClick={handleSendMessage}
-                disabled={!messageText.trim() || !selectedTenant}
-                className="h-10 w-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-zinc-800 disabled:text-zinc-500"
-              >
-                <Send className="h-4 w-4" />
-                <span className="sr-only">Send message</span>
-              </Button>
-            </div>
+            <ChatHeader
+              selectedTenant={selectedTenant}
+              property={property}
+              refreshAll={refreshAll}
+              refreshStatus={refreshStatus}
+              isRefreshing={isRefreshing}
+            />
+            <ChatMessages
+              loading={loading}
+              selectedTenant={selectedTenant}
+              messagesContainerRef={messagesContainerRef}
+              messagesEndRef={messagesEndRef}
+              loadMoreMessages={loadMoreMessages}
+              userHasScrolledUp={userHasScrolledUp}
+            />
+            <MessageInput
+              messageText={messageText}
+              setMessageText={setMessageText}
+              handleSendMessage={handleSendMessage}
+              handleKeyDown={handleKeyDown}
+              disabled={!selectedTenant}
+              ref={messageInputRef}
+            />
           </div>
         </div>
       </DialogContent>
 
-      {/* Confirmation dialog for deleting a conversation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive Conversation</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
-              This will archive this conversation. It can be restored from the archived conversations section.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteChat} className="bg-red-600 hover:bg-red-700 text-white">
-              Archive
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteChat}
+      />
     </Dialog>
   )
 }
