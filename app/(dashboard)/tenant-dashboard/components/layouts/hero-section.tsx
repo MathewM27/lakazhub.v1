@@ -26,28 +26,27 @@ const HeroSection = () => {
   const quickFeatures = [
     { text: 'Access curated listings', icon: FiCheck },
     { text: 'Contact landlords directly', icon: FiCheck },
-    { text: 'Schedule viewings easily', icon: FiCheck }
+   
   ];
 
   return (
     <section className="relative min-h-[90vh] py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
-      {/* Simple subtle gradient overlay */}
+      {/* Removed gradient overlay and decorative elements */}
+      {/* 
       <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black to-black/90 pointer-events-none"></div>
-      
-      {/* Subtle decorative elements */}
       <div 
         className={`absolute top-[20%] right-[10%] w-64 h-64 rounded-full bg-white/3 transition-all duration-1000 ease-out ${
           isVisible ? 'opacity-15 scale-100' : 'opacity-0 scale-90'
         }`}
       />
-      
       <div 
         className={`absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-white/2 transition-all duration-1000 delay-300 ease-out ${
           isVisible ? 'opacity-10 scale-100' : 'opacity-0 scale-90'
         }`}
       />
+      */}
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto relative z-10">
         {isLoading ? (
           <div className="text-center max-w-4xl mx-auto">
             {/* Loading skeleton */}
@@ -75,7 +74,7 @@ const HeroSection = () => {
               >
                 <div>
                   <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
-                    Find Your Perfect Rental
+                    Find Your Ideal Rental Property
                   </h1>
                   <p className="mt-4 text-lg text-white/70 max-w-2xl">
                     Browse through a selection of quality-verified properties and connect directly with owners.

@@ -263,7 +263,7 @@ const Navigation = () => {
                         : "bg-transparent border-b border-white/20"
                 }`}
             >
-                <div className="mx-auto flex w-full items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+                <div className="container mx-auto flex w-full items-center justify-between  py-3">
                     <div className="flex items-center">
                         {/* Mobile menu button on left */}
                         <div className="md:hidden mr-3">

@@ -93,8 +93,6 @@ const Header = () => {
         if (!user?.id) return;
 
         try {
-            console.log('Fetching notifications for user:', user.id);
-
             // Query for conversations with unread messages
             const { data: conversationsData, error: conversationsError } = await supabase
               .from('property_conversations')
@@ -103,9 +101,6 @@ const Header = () => {
               .eq('is_archived', false)
               .gt('landlord_unread_count', 0)
               .order('last_message_at', { ascending: false });
-
-            console.log('Unread conversations:', conversationsData);
-            console.log('Conversations query error:', conversationsError);
 
             if (conversationsError) throw conversationsError;
 
@@ -121,7 +116,6 @@ const Header = () => {
             const unreadCount = filteredConversations ? 
               filteredConversations.reduce((sum: number, conv: { landlord_unread_count?: number }) => sum + (conv.landlord_unread_count || 0), 0) : 0;
             setUnreadMessagesCount(unreadCount);
-            // console.log('Unread count:', unreadCount);
 
             // If no unread messages, clear notifications and return
             if (!filteredConversations || filteredConversations.length === 0) {
@@ -135,8 +129,6 @@ const Header = () => {
               .from('profiles')
               .select('*')
               .in('id', tenantIds);
-
-            // console.log('Tenant profiles:', profilesData);
 
             // Create a map of tenant IDs to profiles for easy lookup
             const tenantProfiles: Record<string, { full_name?: string }> = {};
@@ -185,7 +177,6 @@ const Header = () => {
               return new Date(b.time).getTime() - new Date(a.time).getTime();
             }).slice(0, 10); // Limit to 10 most recent conversations
             
-            // console.log('Final notifications to display:', notifications);
             setMessageNotifications(notifications);
         } catch {
             // console.error('Error fetching message notifications:', error);
@@ -195,17 +186,12 @@ const Header = () => {
     // Handle clicking on a message notification
     const handleMessageNotificationClick = async (notification: MessageNotification) => {
         try {
-            console.log('Notification clicked:', notification);
-            
             // Get property details
             const { data: propertyData, error: propertyError } = await supabase
                 .from('properties')
                 .select('*')
                 .eq('id', notification.propertyId)
                 .single();
-            
-            // console.log('Property data:', propertyData);
-            // console.log('Property error:', propertyError);
                 
             if (propertyError) throw propertyError;
             
@@ -236,7 +222,6 @@ const Header = () => {
             table: 'property_conversations',
             filter: `landlord_id=eq.${user.id}`,
           }, (payload: { new: unknown }) => {
-            // console.log('Conversation updated:', payload);
             const updatedConversation = (payload as { new: { landlord_unread_count: number } }).new;
             
             // Only update if there are unread messages
@@ -248,7 +233,6 @@ const Header = () => {
           
         // Listen for the custom event when messages are marked as read in other components
         const handleMessagesRead = (_event: CustomEvent) => {
-        //   console.log('Header received messagesMarkedAsRead event:', event.detail);
           // Refresh notifications to update the UI
           fetchUnreadMessagesAndNotifications();
         };
@@ -258,12 +242,9 @@ const Header = () => {
           
         messageSubscriptionRef.current = conversationUpdateSubscription;
         
-        // console.log('Subscribed to conversation changes in header');
-        
         return () => {
           conversationUpdateSubscription.unsubscribe();
           window.removeEventListener('messagesMarkedAsRead', handleMessagesRead as EventListener);
-        //   console.log('Unsubscribed from conversation changes in header');
         }
     }, [user?.id, fetchUnreadMessagesAndNotifications]);
 

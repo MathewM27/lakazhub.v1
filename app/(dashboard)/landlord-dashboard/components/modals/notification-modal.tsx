@@ -1550,5 +1550,5 @@ function toast({ title, description, variant }: {
   description: string; 
   variant: "default" | "destructive" | string 
 }): void {
-  console.log(`[${variant.toUpperCase()}] ${title}: ${description}`);
+  //console.log(`[${variant.toUpperCase()}] ${title}: ${description}`);
 }
