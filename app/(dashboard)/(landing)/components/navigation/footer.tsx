@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, ArrowUp, Mail } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 // Custom TikTok icon since it's not in lucide-react by default
 const TiktokIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -76,7 +77,8 @@ export const Footer = () => {
                   width={80}
                   height={80}
                   className="w-full h-full object-cover"
-                  priority // Ensures logo loads quickly
+                  priority={false}
+                  loading="lazy"
                 />
               </div>
             </div>

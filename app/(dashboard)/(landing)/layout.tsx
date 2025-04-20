@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'  
+import React from 'react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -23,8 +24,28 @@ export default function DashboardLandingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable}`}>
-      {children}
-    </div>
+    <>
+      <head>
+        <link rel="preload" as="image" href="/hero.webp" imageSrcSet="/hero.webp" type="image/webp" />
+        {/* Preload Geist Sans and Geist Mono fonts */}
+        <link
+          rel="preload"
+          as="font"
+          href="/_next/static/media/geist-sans-latin.woff2"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          as="font"
+          href="/_next/static/media/geist-mono-latin.woff2"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <div className={`${geistSans.variable} ${geistMono.variable}`}>
+        {children}
+      </div>
+    </>
   );
 }

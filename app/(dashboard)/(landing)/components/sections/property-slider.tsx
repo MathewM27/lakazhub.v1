@@ -1,12 +1,14 @@
 'use client'; // Keep client directive as we need interactivity for the slider
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Home, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../ui/property-card';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
-import dynamic from 'next/dynamic';
+
+// Memoized PropertyCard for performance
+const MemoPropertyCard = memo(PropertyCard);
 
 // Create a component for handling image errors with proper TypeScript types
 interface ImageWithFallbackProps {
@@ -84,6 +86,11 @@ export const PropertySlider = () => {
   const [canScrollNext, setCanScrollNext] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Filter properties based on active filter
+  const filteredProperties = activeFilters === 'all'
+    ? properties
+    : properties.filter((p) => p.type === activeFilters);
+
   // Update scroll buttons state and current index
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -132,7 +139,7 @@ export const PropertySlider = () => {
 
   // Only render a window of slides around the current index for performance
   const visibleWindow = 2;
-  const visibleProperties = properties.filter((_, idx) =>
+  const visibleProperties = filteredProperties.filter((_, idx) =>
     Math.abs(idx - currentIndex) <= visibleWindow
   );
 
@@ -155,37 +162,36 @@ export const PropertySlider = () => {
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-6xl mx-auto opacity-0 animate-fade-in">
+        <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
             <div className="max-w-2xl">
-              <div className="flex items-center gap-2 mb-4 opacity-0 animate-fade-in delay-100">
+              <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                   <Home className="w-4 h-4 text-black" />
                 </div>
                 <span className="text-white/70 text-sm font-medium">Lakaz-Hub</span>
               </div>
               
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white opacity-0 animate-fade-in delay-200">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                 Discover & List Properties
               </h2>
               
-              <p className="text-base md:text-lg text-white/70 opacity-0 animate-fade-in delay-300">
+              <p className="text-base md:text-lg text-white/70">
                 Explore a diverse selection of rental properties tailored to your needs.
               </p>
             </div>
             
             {/* Property filters */}
             <div className="flex items-center gap-3 mt-6 md:mt-0">
-              {['all', 'apartment', 'house', 'villa'].map((filter, index) => (
+              {['all', 'apartment', 'house', 'villa'].map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setActiveFilters(filter)}
-                  className={`opacity-0 animate-fade-in px-4 py-2 text-sm rounded-full transition-all duration-300 ${
+                  className={`px-4 py-2 text-sm rounded-full transition-all duration-300 ${
                     activeFilters === filter
                       ? 'bg-white text-black font-medium'
                       : 'bg-white/10 text-white/70 hover:bg-white/20'
                   }`}
-                  style={{animationDelay: `${300 + (index * 100)}ms`}}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
@@ -196,7 +202,7 @@ export const PropertySlider = () => {
           <div className="relative">
             <div className="overflow-hidden rounded-xl" ref={emblaRef}>
               <div className="flex">
-                {properties.map((property, index) => {
+                {filteredProperties.map((property, index) => {
                   // Only render slides within the visible window
                   if (Math.abs(index - currentIndex) > visibleWindow) {
                     return <div key={property.id} className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6" style={{ minHeight: 300 }} />;
@@ -204,15 +210,14 @@ export const PropertySlider = () => {
                   return (
                     <div 
                       key={property.id}
-                      className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6 opacity-0 animate-slide-up"
-                      style={{animationDelay: `${400 + (index * 50)}ms`}}
+                      className="flex-none w-full sm:w-1/2 md:w-1/3 pl-0 pr-6"
                     >
                       <div 
                         className="relative cursor-pointer hover:translate-y-[-5px] transition-transform duration-300 h-full"
                         onClick={handlePropertyClick}
                       >
                         <div className="h-full w-full max-w-[400px] mx-auto">
-                          <PropertyCard
+                          <MemoPropertyCard
                             id={property.id}
                             name={property.name}
                             location={property.location}
@@ -254,8 +259,7 @@ export const PropertySlider = () => {
           
           {/* Premium features coming soon banner */}
           <div
-            className="mt-16 flex flex-col items-center justify-center p-6 md:p-8 rounded-2xl bg-black border border-white/10 backdrop-blur-sm relative overflow-hidden opacity-0 animate-fade-in"
-            style={{animationDelay: '800ms'}}
+            className="mt-16 flex flex-col items-center justify-center p-6 md:p-8 rounded-2xl bg-black border border-white/10 backdrop-blur-sm relative overflow-hidden"
           >
             {/* Simplified static background instead of animated */}
             <div className="absolute inset-0 overflow-hidden">

@@ -3,10 +3,12 @@
 import { useState, useCallback } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiUser, FiHome, FiMail, FiPhone, FiArrowRight } from "react-icons/fi";
-import Modal from "./../layout/Modal";
+import dynamic from "next/dynamic";
 import { signinWithGoogle, signinWithMagicLink } from "@/utils/actions";
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
+
+const Modal = dynamic(() => import("./../layout/Modal"), { ssr: false });
 
 // Static backgrounds with CSS instead of canvas for better performance
 const StaticBackground = () => (
@@ -283,7 +285,9 @@ export const SignupSection = () => {
         </div>
       </div>
       
-      <Modal isOpen={isModalOpen} message={modalMessage} onClose={() => setIsModalOpen(false)} />
+      {isModalOpen && (
+        <Modal isOpen={isModalOpen} message={modalMessage} onClose={() => setIsModalOpen(false)} />
+      )}
     </section>
   );
 };

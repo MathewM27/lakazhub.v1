@@ -14,26 +14,26 @@ export const HeroSection = () => {
           {/* Left content column */}
           <div className="space-y-4 md:space-y-6">
             <div>
-              <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20 opacity-0 animate-fade-in">
+              <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
                 Introducing LakazHub
               </span>
             </div>
 
             <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
-              <span className="block opacity-0 animate-slide-up delay-100">
+              <span className="block">
                 Where Homes &
               </span>
-              <span className="block relative opacity-0 animate-slide-up delay-200">
+              <span className="block relative">
                 <span className="relative z-10">People Connect</span>
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed opacity-0 animate-slide-up delay-300">
+            <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
               Redefining the renting experience by seamlessly connecting landlords and tenants.
             </p>
 
             {/* Mobile image - Only shown on mobile devices */}
-            <div className="block md:hidden w-full py-4 opacity-0 animate-fade-in delay-300">
+            <div className="block md:hidden w-full py-4">
               <div className="relative mx-auto max-w-md">
                 <div className="aspect-square w-full relative">
                   <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
@@ -43,6 +43,7 @@ export const HeroSection = () => {
                       alt="Home background"
                       fill
                       priority
+                      fetchPriority="high" // <--- Add this line for browsers that support it
                       sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-contain transform scale-105 hover:scale-110 transition-transform duration-700"
                       quality={85}
@@ -80,7 +81,7 @@ export const HeroSection = () => {
             </div>
 
             {/* Using grid for button layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 opacity-0 animate-fade-in delay-400">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
               <Link
                 href="#signup"
                 className="group min-h-[50px] flex items-center justify-center px-8 py-3 bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300 text-base font-medium focus:outline-none focus:ring-2 focus:ring-white/50"
@@ -99,14 +100,14 @@ export const HeroSection = () => {
 
             {/* Feature highlights */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="flex items-center gap-3 opacity-0 animate-slide-up delay-500">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                   <FiCheck className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-sm text-white/80">Smart Property Management</p>
               </div>
 
-              <div className="flex items-center gap-3 opacity-0 animate-slide-up delay-600">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                   <FiCheck className="w-5 h-5 text-white" />
                 </div>
@@ -116,7 +117,7 @@ export const HeroSection = () => {
           </div>
 
           {/* Right image/visual column - Only shown on tablet/desktop */}
-          <div className="hidden md:block opacity-0 animate-fade-in delay-300">
+          <div className="hidden md:block">
             <div className="relative mx-auto">
               <div className="aspect-square w-full max-w-lg ml-auto relative">
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
@@ -126,6 +127,7 @@ export const HeroSection = () => {
                     alt="Home interior"
                     fill
                     priority
+                    fetchPriority="high" // <--- Add this line for desktop image as well
                     sizes="(max-width: 1280px) 50vw, 40vw"
                     className="object-contain transform scale-105 hover:scale-110 transition-transform duration-700"
                     quality={85}

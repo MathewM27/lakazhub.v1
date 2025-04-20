@@ -23,6 +23,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        {/* Preload Inter font for better performance */}
+        <link
+          rel="preload"
+          as="font"
+          href="/_next/static/media/inter-latin-variable.woff2"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="antialiased">
         {children}
       </body>

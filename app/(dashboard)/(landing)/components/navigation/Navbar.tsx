@@ -16,53 +16,54 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState('/');
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  
-  // Throttled scroll handler for better performance
-  const handleScroll = useCallback(() => {
-    // Use requestAnimationFrame for better performance
-    requestAnimationFrame(() => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      setIsScrolled(scrollTop > 50);
-      
-      // Update active link based on scroll position
-      const sections: {[key: string]: number} = {
-        'hero': 0,
-        'why-us': document.getElementById('why-us')?.offsetTop || 0,
-        'properties': document.getElementById('properties')?.offsetTop || 0,
-        'signup': document.getElementById('signup')?.offsetTop || 0,
-      };
-      
-      // Add a small offset to account for the navbar height
-      const scrollPosition = scrollTop + 100;
-      
-      if (scrollPosition >= sections.signup) {
-        setActiveLink('/signup');
-      } else if (scrollPosition >= sections.properties) {
-        setActiveLink('/properties');
-      } else if (scrollPosition >= sections['why-us']) {
-        setActiveLink('/about');
-      } else {
-        setActiveLink('/');
-      }
-    });
+
+  // Only update state if value changes
+  const setIsScrolledSafe = useCallback((val: boolean) => {
+    setIsScrolled(prev => (prev !== val ? val : prev));
   }, []);
 
-  // Optimized scroll event listener with debounce
+  const setActiveLinkSafe = useCallback((val: string) => {
+    setActiveLink(prev => (prev !== val ? val : prev));
+  }, []);
+
+  // Throttled scroll handler for better performance
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
-    
-    const debouncedScroll = () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(handleScroll, 10);
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          setIsScrolledSafe(scrollTop > 50);
+
+          // Only run active link logic after first scroll
+          if (scrollTop > 0) {
+            const sections: {[key: string]: number} = {
+              'hero': 0,
+              'why-us': document.getElementById('why-us')?.offsetTop || 0,
+              'properties': document.getElementById('properties')?.offsetTop || 0,
+              'signup': document.getElementById('signup')?.offsetTop || 0,
+            };
+            const scrollPosition = scrollTop + 100;
+            if (scrollPosition >= sections.signup) {
+              setActiveLinkSafe('/signup');
+            } else if (scrollPosition >= sections.properties) {
+              setActiveLinkSafe('/properties');
+            } else if (scrollPosition >= sections['why-us']) {
+              setActiveLinkSafe('/about');
+            } else {
+              setActiveLinkSafe('/');
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    
-    window.addEventListener('scroll', debouncedScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', debouncedScroll);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-    };
-  }, [handleScroll]);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [setIsScrolledSafe, setActiveLinkSafe]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
