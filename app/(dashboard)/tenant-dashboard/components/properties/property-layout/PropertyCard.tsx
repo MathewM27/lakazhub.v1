@@ -55,6 +55,9 @@ interface PropertyCarouselProps {
   properties: Property[];
   disableInteractions?: boolean; // New prop to disable interactions for all cards in carousel
   customBadge?: string;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 // Individual Property Card Component
@@ -72,13 +75,13 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
   const getAvailabilityBadgeClass = (): string => {
     switch (property.availability) {
       case 'Available': 
-        return 'bg-emerald-500';
+        return 'bg-emerald-500'; // Green dot for Available
       case 'Rented':
-        return 'bg-amber-500';
+        return 'bg-amber-500';   // Amber dot for Rented
       case 'Coming Soon':
-        return 'bg-yellow-500';
+        return 'bg-yellow-500';  // Yellow dot for Coming Soon
       default:
-        return 'bg-blue-500';
+        return 'bg-blue-500';    // Blue for unknown/other
     }
   };
 
@@ -230,7 +233,15 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
 };
 
 // Property Carousel Component
-const PropertyCarousel = ({ title, properties, disableInteractions = false, customBadge }: PropertyCarouselProps) => {
+const PropertyCarousel = ({
+  title,
+  properties,
+  disableInteractions = false,
+  customBadge,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+}: PropertyCarouselProps) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
   const [showEndIndicator, setShowEndIndicator] = useState(false);
@@ -352,6 +363,24 @@ const PropertyCarousel = ({ title, properties, disableInteractions = false, cust
           ) : (
             <div className="w-full py-12 text-center text-white/60">
               No properties found with the selected filters.
+            </div>
+          )}
+          {/* Load More Button at the end of the carousel */}
+          {onLoadMore && (
+            <div className="min-w-[280px] md:min-w-[320px] flex items-center justify-center">
+              <button
+                onClick={onLoadMore}
+                disabled={isLoadingMore || !hasMore}
+                className={`px-6 py-3 rounded-lg border border-white/20 bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-all duration-300 ${
+                  !hasMore ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
+              >
+                {isLoadingMore
+                  ? 'Loading...'
+                  : hasMore
+                  ? 'Load More'
+                  : 'End of Results'}
+              </button>
             </div>
           )}
         </div>
