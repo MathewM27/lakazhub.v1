@@ -244,7 +244,6 @@ const PropertyCarousel = ({
 }: PropertyCarouselProps) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
-  const [showEndIndicator, setShowEndIndicator] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Handle scroll navigation
@@ -272,16 +271,6 @@ const PropertyCarousel = ({
       
       setScrollPosition(currentPos);
       setMaxScroll(maxScrollPos);
-      
-      // Check if we're at the end (within 20px of the max scroll)
-      const reachedEnd = maxScrollPos > 0 && currentPos >= maxScrollPos - 20;
-      
-      // Show indicator briefly when reaching the end
-      if (reachedEnd && !showEndIndicator) {
-        setShowEndIndicator(true);
-        // Hide it after a delay
-        setTimeout(() => setShowEndIndicator(false), 2000);
-      }
     };
     
     // Initial calculation
@@ -295,7 +284,7 @@ const PropertyCarousel = ({
       container.removeEventListener('scroll', handleScrollEvent);
       window.removeEventListener('resize', handleScrollEvent);
     };
-  }, [properties, title, showEndIndicator]);
+  }, [properties, title]);
 
   // Calculate progress percentage
   const progressPercentage = maxScroll > 0 ? (scrollPosition / maxScroll) * 100 : 0;
@@ -306,7 +295,6 @@ const PropertyCarousel = ({
   }
 
   return (
-    // Remove transition-opacity to ensure immediate visibility
     <div className="relative">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-6">
@@ -365,36 +353,50 @@ const PropertyCarousel = ({
               No properties found with the selected filters.
             </div>
           )}
-          {/* Load More Button at the end of the carousel */}
+          {/* Unified Load More / End of Results Button */}
           {onLoadMore && (
-            <div className="min-w-[280px] md:min-w-[320px] flex items-center justify-center">
+            <div className="min-w-[180px] flex items-center justify-center">
               <button
-                onClick={onLoadMore}
+                onClick={hasMore ? onLoadMore : undefined}
                 disabled={isLoadingMore || !hasMore}
-                className={`px-6 py-3 rounded-lg border border-white/20 bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-all duration-300 ${
-                  !hasMore ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+                className={`px-4 py-2 rounded-lg border border-white bg-black text-white text-sm font-medium shadow transition-all duration-200
+                  ${hasMore ? 'hover:bg-white/10 hover:border-white/70 hover:scale-105' : 'opacity-60 cursor-not-allowed'}
+                  focus:outline-none focus:ring-1 focus:ring-white/40`}
+                style={{
+                  minWidth: 110,
+                  marginTop: 8,
+                  marginBottom: 8,
+                  letterSpacing: '0.01em',
+                }}
               >
                 {isLoadingMore
-                  ? 'Loading...'
+                  ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                      Loading
+                    </span>
+                  )
                   : hasMore
-                  ? 'Load More'
-                  : 'End of Results'}
+                  ? (
+                    <span className="flex items-center gap-1">
+                      <ChevronRight className="h-4 w-4" />
+                      More
+                    </span>
+                  )
+                  : (
+                    <span className="flex items-center gap-1">
+                      <ChevronRight className="h-4 w-4" />
+                      End
+                    </span>
+                  )
+                }
               </button>
             </div>
           )}
         </div>
-        
-        {/* End of carousel indicator - shown only when user scrolls to the end */}
-        {showEndIndicator && (
-          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 px-3 py-2 bg-black/80 backdrop-blur-sm rounded-lg text-sm text-white/90 border border-white/10 shadow-lg z-10 animate-fade-in-out">
-            <div className="flex items-center gap-1.5">
-              <ChevronRight className="h-3.5 w-3.5" />
-              <span>End of results</span>
-            </div>
-          </div>
-        )}
-        
         {/* Progress bar */}
         {properties.length > 0 && (
           <div className="mt-3 h-0.5 bg-white/5 rounded-full overflow-hidden">
@@ -405,7 +407,6 @@ const PropertyCarousel = ({
           </div>
         )}
       </div>
-      
       <style jsx global>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
@@ -413,15 +414,6 @@ const PropertyCarousel = ({
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
-        }
-        @keyframes fadeInOut {
-          0% { opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        .animate-fade-in-out {
-          animation: fadeInOut 2s ease-in-out;
         }
       `}</style>
     </div>

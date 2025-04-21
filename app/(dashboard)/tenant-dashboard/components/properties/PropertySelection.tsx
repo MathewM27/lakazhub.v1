@@ -80,6 +80,35 @@ const PropertiesSection = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [messagedProperties, setMessagedProperties] = useState<Property[]>([]);
 
+  // --- Fetch all properties in parent ---
+  useEffect(() => {
+    let mounted = true;
+    async function fetchAllProperties() {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) {
+          setError(error.message);
+          setAllProperties([]);
+        } else if (mounted) {
+          setAllProperties((data as Property[]) || []);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch properties');
+        setAllProperties([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAllProperties();
+    return () => { mounted = false; };
+  }, []);
+  // --- End fetch all properties ---
+
   // --- Memoized filtered lists ---
   const preferredProperties = useMemo(() => {
     if (!hasActiveFilters(activeFilters)) return [];
@@ -269,17 +298,28 @@ const PropertiesSection = () => {
   }
   // --- End filter helpers ---
 
-  // --- Filter change handler ---
-  const handleFilterChange = useCallback((filters: Record<string, string>) => {
-    setActiveFilters({
-      minPrice: filters.minPrice || '',
-      maxPrice: filters.maxPrice || '',
-      bedrooms: filters.bedrooms || '',
-      location: filters.location || ''
-    });
-    setIsFilterOpen(false);
-  }, []);
-  // --- End filter handler ---
+  // Debounce utility
+  function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
+    let timer: NodeJS.Timeout;
+    return ((...args: any[]) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    }) as T;
+  }
+
+  // Use debounce for filter changes
+  const handleFilterChange = useCallback(
+    debounce((filters: Record<string, string>) => {
+      setActiveFilters({
+        minPrice: filters.minPrice || '',
+        maxPrice: filters.maxPrice || '',
+        bedrooms: filters.bedrooms || '',
+        location: filters.location || ''
+      });
+      setIsFilterOpen(false);
+    }, 400),
+    []
+  );
 
   // --- Clear filters ---
   const clearFilters = useCallback(() => {
@@ -376,14 +416,16 @@ const PropertiesSection = () => {
               )}
             </div>
           </div>
+          {/* --- FIX: Show Preferences carousel if filters are active --- */}
           <Preferences 
-            preferredProperties={[]} // You may want to refactor Preferences to fetch its own data, or pass filtered data if needed
-            hasActiveFilters={false}
-            clearFilters={() => {}}
+            preferredProperties={preferredProperties}
+            hasActiveFilters={hasActiveFilters(activeFilters)}
+            clearFilters={clearFilters}
           />
-          <RecentlyAdded />
-          <AvailableProperties />
-          <RentedProperties />
+          <MessagedProperties messagedProperties={messagedProperties} />
+          <RecentlyAdded allProperties={allProperties} loading={loading} />
+          <AvailableProperties allProperties={allProperties} loading={loading} />
+          <RentedProperties allProperties={allProperties} loading={loading} />
         </motion.div>
       </div>
     </section>
