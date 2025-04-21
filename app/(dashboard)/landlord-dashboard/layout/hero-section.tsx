@@ -47,7 +47,10 @@ const HeroSection = () => {
         }`}
       />
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div
+        className="container mx-auto px-6 relative z-10"
+        style={{ minHeight: "600px" }} // Reserve space to avoid layout shift
+      >
         {isLoading ? (
           <div className="text-center max-w-4xl mx-auto">
             {/* Loading skeleton */}
@@ -125,17 +128,16 @@ const HeroSection = () => {
                 }`}
               >
                 <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
-                  <div className="absolute inset-0 z-10">
-                    <Image 
-                      src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF" 
-                      alt="Featured Property"
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 788px) 100vw, (min-width: 788px) 50vw"
-                      priority={true}
-                      
-                    />
-                  </div>
+                  <Image 
+                    src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF" 
+                    alt="Featured Property"
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 788px) 100vw, (min-width: 788px) 50vw"
+                    placeholder="blur"
+                    blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
+                  />
                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
                   
                   {/* Available indicator with green dot - replacing New Listing badge */}

@@ -18,6 +18,8 @@ import { toast } from "@/app/(dashboard)/tenant-dashboard/hooks/use-toast";
 
 // Dynamically import rarely-used filter UI
 const PropertyFilters = dynamic(() => import('../navigation/Filter'), { ssr: false });
+const PropertyDetailModal = dynamic(() => import('./PropertyDetail'), { ssr: false });
+const TenantMessage = dynamic(() => import('./message/messageProperty'), { ssr: false });
 
 const CACHE_KEY = 'property_cache';
 const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes
@@ -69,6 +71,9 @@ const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } }
 };
+
+// Memoized PropertyCard import (already memoized in property-layout/PropertyCard.tsx)
+import { PropertyCard } from './property-layout/PropertyCard';
 
 const PropertiesSection = () => {
   // ...existing code...
@@ -199,6 +204,17 @@ const PropertiesSection = () => {
   const rentedProperties = useMemo(() => (
     allProperties.filter(p => p.status === 'rented' || p.available === false).slice(0, MAX_RENTED_PROPERTIES)
   ), [allProperties]);
+
+  const filteredProperties = useMemo(() => {
+    if (!hasActiveFilters(activeFilters)) return allProperties;
+    return applyFiltersToProperties(allProperties, activeFilters);
+  }, [allProperties, activeFilters]);
+
+  const paginatedProperties = useMemo(() => {
+    const start = 0;
+    const end = start + PAGE_SIZE;
+    return filteredProperties.slice(start, end);
+  }, [filteredProperties]);
 
   // --- End memoized lists ---
 
@@ -380,6 +396,23 @@ const PropertiesSection = () => {
           animate="visible"
           variants={fadeIn}
         >
+          {/* Error Handling UI */}
+          {error && (
+            <div className="mb-8 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-200 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                <span>
+                  Failed to load properties. Please try refreshing the page or check your connection.
+                </span>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                >
+                  Reload Page
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white">Discover Properties</h2>
             <div className="flex items-center gap-2">

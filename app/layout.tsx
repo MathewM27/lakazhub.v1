@@ -32,6 +32,7 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        {/* Remove manual CSS preload for /app/layout.css */}
       </head>
       <body className="antialiased">
         {children}

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import ClientWrapper from './client-wrapper';
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: 'LakazHub | Tenant Dashboard',

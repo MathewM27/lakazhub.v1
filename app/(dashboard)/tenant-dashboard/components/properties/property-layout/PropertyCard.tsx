@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare, Building, Calendar
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
+import dynamic from "next/dynamic";
+import Image from "next/image";
 
-import PropertyDetailModal from '../PropertyDetail';
-import TenantMessage from '../message/messageProperty';
+// Dynamically import modals
+const PropertyDetailModal = dynamic(() => import('../PropertyDetail'), { ssr: false });
+const TenantMessage = dynamic(() => import('../message/messageProperty'), { ssr: false });
 
 // Update Property interface to match landlord implementation but keep UI fields
 export interface Property {
@@ -61,7 +64,7 @@ interface PropertyCarouselProps {
 }
 
 // Individual Property Card Component
-const PropertyCard = ({ property, disableInteractions = false, customBadge }: PropertyCardProps) => {
+const PropertyCard = React.memo(({ property, disableInteractions = false, customBadge }: PropertyCardProps) => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
 
@@ -99,11 +102,18 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
         }`}
       >
         {/* Image Container - Updated to match landlord style */}
-        <div className="relative aspect-[16/9] overflow-hidden">
-          <div 
-            className="w-full h-full bg-cover bg-center transition-all duration-500 hover:scale-105" 
-            style={{ backgroundImage: `url(${imageUrl})` }}
-          ></div>
+        <div className="relative aspect-[16/9] overflow-hidden min-h-[180px]">
+          <Image
+            src={imageUrl}
+            alt={property.name}
+            fill
+            className="object-cover transition-all duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 320px"
+            priority={false}
+            // Optionally add blurDataURL for placeholder
+            // placeholder="blur"
+            // blurDataURL="/images/placeholder-blur.jpg"
+          />
           
           {/* Status Badge - Top left */}
           <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
@@ -213,7 +223,8 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
 
       {/* Only render modals if interactions are enabled - Keep existing modal implementation */}
       {!disableInteractions && (
-        <>
+        <div style={{ minHeight: 0 }}>
+          {/* Pre-allocate space for modals to reduce CLS */}
           <PropertyDetailModal
             property={property}
             open={detailModalOpen}
@@ -226,11 +237,11 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
             onOpenChangeAction={setMessageModalOpen}
             property={property as unknown as Record<string, unknown>} // Fix type error
           />
-        </>
+        </div>
       )}
     </>
   );
-};
+});
 
 // Property Carousel Component
 const PropertyCarousel = ({

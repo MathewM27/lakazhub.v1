@@ -54,6 +54,12 @@ export async function updateSession(request: NextRequest, skipSessionCheck = fal
     }
   );
 
+  // Only set no-store for API/data, not for main HTML
+  // Example:
+  // if (request.nextUrl.pathname.startsWith('/api/')) {
+  //   response.headers.set('Cache-Control', 'no-store');
+  // }
+
   // If public path, allow access without checking user
   if (isPublicPath(request.nextUrl.pathname)) {
     return supabaseResponse;

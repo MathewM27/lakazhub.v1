@@ -30,7 +30,7 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-[90vh] py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
+    <section className="relative min-h-screen py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
      
 
       <div className="container mx-auto relative z-10">
@@ -110,13 +110,16 @@ const HeroSection = () => {
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
               >
-                <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
+                {/* Explicit aspect ratio and min-height for image container */}
+                <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0 min-h-[320px]">
                   <div className="absolute inset-0 z-10">
                     <Image 
                       src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rtck9gM4M5F0Eg9U6YQvHh2Gnc1e3Wr4dbuLj" 
                       alt="Featured Property"
                       fill
                       className="object-cover"
+                      priority
+                      sizes="(max-width: 768px) 100vw, 400px"
                     />
                   </div>
                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
@@ -139,8 +142,8 @@ const HeroSection = () => {
                   <div className="absolute bottom-20 left-4 w-2 h-2 rounded-full bg-white/40"></div>
                   <div className="absolute bottom-16 left-8 w-1 h-1 rounded-full bg-white/30"></div>
                   
-                  {/* Property info */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 z-30">
+                  {/* Pre-allocate space for property info overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 z-30 min-h-[70px]">
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-lg font-bold text-white">Modern Lakeside Apartment</h3>

@@ -2,16 +2,19 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import PropertyModal from './modals/property-modal-details';
-import AvailabilityModal from './modals/availability-modal';
-import NotificationModal from './modals/notification-modal';
 import { useToast } from '../../tenant-dashboard/hooks/use-toast';
 import Header from "../navigation/header";
 import { DashboardContent } from './dashboard-content';
-import SuccessModal from "./modals/success-modal";
 import { useAuth } from '../auth/AuthHandler';
 import { Property } from "../types";
+
+// Dynamically import modals to reduce initial JS bundle
+const PropertyModal = dynamic(() => import('./modals/property-modal-details'), { ssr: false, loading: () => null });
+const AvailabilityModal = dynamic(() => import('./modals/availability-modal'), { ssr: false, loading: () => null });
+const NotificationModal = dynamic(() => import('./modals/notification-modal'), { ssr: false, loading: () => null });
+const SuccessModal = dynamic(() => import('./modals/success-modal'), { ssr: false, loading: () => null });
 
 export default function LandlordDashboard() {
   const { user, profile, isAuthenticating, isAuthenticated, hasCorrectRole, signOut } = useAuth();
@@ -116,41 +119,46 @@ export default function LandlordDashboard() {
         onAddNewPropertyAction={handleAddNewProperty}
         onRefreshNeeded={handleRefreshNeeded}
       />
-      
-      <PropertyModal
-        open={detailsModalOpen}
-        onOpenChangeAction={setDetailsModalOpen}
-        property={selectedProperty}
-        // Instead of auto-refresh, just show the banner
-        onSuccess={
-          // Call setRefreshNeeded in DashboardContent via a custom event
-          () => {
+
+      {/* Only render modals when needed */}
+      {detailsModalOpen && (
+        <PropertyModal
+          open={detailsModalOpen}
+          onOpenChangeAction={setDetailsModalOpen}
+          property={selectedProperty}
+          onSuccess={() => {
             const event = new CustomEvent("propertyChanged");
             window.dispatchEvent(event);
-          }
-        }
-      />
-      
-      <AvailabilityModal
-        open={availabilityModalOpen}
-        onOpenChangeAction={setAvailabilityModalOpen}
-        property={selectedProperty}
-        onUpdate={refreshProperties}
-      />
-      
-      <NotificationModal
-        open={notificationsModalOpen}
-        onOpenChangeAction={setNotificationsModalOpen}
-        property={selectedProperty}
-      />
+          }}
+        />
+      )}
 
-      <SuccessModal
-        open={successModalOpen}
-        onOpenChangeAction={setSuccessModalOpen}
-        title={successModalProps.title}
-        message={successModalProps.message}
-        autoClose={true}
-      />
+      {availabilityModalOpen && (
+        <AvailabilityModal
+          open={availabilityModalOpen}
+          onOpenChangeAction={setAvailabilityModalOpen}
+          property={selectedProperty}
+          onUpdate={refreshProperties}
+        />
+      )}
+
+      {notificationsModalOpen && (
+        <NotificationModal
+          open={notificationsModalOpen}
+          onOpenChangeAction={setNotificationsModalOpen}
+          property={selectedProperty}
+        />
+      )}
+
+      {successModalOpen && (
+        <SuccessModal
+          open={successModalOpen}
+          onOpenChangeAction={setSuccessModalOpen}
+          title={successModalProps.title}
+          message={successModalProps.message}
+          autoClose={true}
+        />
+      )}
     </div>
   );
 }

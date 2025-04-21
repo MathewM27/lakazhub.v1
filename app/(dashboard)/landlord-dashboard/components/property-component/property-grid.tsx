@@ -10,7 +10,13 @@ import { PropertyCache } from "../../lib/utils/cache/propertyCache"; // Add this
 import { useToast } from "../../hooks/use-toast";
 // Dynamic import for rarely-used modal
 import dynamic from "next/dynamic";
+
+// Dynamically import modals/dialogs
 const NotificationsModal = dynamic(() => import("../modals/notification-modal"), { ssr: false });
+const SuccessModal = dynamic(() => import("../modals/success-modal"), { ssr: false });
+const AvailabilityModal = dynamic(() => import("../modals/availability-modal"), { ssr: false });
+const PropertyOnboarding = dynamic(() => import("../modals/property-modal/PropertyOnboarding"), { ssr: false });
+// ...add other modals/dialogs as needed...
 
 interface PropertyGridProps {
   onPropertyDetailsAction: (property: Property) => void;

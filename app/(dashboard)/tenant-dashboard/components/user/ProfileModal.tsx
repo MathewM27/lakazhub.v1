@@ -50,7 +50,7 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="sm:max-w-md rounded-xl border border-white/20 bg-black text-white shadow-2xl overflow-y-auto"
+        className="sm:max-w-md rounded-xl border border-white/20 bg-black text-white shadow-2xl overflow-y-auto min-h-[400px]"
         style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}
       >
         <DialogHeader className="relative">
@@ -65,7 +65,7 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
             </Button>
           </div>
           <div className="flex items-center justify-center mb-2">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold shadow-lg border-2 border-white/20">
+            <div className="h-16 w-16 min-h-[64px] min-w-[64px] rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-xl font-bold shadow-lg border-2 border-white/20">
               {contextProfile?.full_name?.[0] || user?.user_metadata?.full_name?.[0] || user?.email?.[0] || 'T'}
             </div>
           </div>

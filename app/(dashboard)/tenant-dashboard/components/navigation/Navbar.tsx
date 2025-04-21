@@ -26,12 +26,15 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/utils/lib/utils";
 import { cva } from "class-variance-authority";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ProfileModal from "../user/ProfileModal";
+import dynamic from "next/dynamic";
 import { supabase } from "../../utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useAuth } from "../../auth/AuthHandler";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+
+// Replace static import with dynamic import
+const ProfileModal = dynamic(() => import("../user/ProfileModal"), { ssr: false });
 
 // Create a custom SheetContent component that properly handles children
 const sheetVariants = cva(
@@ -262,6 +265,7 @@ const Navigation = () => {
                         ? "bg-black/90 backdrop-blur-md shadow-md border-b border-white/10" 
                         : "bg-transparent border-b border-white/20"
                 }`}
+                style={{ minHeight: 56 }} // Pre-allocate nav height (e.g., 56px)
             >
                 <div className="container mx-auto flex w-full items-center justify-between  py-3">
                     <div className="flex items-center">
@@ -517,10 +521,10 @@ const Navigation = () => {
             
             {/* Notifications Modal for Mobile - Updated with ref */}
             {isNotificationsModalOpen && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center min-h-screen">
                     <div 
                         ref={notificationsModalRef}
-                        className="bg-black/95 border border-white/20 rounded-xl w-[90%] max-w-md max-h-[80vh] overflow-auto"
+                        className="bg-black/95 border border-white/20 rounded-xl w-[90%] max-w-md max-h-[80vh] overflow-auto min-h-[300px]"
                     >
                         <div className="p-4 border-b border-white/10">
                             <div className="flex justify-between items-center">

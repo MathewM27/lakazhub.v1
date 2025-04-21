@@ -52,3 +52,5 @@ export const BackgroundPattern = () => {
     </div>
   );
 };
+
+// Optionally, only render this after main content is loaded

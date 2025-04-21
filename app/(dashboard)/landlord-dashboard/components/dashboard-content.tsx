@@ -6,12 +6,16 @@ import PropertyGrid from './property-component/property-grid';
 import HeroSection from "../layout/hero-section";
 import { Footer } from "../navigation/footer";
 import { Property } from "../types";
-import CacheMonitor from './cache-monitor';
 import { PropertyCache } from "../lib/utils/cache/propertyCache";
 
-// Dynamically import OtherProperties for performance
+
+// Dynamically import heavy/rarely-used components at the top-level
 const OtherProperties = dynamic(() => import("../layout/other-properties"), {
   loading: () => <div className="text-white/70 py-12 text-center">Loading analytics...</div>,
+  ssr: false,
+});
+const CacheMonitor = dynamic(() => import("./cache-monitor"), {
+  loading: () => <div className="text-white/70 py-12 text-center">Loading cache monitor...</div>,
   ssr: false,
 });
 

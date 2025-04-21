@@ -23,8 +23,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "../lib/utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import NotificationsModal from "../components/modals/notification-modal";
-import ProfileModal from "./ProfileModal"; // Import ProfileModal
+import dynamic from "next/dynamic";
+
+// Replace static imports with dynamic imports
+const ProfileModal = dynamic(() => import("./ProfileModal"), { ssr: false });
+const NotificationsModal = dynamic(() => import("../components/modals/notification-modal"), { ssr: false });
+
 import { format, formatDistanceToNow } from "date-fns";
 
 // Add at the top of the file
