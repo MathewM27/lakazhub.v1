@@ -20,7 +20,7 @@ import { toast } from "@/app/(dashboard)/tenant-dashboard/hooks/use-toast";
 const PropertyFilters = dynamic(() => import('../navigation/Filter'), { ssr: false });
 
 const CACHE_KEY = 'property_cache';
-const CACHE_EXPIRY = 1000 * 60 * 15;
+const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes
 const PAGE_SIZE = 10;
 const MAX_RENTED_PROPERTIES = 15;
 const MIN_FILTERED_RESULTS = 5;
@@ -79,35 +79,99 @@ const PropertiesSection = () => {
   const [activeFilters, setActiveFilters] = useState({ minPrice: '', maxPrice: '', bedrooms: '', location: '' });
   const [userId, setUserId] = useState<string | null>(null);
   const [messagedProperties, setMessagedProperties] = useState<Property[]>([]);
+  const [isUsingCache, setIsUsingCache] = useState(false);
 
-  // --- Fetch all properties in parent ---
+  // --- Property cache helpers ---
+  function loadPropertiesFromCache(): Property[] | null {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      const { data, timestamp } = JSON.parse(cached);
+      if (!data || !timestamp) return null;
+      if (Date.now() - timestamp > CACHE_EXPIRY) return null;
+      return data as Property[];
+    } catch {
+      return null;
+    }
+  }
+  function savePropertiesToCache(data: Property[]) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch {}
+  }
+  function clearPropertiesCache() {
+    try {
+      localStorage.removeItem(CACHE_KEY);
+    } catch {}
+  }
+  // --- End cache helpers ---
+
+  // --- Fetch all properties with cache ---
+  const fetchAllProperties = useCallback(async (forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let useCache = !forceRefresh;
+      let cached = null;
+      if (useCache) {
+        cached = loadPropertiesFromCache();
+        if (cached && Array.isArray(cached)) {
+          setAllProperties(cached);
+          setIsUsingCache(true); // <-- Set cache indicator
+          setLoading(false);
+          // Stale-while-revalidate: fetch in background
+          (async () => {
+            const { data, error } = await supabase
+              .from('properties')
+              .select('*')
+              .order('created_at', { ascending: false });
+            if (!error && data && Array.isArray(data)) {
+              setAllProperties(data as Property[]);
+              setIsUsingCache(false); // <-- Reset cache indicator
+              savePropertiesToCache(data as Property[]);
+            }
+          })();
+          return;
+        }
+      }
+      // No valid cache, fetch from Supabase
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        setError(error.message);
+        setAllProperties([]);
+        clearPropertiesCache();
+        setIsUsingCache(false);
+      } else {
+        setAllProperties((data as Property[]) || []);
+        setIsUsingCache(false);
+        savePropertiesToCache((data as Property[]) || []);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch properties');
+      setAllProperties([]);
+      clearPropertiesCache();
+      setIsUsingCache(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  // --- End fetch all properties with cache ---
+
+  // --- useEffect: fetch user and properties on mount ---
   useEffect(() => {
     let mounted = true;
-    async function fetchAllProperties() {
-      setLoading(true);
-      setError(null);
-      try {
-        const { data, error } = await supabase
-          .from('properties')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (error) {
-          setError(error.message);
-          setAllProperties([]);
-        } else if (mounted) {
-          setAllProperties((data as Property[]) || []);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch properties');
-        setAllProperties([]);
-      } finally {
-        setLoading(false);
-      }
+    async function getUserAndProperties() {
+      const { data } = await supabase.auth.getUser();
+      if (mounted && data?.user) setUserId(data.user.id);
+      fetchAllProperties();
     }
-    fetchAllProperties();
+    getUserAndProperties();
     return () => { mounted = false; };
-  }, []);
-  // --- End fetch all properties ---
+  }, [fetchAllProperties]);
+  // --- End useEffect ---
 
   // --- Memoized filtered lists ---
   const preferredProperties = useMemo(() => {
@@ -285,8 +349,8 @@ const PropertiesSection = () => {
 
   // --- Refresh handler ---
   const refreshProperties = useCallback(() => {
-   
-  }, []);
+    fetchAllProperties(true); // force refresh, ignore cache
+  }, [fetchAllProperties]);
   // --- End refresh ---
 
   // --- Conversation update event listener ---
@@ -319,6 +383,15 @@ const PropertiesSection = () => {
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white">Discover Properties</h2>
             <div className="flex items-center gap-2">
+              {/* Visual indicator for cache */}
+              {/* 
+              {isUsingCache && (
+                <span className="flex items-center px-2 py-1 bg-yellow-900/80 text-yellow-300 text-xs rounded-full mr-2">
+                  <svg className="h-3 w-3 mr-1 fill-yellow-300" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" /></svg>
+                  Using cached data
+                </span>
+              )}
+              */}
               <button
                 onClick={refreshProperties}
                 className="md:ml-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-white transition hidden md:flex items-center gap-1.5"
