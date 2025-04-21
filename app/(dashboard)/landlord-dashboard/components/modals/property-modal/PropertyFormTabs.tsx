@@ -215,11 +215,6 @@ export default function PropertyFormTabs({
         PropertyCache.markPropertyUpdated(property.id);
       }
       
-      // Call the onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-      
     } catch {
       toast({
         title: "Submission Error",

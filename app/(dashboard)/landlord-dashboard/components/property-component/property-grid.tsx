@@ -17,6 +17,9 @@ interface PropertyGridProps {
   onAvailabilityAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
   onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
+  // Add these props for refresh indicator
+  refreshNeeded?: boolean;
+  onRefreshClear?: () => void;
 }
 
 const PAGE_SIZE = 9;
@@ -25,7 +28,9 @@ export default function PropertyGrid({
   onPropertyDetailsAction, 
   onAvailabilityAction, 
   onAddNewPropertyAction,
-  onRefreshNeeded 
+  onRefreshNeeded,
+  refreshNeeded = false,
+  onRefreshClear
 }: PropertyGridProps) {
   const { properties, loading, error, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
@@ -36,21 +41,18 @@ export default function PropertyGrid({
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Memoized refresh handler
-  const handleRefresh = useCallback(() => {
-    refreshProperties().then(() => {
+  // Handler for improved refresh button (clear cache, then refresh)
+  const handleRefresh = useCallback(async () => {
+    PropertyCache.clearCache();
+    setTimeout(async () => {
+      await refreshProperties();
+      if (onRefreshClear) onRefreshClear();
       toast({
         title: "Properties refreshed",
         description: "Your property list has been updated.",
       });
-    }).catch(err => {
-      toast({
-        title: "Refresh failed",
-        description: err.message || "Could not refresh properties",
-        variant: "destructive",
-      });
-    });
-  }, [refreshProperties, toast]);
+    }, 200);
+  }, [refreshProperties, onRefreshClear, toast]);
 
   // Memoized delete handler - update to use direct Supabase
   const handleDeleteProperty = useCallback(async (propertyId: string) => {
@@ -155,15 +157,37 @@ export default function PropertyGrid({
                 View and manage all your properties in one place with real-time information
               </p>
             </div>
-            
-            {/* Refresh button - Keeping only this button */}
+            {/* Improved Refresh Button with Glow and Animation */}
             <div className="mt-6 md:mt-0">
               <button
-                onClick={handleRefresh} 
-                className="px-4 py-2 text-sm rounded-full transition-all duration-300 bg-white/10 text-white/70 hover:bg-white/20 opacity-0 translate-y-2 animate-fade-in-up animation-delay-300 flex items-center gap-2"
+                onClick={handleRefresh}
+                className={
+                  `px-4 py-2 text-sm rounded-full transition-all duration-300 flex items-center gap-2
+                  bg-white/10 text-white/70 hover:bg-white/20
+                  ${refreshNeeded ? "shadow-[0_0_16px_4px_rgba(34,197,94,0.5)] ring-2 ring-green-400/80 animate-glow" : ""}
+                  `
+                }
+                style={{
+                  position: "relative",
+                  outline: refreshNeeded ? "2px solid #22c55e" : undefined,
+                }}
+                title={refreshNeeded ? "New property added or updated. Click to refresh your list." : "Refresh property list"}
               >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
+                <span className="relative flex items-center">
+                  <RefreshCw
+                    className={`w-4 h-4 transition-transform duration-500
+                      ${refreshNeeded ? "animate-spin-slow text-green-400" : ""}
+                    `}
+                  />
+                </span>
+                <span className={refreshNeeded ? "text-green-400 font-semibold" : ""}>
+                  Refresh
+                </span>
+                {refreshNeeded && (
+                  <span className="ml-2 text-xs text-green-400 animate-pulse">
+                    New changes!
+                  </span>
+                )}
               </button>
             </div>
           </div>

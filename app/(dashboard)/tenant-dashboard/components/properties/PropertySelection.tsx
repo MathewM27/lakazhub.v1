@@ -551,7 +551,8 @@ const PropertiesSection = () => {
                   />
                 </div>
               )}
-              <RentedProperties rentedProperties={rentedProperties} />
+              {/* Always show rented properties carousel below messaged properties */}
+              <RentedProperties />
               {allProperties.length === 0 && !loading && (
                 <div className="text-center py-16 bg-white/5 rounded-xl border border-white/10">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">

@@ -26,6 +26,7 @@ export default function LandlordDashboard() {
     message: "",
   });
   const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
+  const [refreshBanner, setRefreshBanner] = useState(false);
 
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
@@ -52,6 +53,7 @@ export default function LandlordDashboard() {
 
   // Handler for refreshing properties - store the refresh function
   const handleRefreshNeeded = useCallback((refreshFn: () => Promise<Property[] | void>) => {
+    console.log("[LandlordDashboard] Storing refreshProperties function from child.");
     refreshPropertiesRef.current = refreshFn;
   }, []);
 
@@ -59,13 +61,22 @@ export default function LandlordDashboard() {
   const refreshProperties = async () => {
     if (refreshPropertiesRef.current) {
       try {
+        console.log("[LandlordDashboard] Calling refreshProperties...");
         await refreshPropertiesRef.current();
+        console.log("[LandlordDashboard] refreshProperties completed.");
       } catch (error) {
-        console.error("Failed to refresh properties:", error);
+        console.error("[LandlordDashboard] Failed to refresh properties:", error);
       }
+    } else {
+      console.warn("[LandlordDashboard] refreshPropertiesRef.current is null!");
     }
   };
   
+  // Handler to show refresh banner after property add/update
+  const handlePropertyChanged = useCallback(() => {
+    setRefreshBanner(true);
+  }, []);
+
   // Function to render the welcome screen
   const renderWelcomeScreen = (message = "Your landlord dashboard is loading...") => {
     return <LoadingScreen message={message} />;
@@ -110,7 +121,14 @@ export default function LandlordDashboard() {
         open={detailsModalOpen}
         onOpenChangeAction={setDetailsModalOpen}
         property={selectedProperty}
-        onSuccess={handleSuccessAction}
+        // Instead of auto-refresh, just show the banner
+        onSuccess={
+          // Call setRefreshNeeded in DashboardContent via a custom event
+          () => {
+            const event = new CustomEvent("propertyChanged");
+            window.dispatchEvent(event);
+          }
+        }
       />
       
       <AvailabilityModal

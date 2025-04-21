@@ -7,6 +7,7 @@ import HeroSection from "../layout/hero-section";
 import { Footer } from "../navigation/footer";
 import { Property } from "../types";
 import CacheMonitor from './cache-monitor';
+import { PropertyCache } from "../lib/utils/cache/propertyCache";
 
 // Dynamically import OtherProperties for performance
 const OtherProperties = dynamic(() => import("../layout/other-properties"), {
@@ -18,7 +19,7 @@ interface DashboardContentProps {
   onPropertyDetailsAction: (property: Property) => void;
   onAvailabilityAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
-  onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void; // Added this prop to match what's being passed
+  onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
 }
 
 export function DashboardContent({
@@ -28,14 +29,37 @@ export function DashboardContent({
   onRefreshNeeded
 }: DashboardContentProps) {
   const [refreshFunction, setRefreshFunction] = useState<() => Promise<Property[] | void>>();
-  
+  const [refreshNeeded, setRefreshNeeded] = useState(false);
+
   const handleRefreshNeeded = useCallback((refreshFn: () => Promise<Property[] | void>) => {
     setRefreshFunction(() => refreshFn);
-    // Call the parent component's onRefreshNeeded function if provided
     if (onRefreshNeeded) {
       onRefreshNeeded(refreshFn);
     }
   }, [onRefreshNeeded]);
+
+  // Listen for propertyChanged event to show the refresh indicator
+  useEffect(() => {
+    const handler = () => setRefreshNeeded(true);
+    window.addEventListener("propertyChanged", handler);
+    return () => window.removeEventListener("propertyChanged", handler);
+  }, []);
+
+  // Handler to be called after property add/update
+  const handlePropertyChanged = useCallback(() => {
+    setRefreshNeeded(true);
+  }, []);
+
+  // Handler for refresh button (not used here, but kept for completeness)
+  const handleRefresh = useCallback(async () => {
+    PropertyCache.clearCache();
+    setTimeout(async () => {
+      if (refreshFunction) {
+        await refreshFunction();
+        setRefreshNeeded(false);
+      }
+    }, 200);
+  }, [refreshFunction]);
 
   return (
     <div className="flex-1">
@@ -47,6 +71,8 @@ export function DashboardContent({
           onAvailabilityAction={onAvailabilityAction}
           onAddNewPropertyAction={onAddNewPropertyAction}
           onRefreshNeeded={handleRefreshNeeded}
+          refreshNeeded={refreshNeeded}
+          onRefreshClear={() => setRefreshNeeded(false)}
         />
       </section>
       <section className="container mx-auto px-4 py-12">

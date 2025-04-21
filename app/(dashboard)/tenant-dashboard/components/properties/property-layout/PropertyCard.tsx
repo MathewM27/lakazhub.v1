@@ -92,7 +92,7 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
     <>
       <div 
         className={`h-full group bg-black border border-white/10 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-          disableInteractions ? 'opacity-80' : ''
+          disableInteractions ? 'opacity-80 pointer-events-none select-none' : ''
         }`}
       >
         {/* Image Container - Updated to match landlord style */}
@@ -110,8 +110,16 @@ const PropertyCard = ({ property, disableInteractions = false, customBadge }: Pr
                 {property.availability}
               </span>
             </div>
-            
-            {/* Coming soon / next available date badge */}
+            {/* Show next_available_date for rented properties */}
+            {property.availability === 'Rented' && property.next_available_date && (
+              <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2.5 py-0.5 rounded-full ml-1">
+                <Calendar className="w-2.5 h-2.5 text-white/70" />
+                <span className="text-white text-[11px] font-medium">
+                  {new Date(property.next_available_date).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+            {/* Coming soon badge remains unchanged */}
             {property.availability === 'Coming Soon' && property.next_available_date && (
               <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2.5 py-0.5 rounded-full ml-1">
                 <Calendar className="w-2.5 h-2.5 text-white/70" />

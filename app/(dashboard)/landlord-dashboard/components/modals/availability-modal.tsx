@@ -100,7 +100,8 @@ export default function AvailabilityModal({
     if (!property?.id) return;
     
     setSaving(true);
-    
+    console.log("[AvailabilityModal] Saving availability for property:", property.id, "Status:", availabilityStatus, "Next date:", nextAvailableDate);
+
     try {
       // Prepare the update data
       const isAvailable = availabilityStatus === "available";
@@ -135,11 +136,10 @@ export default function AvailabilityModal({
       // Update the property in cache
       if (data) {
         // Update the property in cache
+        console.log("[AvailabilityModal] Marking property updated in cache...", property.id);
         PropertyCache.markPropertyUpdated(property.id);
         PropertyCache.setProperty(data);
-        
-        // Log the cache update
-        console.log(`[AVAILABILITY] Updated property ${property.id} in cache with new availability: ${isAvailable ? 'Available' : 'Rented'}`);
+        console.log("[AvailabilityModal] Property updated in cache and setProperty called.");
       }
       
       toast({
@@ -149,13 +149,16 @@ export default function AvailabilityModal({
       
       // Call the update callback if provided
       if (onUpdate) {
-        onUpdate();
+        console.log("[AvailabilityModal] Calling onUpdate to refresh properties...");
+        await onUpdate();
+        console.log("[AvailabilityModal] onUpdate (refresh) completed.");
       }
       
       // Close the modal
       onOpenChangeAction(false);
+      console.log("[AvailabilityModal] Modal closed after save.");
     } catch (error) {
-      console.error('Error updating availability:', error);
+      console.error('[AvailabilityModal] Error updating availability:', error);
       toast({
         title: "Update failed",
         description: "There was an error updating the property availability.",
@@ -163,6 +166,7 @@ export default function AvailabilityModal({
       });
     } finally {
       setSaving(false);
+      console.log("[AvailabilityModal] Save availability finished.");
     }
   };
 

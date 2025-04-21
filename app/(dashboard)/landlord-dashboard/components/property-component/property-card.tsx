@@ -70,8 +70,13 @@ export default function PropertyCard({
           .eq('is_archived', false);
 
         if (unreadError) {
-          // Log error but continue execution
-          console.error('Error fetching unread count:', unreadError);
+          // Only log if there is a real error message
+          if (unreadError.message) {
+            console.error('Error fetching unread count:', unreadError.message);
+          } else {
+            // Optionally, comment out or remove this line to avoid empty error logs
+            // console.error('Error fetching unread count');
+          }
           return;
         }
 

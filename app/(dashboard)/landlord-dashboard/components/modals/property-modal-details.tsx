@@ -74,7 +74,8 @@ export default function PropertyModal({
   const handleSubmit = async (formData: FormData, imageUrls: string[]) => {
     try {
       setIsSubmitting(true)
-      
+      console.log("[PropertyModal] Submitting property form data...", { formData, imageUrls });
+
       // Get current user session for landlord_id
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -109,6 +110,7 @@ export default function PropertyModal({
       
       try {
         if (property?.id) {
+          console.log("[PropertyModal] Updating existing property...", property.id, propertyData);
           // Update existing property
           const { error: updateError } = await supabase
             .from('properties')
@@ -120,6 +122,7 @@ export default function PropertyModal({
           }
           
           // Update cache
+          console.log("[PropertyModal] Marking property updated in cache...", property.id);
           PropertyCache.markPropertyUpdated(property.id)
           
         } else {
@@ -128,7 +131,7 @@ export default function PropertyModal({
             ...propertyData,
             created_at: new Date().toISOString(),
           }
-          
+          console.log("[PropertyModal] Creating new property...", createData);
           const { error: createError } = await supabase
             .from('properties')
             .insert(createData)
@@ -138,22 +141,28 @@ export default function PropertyModal({
           }
           
           // Invalidate properties list cache
+          console.log("[PropertyModal] Clearing properties cache after create...");
           PropertyCache.setProperties([], undefined)
         }
-        
+
         // Success notification
         toast({
           title: "Success", 
           description: property?.id ? "Property updated successfully" : "Property created successfully"
         })
-        
-        // Call success callback to refresh the property list
+
+        // Add a small delay to ensure cache is cleared before refresh
         if (onSuccess) {
-          onSuccess()
+          console.log("[PropertyModal] Waiting before calling onSuccess to refresh properties...");
+          await new Promise(res => setTimeout(res, 150));
+          console.log("[PropertyModal] Calling onSuccess to refresh properties...");
+          await onSuccess();
+          console.log("[PropertyModal] onSuccess (refresh) completed.");
         }
         
-        // Close the modal
-        onOpenChangeAction(false)
+        // Only close the modal after refresh is complete
+        onOpenChangeAction(false);
+        console.log("[PropertyModal] Modal closed after save.");
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
@@ -162,6 +171,7 @@ export default function PropertyModal({
           description: `Failed to save property details: ${errorMessage}`,
           variant: "destructive"
         })
+        console.error("[PropertyModal] Error in DB operation:", errorMessage);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -170,8 +180,10 @@ export default function PropertyModal({
         description: `An unexpected error occurred: ${errorMessage}`,
         variant: "destructive"
       })
+      console.error("[PropertyModal] Unexpected error:", errorMessage);
     } finally {
       setIsSubmitting(false)
+      console.log("[PropertyModal] Submission finished.");
     }
   }
 
@@ -200,6 +212,7 @@ export default function PropertyModal({
             property={getPropertyDataForForm()} 
             onSubmit={handleSubmit} 
             isSubmitting={isSubmitting} 
+            onSuccess={onSuccess}
           />
         )}
       </DialogContent>

@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { PropertyCache, CacheStats } from '../lib/utils/cache/propertyCache';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Pie, PieChart, Cell, Legend, Tooltip } from 'recharts';
 import { Shield, Clock, Database, PieChart as PieChartIcon, ListFilter } from 'lucide-react';
+import { useToast } from "../hooks/use-toast";
 
 export const CacheMonitor = () => {
   const [stats, setStats] = useState<CacheStats>(PropertyCache.getCacheStats());
   const [expanded, setExpanded] = useState(false);
+  const { toast } = useToast();
   
   // Instead of checking for API URL, check for Supabase URL which is more important
   const supabaseUrlMissing = !process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -84,7 +86,7 @@ export const CacheMonitor = () => {
       title: "Cache Cleared",
       description: "The property cache has been cleared.",
     });
-  }, []);
+  }, [toast]);
 
   // If not expanded, show minimal stats in fixed footer
   if (!expanded) {
@@ -227,7 +229,4 @@ export const CacheMonitor = () => {
 };
 
 export default CacheMonitor;
-function toast(arg0: { title: string; description: string; }) {
-    throw new Error('Function not implemented.');
-}
 
