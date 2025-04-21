@@ -160,76 +160,35 @@ const PropertiesSection = () => {
       return;
     }
     try {
-      const CONVERSATIONS_CACHE_KEY = `conversations-${uid}`;
-      let conversationsData: Array<{ property_id: string }> | null = null;
-
-      try {
-        const cachedConversationsData = localStorage.getItem(CONVERSATIONS_CACHE_KEY);
-        if (cachedConversationsData) {
-          const parsedData = JSON.parse(cachedConversationsData);
-          if (parsedData?.data && Array.isArray(parsedData.data)) {
-            conversationsData = parsedData.data;
-          }
-        }
-      } catch {}
-
-      if (!conversationsData) {
-        const { data, error } = await supabase
-          .from('property_conversations')
-          .select('id, property_id, tenant_id, landlord_id')
-          .eq('tenant_id', uid);
-        if (error) {
-          setMessagedProperties([]);
-          return;
-        }
-        conversationsData = data as Array<{ property_id: string }>;
-      }
-
-      if (!conversationsData || conversationsData.length === 0) {
+      // Always fetch latest conversations for accuracy
+      const { data: conversations, error: convError } = await supabase
+        .from('property_conversations')
+        .select('property_id')
+        .eq('tenant_id', uid);
+  
+      if (convError || !conversations || conversations.length === 0) {
         setMessagedProperties([]);
         return;
       }
-
-      const propertyIds = [...new Set(
-        conversationsData.map((conv) => 
-          conv.property_id || (conv as any).property?.id
-        ).filter(Boolean)
-      )];
-
+  
+      const propertyIds = [...new Set(conversations.map((conv: { property_id: string }) => conv.property_id).filter(Boolean))];
       if (propertyIds.length === 0) {
         setMessagedProperties([]);
         return;
       }
-
-      // Try to match with already loaded properties
-      let matchedProperties: Property[] = [];
-      if (allProperties.length > 0) {
-        matchedProperties = allProperties.filter(
-          property => propertyIds.includes(property.id)
-        );
-      }
-
-      if (matchedProperties.length > 0) {
-        setMessagedProperties(matchedProperties);
-        return;
-      }
-
-      // Fetch properties if not already loaded
+  
+      // Fetch property details directly from Supabase for these IDs
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select('*')
         .in('id', propertyIds);
-
-      if (propertiesError) {
+  
+      if (propertiesError || !propertiesData || propertiesData.length === 0) {
         setMessagedProperties([]);
         return;
       }
-
-      if (!propertiesData || propertiesData.length === 0) {
-        setMessagedProperties([]);
-        return;
-      }
-
+  
+      // Transform properties for carousel
       const transformedProperties: Property[] = (propertiesData as Array<Record<string, any>>).map((item) => {
         const imageUrl = Array.isArray(item.images) && item.images.length > 0 
           ? item.images[0] as string
@@ -263,19 +222,16 @@ const PropertiesSection = () => {
           rules: (item.rules as string[]) || [],
           next_available_date: item.next_available_date as string,
           availability: getAvailabilityLabel(!!item.available, (item.status as string) || ''),
-          price: typeof item.price === 'number' ? item.price : Number(item.monthly_rent) || 0,
-          area: typeof item.area === 'number' ? item.area : 0,
-          imageErrorHandler: (e: React.SyntheticEvent<HTMLImageElement>) => {
-            e.currentTarget.src = '/placeholder-property.jpg';
-          }
+          price: Number(item.price) || 0, // Ensure price is included
+          area: Number(item.area) || 0,  // Ensure area is included
         };
       });
-
+  
       setMessagedProperties(transformedProperties);
     } catch {
       setMessagedProperties([]);
     }
-  }, [allProperties]);
+  }, []);
   // --- End fetchMessagedProperties ---
 
   // --- Filter logic helpers (outside render) ---
@@ -342,6 +298,12 @@ const PropertiesSection = () => {
     return () => window.removeEventListener('conversationUpdated', handleConversationUpdate);
   }, [userId, fetchMessagedProperties]);
   // --- End event listener ---
+
+  // --- Fetch messaged properties on userId or allProperties change ---
+  useEffect(() => {
+    if (userId) fetchMessagedProperties(userId);
+  }, [userId, fetchMessagedProperties]);
+  // --- End fetch on userId change ---
 
   // --- Render ---
   return (
