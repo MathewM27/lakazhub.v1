@@ -56,7 +56,6 @@ export default function LandlordDashboard() {
 
   // Handler for refreshing properties - store the refresh function
   const handleRefreshNeeded = useCallback((refreshFn: () => Promise<Property[] | void>) => {
-    console.log("[LandlordDashboard] Storing refreshProperties function from child.");
     refreshPropertiesRef.current = refreshFn;
   }, []);
 
@@ -64,14 +63,10 @@ export default function LandlordDashboard() {
   const refreshProperties = async () => {
     if (refreshPropertiesRef.current) {
       try {
-        console.log("[LandlordDashboard] Calling refreshProperties...");
         await refreshPropertiesRef.current();
-        console.log("[LandlordDashboard] refreshProperties completed.");
       } catch (error) {
-        console.error("[LandlordDashboard] Failed to refresh properties:", error);
+        // Error handling logic can be added here if needed
       }
-    } else {
-      console.warn("[LandlordDashboard] refreshPropertiesRef.current is null!");
     }
   };
   

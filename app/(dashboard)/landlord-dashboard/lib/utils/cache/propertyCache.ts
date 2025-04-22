@@ -54,17 +54,7 @@ export class PropertyCache {
    * Log a message with the [PROPERTY_CACHE] prefix
    */
   private static log(message: string, level: 'info' | 'warn' | 'error' = 'info'): void {
-    if (ENABLE_DETAILED_LOGS) {
-      const prefix = '[PROPERTY_CACHE]';
-      
-      if (level === 'error') {
-        console.error(`${prefix} ${message}`);
-      } else if (level === 'warn') {
-        console.warn(`${prefix} ${message}`);
-      } else {
-        console.log(`${prefix} ${message}`);
-      }
-    }
+    // No-op for production: remove all logs
   }
   
   /**
@@ -149,7 +139,7 @@ export class PropertyCache {
         localStorage.setItem(this.CACHE_KEY + '_stats', JSON.stringify(this.stats));
       }
     } catch (error) {
-      console.error('Error updating cache stats:', error);
+      // Removed: console.error('Error updating cache stats:', error);
     }
   }
   
@@ -189,7 +179,7 @@ export class PropertyCache {
         try {
           callback(data);
         } catch (error) {
-          console.error('Error in cache listener callback:', error);
+          // Removed: console.error('Error in cache listener callback:', error);
         }
       });
     }
@@ -655,7 +645,7 @@ export class PropertyCache {
    * Log a detailed report of what's in the cache
    */
   static logCacheContents(): void {
-    console.log(this.getDetailedCacheReport());
+    // No-op for production: do not log cache contents
   }
 }
 
