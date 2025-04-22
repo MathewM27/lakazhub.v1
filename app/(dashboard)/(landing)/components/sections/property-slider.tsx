@@ -190,7 +190,7 @@ export const PropertySlider = () => {
                   className={`px-4 py-2 text-sm rounded-full transition-all duration-300 ${
                     activeFilters === filter
                       ? 'bg-white text-black font-medium'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                      : 'bg-white/10 text-white/70 '
                   }`}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
@@ -242,7 +242,7 @@ export const PropertySlider = () => {
             
             <button 
               onClick={scrollPrev}
-              className={`absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollPrev ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'}`}
+              className={`absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollPrev ? 'opacity-30 cursor-not-allowed' : ''}`}
               disabled={!canScrollPrev}
             >
               <ChevronLeft className="w-5 h-5 group-hover:scale-95 transition-transform" />
@@ -250,7 +250,7 @@ export const PropertySlider = () => {
             
             <button 
               onClick={scrollNext}
-              className={`absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollNext ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white hover:text-black'}`}
+              className={`absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-300 border border-white/20 group ${!canScrollNext ? 'opacity-30 cursor-not-allowed' : ''}`}
               disabled={!canScrollNext}
             >
               <ChevronRight className="w-5 h-5 group-hover:scale-95 transition-transform" />

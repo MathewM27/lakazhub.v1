@@ -9,51 +9,38 @@ const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Handle loading state with simple sequential transitions
   useEffect(() => {
     const loadTimer = setTimeout(() => {
       setIsLoading(false);
-      // Add a slight delay before triggering visibility animations
       const visibilityTimer = setTimeout(() => {
         setIsVisible(true);
       }, 100);
       return () => clearTimeout(visibilityTimer);
     }, 500);
-    
     return () => clearTimeout(loadTimer);
   }, []);
 
   const quickFeatures = [
     { text: 'Manage multiple properties', icon: FiCheck },
-    { text: 'Control your listings', icon: FiCheck },
-    { text: 'Screen potential tenants', icon: FiCheck }
+    { text: 'Control your listings', icon: FiCheck }
   ];
 
   return (
-    <section className="relative min-h-[90vh] py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
-      {/* Simple subtle gradient overlay */}
+    <section className="relative min-h-screen py-8 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
       <div className="absolute inset-0 bg-gradient-to-b from-black/95 via-black to-black/90 pointer-events-none"></div>
-      
-      {/* Subtle decorative elements */}
       <div 
         className={`absolute top-[20%] right-[10%] w-64 h-64 rounded-full bg-white/3 transition-all duration-1000 ease-out ${
           isVisible ? 'opacity-15 scale-100' : 'opacity-0 scale-90'
         }`}
       />
-      
       <div 
         className={`absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-white/2 transition-all duration-1000 delay-300 ease-out ${
           isVisible ? 'opacity-10 scale-100' : 'opacity-0 scale-90'
         }`}
       />
-
-      <div
-        className="container mx-auto px-6 relative z-10"
-        style={{ minHeight: "600px" }} // Reserve space to avoid layout shift
-      >
+      <div className="container mx-auto px-4 sm:px-6 relative z-10" style={{ minHeight: "600px" }}>
         {isLoading ? (
           <div className="text-center max-w-4xl mx-auto">
-            {/* Loading skeleton */}
             <div className="h-8 bg-white/20 w-1/2 mx-auto mb-4 rounded animate-pulse"></div>
             <div className="h-4 bg-white/10 w-3/4 mx-auto mb-6 rounded animate-pulse"></div>
             <div className="w-full h-16 bg-white/5 border border-white/10 rounded-xl animate-pulse mb-10" />
@@ -67,67 +54,59 @@ const HeroSection = () => {
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-6xl mx-auto">
-            {/* Main content - two columns with main heading on left */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start pt-16">
-              {/* Left column - Main heading moved here */}
-              <div 
-                className={`space-y-6 transition-all duration-700 delay-300 ease-out ${
+          <div className="w-full max-w-7xl mx-auto">
+            <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:gap-16 items-center md:items-start pt-8 md:pt-20">
+              <div
+                className={`flex flex-col justify-center h-full transition-all duration-700 delay-300 ease-out ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 }`}
               >
-                <div>
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
-                    Manage Your Properties
+                <div className="max-w-xl mx-auto md:mx-0 text-center md:text-left">
+                  <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-4">
+                    Manage Your <span className="text-amber-400">Properties</span>
                   </h1>
-                  <p className="mt-4 text-lg text-white/70 max-w-2xl">
-                    List, manage and connect with qualified tenants in one seamless platform.
+                  <p className="mt-2 mb-6 text-base xs:text-lg sm:text-xl text-white/80 max-w-lg mx-auto md:mx-0">
+                    List, manage, and connect with qualified tenants in one seamless platform.
                   </p>
                 </div>
-
-                {/* Quick features - with consistent style */}
-                <div className="flex flex-wrap gap-6 mt-6">
+                <div className="flex flex-col sm:flex-row sm:justify-start gap-4 sm:gap-8 mt-2 mb-8 max-w-xl mx-auto md:mx-0">
                   {quickFeatures.map((feature, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-3 transition-all duration-500 ease-out"
-                      style={{ 
+                      className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-2 shadow-sm transition-all duration-500 ease-out"
+                      style={{
                         transitionDelay: `${400 + (index * 100)}ms`,
                         opacity: isVisible ? 1 : 0,
                         transform: isVisible ? 'translateX(0)' : 'translateX(-10px)'
                       }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <feature.icon className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center">
+                        <feature.icon className="w-4 h-4 text-amber-400" />
                       </div>
-                      <span className="text-white/80">{feature.text}</span>
+                      <span className="text-white/90 text-base font-medium">{feature.text}</span>
                     </div>
                   ))}
                 </div>
-                
-                {/* CTA Button - using amber for landlord theme */}
-                <div 
-                  className={`pt-4 transition-all duration-500 delay-700 ease-out ${
+                <div
+                  className={`flex justify-center md:justify-start pt-2 transition-all duration-500 delay-700 ease-out ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
                 >
-                  <Link 
+                  <Link
                     href="/add-property"
-                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg hover:bg-amber-400 transition-all font-medium group"
+                    className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-black px-7 py-3 rounded-xl shadow-lg font-semibold text-lg transition-all group"
                   >
                     <span>Add Property</span>
-                    <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    <FiArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
               </div>
-              
-              {/* Right column - Property management card */}
               <div 
-                className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out mt-6 md:mt-0 ${
+                className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out w-full max-w-md mx-auto md:mx-0 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
               >
-                <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0">
+                <div className="aspect-[4/3] relative w-full min-h-[260px] sm:min-h-[320px]">
                   <Image 
                     src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF" 
                     alt="Featured Property"
@@ -139,27 +118,19 @@ const HeroSection = () => {
                     blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDMyMCAyNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiNlZWUiLz48L3N2Zz4="
                   />
                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
-                  
-                  {/* Available indicator with green dot - replacing New Listing badge */}
                   <div className="absolute top-4 left-4 z-30">
                     <div className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/20 flex items-center">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
                       <span>Available</span>
                     </div>
                   </div>
-                  
-                  {/* Heart icon - replacing search icon */}
                   <div className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-sm rounded-full z-30">
                     <FiHeart className="h-4 w-4 text-amber-400" />
                   </div>
-                  
-                  {/* Small decorative elements at corners - consistent with landlord dashboard */}
                   <div className="absolute top-4 right-16 w-2 h-2 rounded-full bg-white/40"></div>
                   <div className="absolute top-4 right-20 w-1 h-1 rounded-full bg-white/30"></div>
                   <div className="absolute bottom-20 left-4 w-2 h-2 rounded-full bg-white/40"></div>
                   <div className="absolute bottom-16 left-8 w-1 h-1 rounded-full bg-white/30"></div>
-                  
-                  {/* Property info */}
                   <div className="absolute bottom-0 left-0 right-0 p-5 z-30">
                     <div className="flex items-start justify-between">
                       <div>
@@ -176,8 +147,6 @@ const HeroSection = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Property features - maintaining the same layout as landlord dashboard */}
                 <div className="bg-white/5 backdrop-blur-md p-4 flex justify-between">
                   <div className="text-center">
                     <span className="text-white/70 text-xs">Bedrooms</span>

@@ -153,7 +153,7 @@ const Header = () => {
               created_at: string;
             }) => {
               const tenantProfile = tenantProfiles[conv.tenant_id] || {};
-              const tenantName = tenantProfile?.full_name || 'Unknown User';
+              const tenantName = tenantProfile?.full_name || 'Tenant';
               
               // Get the last message from the messages array
               const messages = conv.messages || [];
@@ -162,7 +162,7 @@ const Header = () => {
               // Safely access property name
               const propertyName = conv.properties && typeof conv.properties === 'object' && conv.properties.name 
                 ? conv.properties.name 
-                : 'Unknown Property';
+                : 'Property';
               
               return {
                 conversationId: conv.id,
@@ -247,7 +247,8 @@ const Header = () => {
         messageSubscriptionRef.current = conversationUpdateSubscription;
         
         return () => {
-          conversationUpdateSubscription.unsubscribe();
+          // Properly remove the channel from Supabase
+          supabase.removeChannel(conversationUpdateSubscription);
           window.removeEventListener('messagesMarkedAsRead', handleMessagesRead as EventListener);
         }
     }, [user?.id, fetchUnreadMessagesAndNotifications]);
@@ -634,11 +635,13 @@ const Header = () => {
                                 >
                                     Profile Settings
                                 </DropdownMenuItem>
+                                {/* 
                                 <DropdownMenuItem 
                                     className="text-white hover:text-black hover:bg-white cursor-pointer px-4 py-2.5 transition-colors"
                                 >
                                     FAQ & Help
                                 </DropdownMenuItem>
+                                */}
                                 <DropdownMenuSeparator className="bg-white/10" />
                                 <DropdownMenuItem 
                                     className="text-white hover:text-black  cursor-pointer px-4 py-2.5 transition-colors" 

@@ -14,14 +14,20 @@ interface BasicInfoTabProps {
   onNext: () => void;
 }
 
-// List of common locations in Mauritius
+// Expanded list of common locations in Mauritius
 const mauritiusLocations = [
-  "Port Louis", "Curepipe", "Vacoas", "Quatre Bornes", "Rose Hill", 
-  "Beau Bassin", "Phoenix", "Goodlands", "Triolet", "Centre de Flacq",
-  "Mahebourg", "Grand Baie", "Flic en Flac", "Tamarin", "Black River",
-  "Grand Gaube", "Trou aux Biches", "Mont Choisy", "Pamplemousses",
-  "Belle Mare", "Blue Bay", "Trou d'Eau Douce", "Pereybere", "Cap Malheureux",
-  "Surinam", "Chemin Grenier", "Rivière du Rempart", "Souillac"
+  // North
+  "Grand Baie", "Pereybere", "Cap Malheureux", "Grand Gaube", "Goodlands", "Rivière du Rempart", "Mapou", "Poudre d'Or", "Calodyne", "Mont Choisy", "Trou aux Biches", "Pointe aux Canonniers", "Bain Boeuf", "Anse La Raie",
+  // West
+  "Flic en Flac", "Tamarin", "Black River", "Albion", "Cascavelle", "Petite Rivière", "La Gaulette", "Le Morne", "Case Noyale",
+  // South
+  "Mahebourg", "Blue Bay", "Le Bouchon", "Souillac", "Surinam", "Chemin Grenier", "Bel Ombre", "Baie du Cap", "Rivière des Anguilles", "Rivière des Galets", "St Felix", "Gris Gris",
+  // East
+  "Centre de Flacq", "Bel Air", "Trou d'Eau Douce", "Palmar", "Belle Mare", "Poste Lafayette", "Roche Noires", "Quatre Cocos", "Lallmatie", "Camp de Masque", "Queen Victoria", "Sebastopol", "Beau Champ",
+  // Central/Urban
+  "Port Louis", "Curepipe", "Vacoas", "Quatre Bornes", "Rose Hill", "Beau Bassin", "Phoenix", "Ebène", "Moka", "Floréal", "Plaine Wilhems", "Pailles", "Coromandel", "Highlands",
+  // Other towns/villages
+  "Triolet", "Terre Rouge", "Pamplemousses", "Montagne Longue", "Long Mountain", "Plaine Magnien", "Rose Belle", "New Grove", "Camp Diable", "Mare d'Albert", "Mare Tabac", "Petit Bel Air", "Riche Mare", "St Pierre", "Dagotière", "Verdun", "Mont Ida", "Petit Paquet", "Camp Ithier", "Camp Thorel", "Petit Gabriel", "Camp Carol", "Camp Fouquereaux", "Camp Levieux"
 ];
 
 export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTabProps) {
@@ -215,11 +221,12 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {[1, 2, 3, 4, 5, 6].map((num) => (
+                {[1, 2, 3, 4, 5].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num}
                   </SelectItem>
                 ))}
+                <SelectItem value="6+">6+</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -233,11 +240,12 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {[1, 1.5, 2, 2.5, 3, 3.5, 4].map((num) => (
+                {[1, 2, 3, 4, 5].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num}
                   </SelectItem>
                 ))}
+                <SelectItem value="6+">6+</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -36,7 +36,7 @@ const FeatureItem = memo(function FeatureItem({
   label: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1 transition-all duration-200 hover:-translate-y-1 hover:text-white">
+    <div className="flex flex-col items-center gap-1 transition-all duration-200 hover:-translate-y-1">
       <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
         {icon}
       </div>

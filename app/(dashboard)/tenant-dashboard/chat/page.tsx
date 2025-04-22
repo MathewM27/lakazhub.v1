@@ -711,6 +711,15 @@ export default function ChatPage() {
     </div>
   );
 
+  if (initialPageLoad) {
+    return (
+      <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-[100]">
+        <div className="animate-spin h-12 w-12 border-4 border-white/30 border-t-white rounded-full mb-4"></div>
+        <div className="text-white font-medium text-lg">Loading chat...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Navigation />

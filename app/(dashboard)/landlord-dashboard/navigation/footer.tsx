@@ -139,14 +139,16 @@ export const Footer = () => {
             <p className="text-white/70 mb-4">Stay connected for updates and news</p>
             <div className="flex space-x-3">
               {[
-                { icon: Facebook, href: '#' },
-                { icon: Instagram, href: '#' },
-                { icon: TiktokIcon, href: '#' }
+                { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61565853924765' },
+                { icon: Instagram, href: 'https://www.instagram.com/futurexdesigns/' },
+                { icon: TiktokIcon, href: 'https://www.tiktok.com/@future_xdesigns?_t=ZM-8vjhmF9nyMQ&_r=1' }
               ].map((social, i) => (
                 <a
                   key={i}
                   href={social.href}
                   className="w-10 h-10 rounded-full backdrop-blur-sm bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 hover:-translate-y-1"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <social.icon className="w-4 h-4" />
                 </a>

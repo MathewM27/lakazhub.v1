@@ -14,10 +14,7 @@ const OtherProperties = dynamic(() => import("../layout/other-properties"), {
   loading: () => <div className="text-white/70 py-12 text-center">Loading analytics...</div>,
   ssr: false,
 });
-const CacheMonitor = dynamic(() => import("./cache-monitor"), {
-  loading: () => <div className="text-white/70 py-12 text-center">Loading cache monitor...</div>,
-  ssr: false,
-});
+
 
 interface DashboardContentProps {
   onPropertyDetailsAction: (property: Property) => void;
@@ -83,7 +80,6 @@ export function DashboardContent({
         <h2 className="text-3xl font-bold mb-8">Coming Soon</h2>
         <OtherProperties />
       </section>
-      <CacheMonitor />
       <Footer />
     </div>
   );

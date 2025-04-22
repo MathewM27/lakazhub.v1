@@ -9,31 +9,25 @@ const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Handle loading state with simple sequential transitions
   useEffect(() => {
     const loadTimer = setTimeout(() => {
       setIsLoading(false);
-      // Add a slight delay before triggering visibility animations
       const visibilityTimer = setTimeout(() => {
         setIsVisible(true);
       }, 100);
       return () => clearTimeout(visibilityTimer);
     }, 500);
-    
     return () => clearTimeout(loadTimer);
   }, []);
 
   const quickFeatures = [
     { text: 'Access curated listings', icon: FiCheck },
     { text: 'Contact landlords directly', icon: FiCheck },
-   
   ];
 
   return (
-    <section className="relative min-h-screen py-12 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
-     
-
-      <div className="container mx-auto relative z-10">
+    <section className="relative min-h-screen py-8 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
+      <div className="container mx-auto relative z-10 px-4 sm:px-6">
         {isLoading ? (
           <div className="text-center max-w-4xl mx-auto">
             {/* Loading skeleton */}
@@ -50,68 +44,65 @@ const HeroSection = () => {
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-6xl mx-auto">
-            {/* Main content - two columns with main heading on left */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start pt-16">
-              {/* Left column - Main heading moved here */}
-              <div 
-                className={`space-y-6 transition-all duration-700 delay-300 ease-out ${
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Responsive grid: stack on mobile, side-by-side on md+ */}
+            <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:gap-16 items-center md:items-start pt-8 md:pt-20">
+              {/* Left column - Improved layout */}
+              <div
+                className={`flex flex-col justify-center h-full transition-all duration-700 delay-300 ease-out ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 }`}
               >
-                <div>
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight">
-                    Find Your Ideal Rental Property
+                <div className="max-w-xl mx-auto md:mx-0 text-center md:text-left">
+                  <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-4">
+                    Find Your <span className="text-blue-400">Ideal Rental</span> Property
                   </h1>
-                  <p className="mt-4 text-lg text-white/70 max-w-2xl">
-                    Browse through a selection of quality-verified properties and connect directly with owners.
+                  <p className="mt-2 mb-6 text-base xs:text-lg sm:text-xl text-white/80 max-w-lg mx-auto md:mx-0">
+                    Discover homes and connect directly with property owners for a seamless rental experience.
                   </p>
                 </div>
-
-                {/* Quick features - with consistent style */}
-                <div className="flex flex-wrap gap-6 mt-6">
+                {/* Features */}
+                <div className="flex flex-col sm:flex-row sm:justify-start gap-4 sm:gap-8 mt-2 mb-8 max-w-xl mx-auto md:mx-0">
                   {quickFeatures.map((feature, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-3 transition-all duration-500 ease-out"
-                      style={{ 
+                      className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-2 shadow-sm transition-all duration-500 ease-out"
+                      style={{
                         transitionDelay: `${400 + (index * 100)}ms`,
                         opacity: isVisible ? 1 : 0,
                         transform: isVisible ? 'translateX(0)' : 'translateX(-10px)'
                       }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <feature.icon className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-full bg-blue-700/20 flex items-center justify-center">
+                        <feature.icon className="w-4 h-4 text-blue-400" />
                       </div>
-                      <span className="text-white/80">{feature.text}</span>
+                      <span className="text-white/90 text-base font-medium">{feature.text}</span>
                     </div>
                   ))}
                 </div>
-                
-                {/* CTA Button - consistent with landlord dashboard */}
-                <div 
-                  className={`pt-4 transition-all duration-500 delay-700 ease-out ${
+                {/* CTA Button */}
+                <div
+                  className={`flex justify-center md:justify-start pt-2 transition-all duration-500 delay-700 ease-out ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
                 >
-                  <Link 
+                  <Link
                     href="/properties"
-                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg hover:bg-white/90 transition-all font-medium group"
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl shadow-lg font-semibold text-lg transition-all group"
                   >
                     <span>Browse Properties</span>
-                    <FiArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    <FiArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
               </div>
-              
               {/* Right column - Featured property card */}
-              <div 
-                className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out mt-6 md:mt-0 ${
+              <div
+                className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out w-full max-w-md mx-auto md:mx-0 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
               >
                 {/* Explicit aspect ratio and min-height for image container */}
-                <div className="aspect-[4/3] relative w-full max-w-md mx-auto md:mx-0 min-h-[320px]">
+                <div className="aspect-[4/3] relative w-full min-h-[260px] sm:min-h-[320px]">
                   <div className="absolute inset-0 z-10">
                     <Image 
                       src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rtck9gM4M5F0Eg9U6YQvHh2Gnc1e3Wr4dbuLj" 

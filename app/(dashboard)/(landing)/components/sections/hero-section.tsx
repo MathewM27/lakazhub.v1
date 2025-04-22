@@ -29,7 +29,7 @@ export const HeroSection = () => {
             </h1>
 
             <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
-              Redefining the renting experience by seamlessly connecting landlords and tenants.
+              Redefining the renting experience by seamlessly connecting property owners and tenants.
             </p>
 
             {/* Mobile image - Only shown on mobile devices */}
@@ -136,7 +136,7 @@ export const HeroSection = () => {
                   {/* Status badge - positioned at top-right - changed to pure black */}
                   <div className="absolute top-6 right-6 bg-black px-4 py-1.5 rounded-full flex items-center space-x-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-sm text-white font-medium">Available Online</span>
+                    <span className="text-sm text-white font-medium">Realtime Availability</span>
                   </div>
 
                   {/* Messaging badge - positioned at top-left - changed to pure black */}

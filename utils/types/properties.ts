@@ -4,8 +4,8 @@ export const properties: Property[] = [
   {
     id: "1",
     name: "Luxury Beachfront Villa",
-    location: "Miami Beach, FL",
-    price: 5000,
+    location: "Grand Baie, Mauritius",
+    price: 30000,
     imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
     image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
     images: [
@@ -21,8 +21,8 @@ export const properties: Property[] = [
     landlord_id: "landlord-123",
     property_type: "villa",
     description: "Beautiful beachfront villa with stunning ocean views",
-    monthly_rent: 5000,
-    security_deposit: 10000,
+    monthly_rent: 30000,
+    security_deposit: 100000,
     utilities: {
       water: true,
       electricity: true,
@@ -44,8 +44,8 @@ export const properties: Property[] = [
   {
     id: "2",
     name: "Downtown Apartment",
-    location: "New York, NY",
-    price: 3500,
+    location: "Port Louis, Mauritius",
+    price: 25000,
     imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
     image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
     images: [
@@ -61,8 +61,8 @@ export const properties: Property[] = [
     landlord_id: "landlord-124",
     property_type: "apartment",
     description: "Modern apartment in the heart of downtown",
-    monthly_rent: 3500,
-    security_deposit: 7000,
+    monthly_rent: 35000,
+    security_deposit: 70000,
     utilities: {
       water: true,
       electricity: false,
@@ -83,8 +83,8 @@ export const properties: Property[] = [
   {
     id: "3",
     name: "Suburban Family Home",
-    location: "Austin, TX",
-    price: 2800,
+    location: "Quatre Bornes, Mauritius",
+    price: 28000,
     imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
     image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7ryAzQCyH8qp9b1uSxPEIaiwV4FOrWDsKhdC3M",
     images: [
@@ -100,8 +100,8 @@ export const properties: Property[] = [
     landlord_id: "landlord-125",
     property_type: "house",
     description: "Spacious family home in a quiet suburb",
-    monthly_rent: 2800,
-    security_deposit: 5600,
+    monthly_rent: 28000,
+    security_deposit: 56000,
     utilities: {
       water: false,
       electricity: false,
@@ -122,8 +122,8 @@ export const properties: Property[] = [
   {
     id: "4",
     name: "Mountain Retreat Cabin",
-    location: "Aspen, CO",
-    price: 4200,
+    location: "Chamarel, Mauritius",
+    price: 42000,
     imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
     image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7r2wDOOlgxMUVO4urzl6ogWXn2Iw7tGeQHA1dF",
     images: [
@@ -138,8 +138,8 @@ export const properties: Property[] = [
     landlord_id: "landlord-126",
     property_type: "cabin",
     description: "Cozy mountain cabin with breathtaking views",
-    monthly_rent: 4200,
-    security_deposit: 8400,
+    monthly_rent: 42000,
+    security_deposit: 84000,
     utilities: {
       water: true,
       electricity: true,
@@ -160,8 +160,8 @@ export const properties: Property[] = [
   {
     id: "5",
     name: "Lakeside Cottage",
-    location: "Lake Tahoe, CA",
-    price: 3800,
+    location: "Mahebourg, Mauritius",
+    price: 38000,
     imageUrl: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
     image: "https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rRFj4G1SlLNzXApxSFmHkvhiPbJeaI9VT0D67",
     images: [
@@ -177,8 +177,8 @@ export const properties: Property[] = [
     landlord_id: "landlord-127",
     property_type: "cottage",
     description: "Charming cottage with private lake access",
-    monthly_rent: 3800,
-    security_deposit: 7600,
+    monthly_rent: 38000,
+    security_deposit: 76000,
     utilities: {
       water: true,
       electricity: true,

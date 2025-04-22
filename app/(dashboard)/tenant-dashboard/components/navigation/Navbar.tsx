@@ -32,6 +32,7 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useAuth } from "../../auth/AuthHandler";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
 // Replace static import with dynamic import
 const ProfileModal = dynamic(() => import("../user/ProfileModal"), { ssr: false });
@@ -86,6 +87,7 @@ const Navigation = () => {
     const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
     
     // Get user from AuthContext instead of local state
     const { user, profile, isAuthenticated } = useAuth();
@@ -193,46 +195,23 @@ const Navigation = () => {
     }, [user?.id]);
 
     const handleMessageLinkClick = async () => {
-        // Set navigating state to true to show loading indicator
         setIsNavigating(true);
-        
-        // Close the sheet if on mobile
-        closeSheet();
-        
-        // Mark messages as read if needed - but do this in the background
-        if (unreadMessagesCount > 0 && user?.id) {
-            try {
-                // Instead of waiting for the endpoint to respond, just navigate immediately
-                // and let this run in the background
-                router.push('/tenant-dashboard/chat');
-                
-                // In the background, mark messages as read
+        // Show spinner immediately
+        startTransition(() => {
+            // Mark messages as read in the background
+            if (unreadMessagesCount > 0 && user?.id) {
                 supabase.rpc('mark_tenant_conversations_read', {
                     tenant_id: user.id
                 }).then(() => {
-                    // Clear unread count in UI 
                     setUnreadMessagesCount(0);
-                }).catch((error: unknown) => {
-                    // console.error('Error marking messages as read:', error);
                 });
-                
-                // Keep loading state for minimal time for better UX
-                setTimeout(() => {
-                    setIsNavigating(false);
-                }, 250);
-            } catch (error: unknown) {
-                // console.error('Error handling message link click:', error);
-                setIsNavigating(false);
             }
-        } else {
-            // Just navigate without marking anything as read
             router.push('/tenant-dashboard/chat');
-            
-            // Keep loading state for minimal time for better UX
-            setTimeout(() => {
-                setIsNavigating(false);
-            }, 250);
-        }
+        });
+        // Keep spinner for minimal time for better UX
+        setTimeout(() => {
+            setIsNavigating(false);
+        }, 1000); // You can adjust this duration
     };
 
     const handleNotificationsClick = () => {
@@ -267,7 +246,7 @@ const Navigation = () => {
                 }`}
                 style={{ minHeight: 56 }} // Pre-allocate nav height (e.g., 56px)
             >
-                <div className="container mx-auto flex w-full items-center justify-between  py-3">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex items-center">
                         {/* Mobile menu button on left */}
                         <div className="md:hidden mr-3">
@@ -563,7 +542,7 @@ const Navigation = () => {
             )}
 
             {/* Add full-screen loading overlay during navigation */}
-            {isNavigating && (
+            {(isNavigating || isPending) && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
                     <div className="animate-spin h-10 w-10 border-4 border-white/30 border-t-white rounded-full mb-2"></div>
                     <div className="text-white font-medium">Loading messages...</div>
