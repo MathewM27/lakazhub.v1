@@ -1,6 +1,5 @@
 import { supabase } from './supabase/client';
 import { logDebug, logError } from './logging';
-import * as Sentry from '@sentry/nextjs';
 import { Session } from '@supabase/supabase-js';
 
 // Automatically refresh session when it's about to expire
@@ -34,12 +33,7 @@ export const setupSessionRefresh = () => {
       }
     } catch (err) {
       logError('Error during session refresh', err);
-      
-      // Report to Sentry
-      Sentry.captureException(err, {
-        tags: { component: 'TenantAuth' },
-        extra: { action: 'session_refresh' }
-      });
+      // Sentry reporting removed
     }
   };
 

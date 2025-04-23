@@ -176,4 +176,21 @@ export class SessionManager {
       subscription.unsubscribe();
     };
   }
+
+  /**
+   * Static helper to clear all PKCE/session storage and Supabase cookies
+   */
+  public static clearAuthStorage(): void {
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.clear();
+        localStorage.clear();
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        });
+      }
+    } catch {}
+  }
 }

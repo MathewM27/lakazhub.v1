@@ -746,9 +746,7 @@ export default function ChatPage() {
                       className="text-white/70 hover:text-white hover:bg-white/10"
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                      <span className="text-xs">
-                        {refreshing ? 'Refreshing...' : 'Refresh'}
-                      </span>
+                    
                     </Button>
                   </div>
                   

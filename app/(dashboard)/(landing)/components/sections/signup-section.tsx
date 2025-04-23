@@ -53,9 +53,27 @@ export const SignupSection = () => {
     setError("");
   }, []);
 
+  // Utility to clear PKCE/session storage and Supabase cookies
+  const clearAuthStorage = useCallback(() => {
+    try {
+      sessionStorage.clear();
+      localStorage.clear();
+      // Remove Supabase cookies (client-side, best effort)
+      if (typeof document !== "undefined") {
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+          // Remove cookie for current path and root
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        });
+      }
+    } catch {}
+  }, []);
+
   const handleSendMagicLink = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    clearAuthStorage(); // <-- Clear before starting login
     try {
       await signinWithMagicLink(
         null,
@@ -74,24 +92,20 @@ export const SignupSection = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, formMode, userType]);
+  }, [formData, formMode, userType, clearAuthStorage]);
 
   const handleGoogleSignIn = useCallback(async () => {
     try {
       setIsGoogleLoading(true);
-      
-      // First navigate to the loading screen, which gives immediate visual feedback
+      clearAuthStorage(); // <-- Clear before starting login
       router.push(`/auth/auth-loading?message=Connecting to Google&user_role=${userType}`);
-      
-      // Then initiate the Google sign-in process
-      // The response will be handled by the callback route
       await signinWithGoogle(userType);
     } catch (error) {
       console.error('Failed to sign in with Google:', error);
       setError('Failed to sign in with Google. Please try again.');
       setIsGoogleLoading(false);
     }
-  }, [userType, router]);
+  }, [userType, router, clearAuthStorage]);
 
   return (
     <section id="signup" className="bg-black text-white py-16 relative overflow-hidden">

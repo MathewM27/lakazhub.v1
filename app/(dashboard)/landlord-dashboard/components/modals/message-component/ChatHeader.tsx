@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { X, RefreshCw, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/utils/lib/utils";
@@ -40,17 +39,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           className="mr-2 text-zinc-400 hover:text-white hover:bg-zinc-800"
           onClick={onBack}
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 text-white" />
         </Button>
-        <Avatar className="h-8 w-8 mr-2 border border-white">
-          <AvatarImage src={selectedTenant.avatar} alt={selectedTenant.name} />
-          <AvatarFallback className="bg-black text-zinc-300">
-            {selectedTenant.name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")}
-          </AvatarFallback>
-        </Avatar>
+        <div
+          className="h-8 w-8 mr-2 flex items-center justify-center rounded-full"
+          style={{ backgroundColor: "#FFA500", color: "white", fontWeight: "bold", fontSize: "1rem" }}
+        >
+          {selectedTenant.name?.charAt(0)?.toUpperCase() || "?"}
+        </div>
         <div>
           <div className="font-medium text-sm text-white">{selectedTenant.name}</div>
           <p className="text-xs text-zinc-400">
@@ -103,9 +99,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 mt-4 rounded-full text-black hover:text-white hover:bg-zinc-800"
+            className="h-8 w-8 mt-4 rounded-full text-white hover:text-white hover:bg-zinc-800"
             onClick={onClose}
           >
+            <X className="h-4 w-4 text-white" />
             <span className="sr-only">Close</span>
           </Button>
         )}

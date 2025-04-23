@@ -344,6 +344,16 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             await supabase.auth.signOut();
+            // Clear all PKCE/session storage and Supabase cookies
+            if (typeof window !== "undefined") {
+                sessionStorage.clear();
+                localStorage.clear();
+                document.cookie.split(";").forEach(cookie => {
+                    const eqPos = cookie.indexOf("=");
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                });
+            }
             window.location.href = 'http://localhost:3000'; 
         } catch {
             // console.error('Error logging out:', err);

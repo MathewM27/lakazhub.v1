@@ -97,13 +97,19 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
   const signOut = useCallback(async () => {
     try {
       logDebug(PREFIX, 'Signing out user');
-      
       await supabase.auth.signOut();
-      // Clear any cached auth data
+      // Clear any cached auth data and Supabase cookies
       if (isBrowser) {
-        sessionStorage.removeItem('auth_status');
-        sessionStorage.removeItem('auth_status_time');
-        localStorage.removeItem('profile_cache');
+        sessionStorage.clear();
+        localStorage.clear();
+        // Remove Supabase cookies (client-side, best effort)
+        if (typeof document !== "undefined") {
+          document.cookie.split(";").forEach(cookie => {
+            const eqPos = cookie.indexOf("=");
+            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+          });
+        }
       }
     } catch (error) {
       logError(PREFIX, 'Error signing out', error);
