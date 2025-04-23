@@ -87,11 +87,14 @@ export async function GET(request: Request) {
     
     // Log success in background (non-blocking)
     queueMicrotask(() => {
-      logInBackground({ type: 'auth_success', provider: 'google' });
+      logInBackground({ type: 'auth_success', provider: session.user.app_metadata?.provider || 'unknown' });
     });
     
     // Update user metadata in background without blocking the redirect
-    if (session.user.app_metadata?.provider === 'google' && userRole) {
+    if (
+      (session.user.app_metadata?.provider === 'google' || session.user.app_metadata?.provider === 'facebook')
+      && userRole
+    ) {
       queueMicrotask(async () => {
         try {
           const metadata = session.user.user_metadata || {};
@@ -108,7 +111,6 @@ export async function GET(request: Request) {
             }
           });
         } catch (updateError) {
-          // Just log the error, don't block the flow
           logInBackground({
             type: 'profile_update_error',
             error: String(updateError),
