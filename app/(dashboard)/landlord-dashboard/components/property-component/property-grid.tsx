@@ -13,9 +13,6 @@ import dynamic from "next/dynamic";
 
 // Dynamically import modals/dialogs
 const NotificationsModal = dynamic(() => import("../modals/notification-modal"), { ssr: false });
-const SuccessModal = dynamic(() => import("../modals/success-modal"), { ssr: false });
-const AvailabilityModal = dynamic(() => import("../modals/availability-modal"), { ssr: false });
-const PropertyOnboarding = dynamic(() => import("../modals/property-modal/PropertyOnboarding"), { ssr: false });
 // ...add other modals/dialogs as needed...
 
 interface PropertyGridProps {
@@ -38,7 +35,7 @@ export default function PropertyGrid({
   refreshNeeded = false,
   onRefreshClear
 }: PropertyGridProps) {
-  const { properties, loading, error, refreshProperties } = useProperties();
+  const { properties, loading, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
   const { toast } = useToast();
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
@@ -207,19 +204,6 @@ export default function PropertyGrid({
               >
                 <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <p className="text-white/70">Loading properties...</p>
-              </div>
-            ) : error ? (
-              <div 
-                className="col-span-3 text-center py-12 px-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in"
-              >
-                <h3 className="text-xl font-semibold text-red-400 mb-2">Error loading properties</h3>
-                <p className="text-white/80 mb-4">{error.message}</p>
-                <button 
-                  onClick={handleRefresh}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors"
-                >
-                  Try Again
-                </button>
               </div>
             ) : Array.isArray(properties) && properties.length > 0 ? (
               <>

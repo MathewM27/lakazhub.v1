@@ -8,8 +8,8 @@ interface ChatHeaderProps {
   modalTitle?: string;
   lastRefreshAt?: Date | null;
   onClose?: () => void;
-  selectedTenant?: any;
-  property?: any;
+  selectedTenant?: unknown;
+  property?: unknown;
   onBack?: () => void;
   refreshAll?: () => void;
   refreshStatus?: string;
@@ -31,6 +31,25 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   if (mobile && selectedTenant) {
     // Mobile chat header with back button
+
+    // Type guard for selectedTenant
+    const tenantName =
+      typeof selectedTenant === "object" &&
+      selectedTenant !== null &&
+      "name" in selectedTenant &&
+      typeof (selectedTenant as { name?: unknown }).name === "string"
+        ? (selectedTenant as { name: string }).name
+        : undefined;
+
+    // Type guard for property
+    const propertyName =
+      typeof property === "object" &&
+      property !== null &&
+      "name" in property &&
+      typeof (property as { name?: unknown }).name === "string"
+        ? (property as { name: string }).name
+        : undefined;
+
     return (
       <div className="border-b border-white p-2 flex items-center bg-black">
         <Button
@@ -45,12 +64,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           className="h-8 w-8 mr-2 flex items-center justify-center rounded-full"
           style={{ backgroundColor: "#FFA500", color: "white", fontWeight: "bold", fontSize: "1rem" }}
         >
-          {selectedTenant.name?.charAt(0)?.toUpperCase() || "?"}
+          {tenantName?.charAt(0)?.toUpperCase() || "?"}
         </div>
         <div>
-          <div className="font-medium text-sm text-white">{selectedTenant.name}</div>
+          <div className="font-medium text-sm text-white">{tenantName}</div>
           <p className="text-xs text-zinc-400">
-            Inquiring about {property?.name || "your property"}
+            Inquiring about {propertyName || "your property"}
           </p>
         </div>
         <Button

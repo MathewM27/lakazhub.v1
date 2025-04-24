@@ -29,7 +29,6 @@ export default function LandlordDashboard() {
     message: "",
   });
   const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
-  const [refreshBanner, setRefreshBanner] = useState(false);
 
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
@@ -47,13 +46,6 @@ export default function LandlordDashboard() {
     setAvailabilityModalOpen(true);
   }, []);
   
-  const handleSuccessAction = useCallback(() => {
-    toast({
-      title: "Success",
-      description: "Your changes have been saved."
-    });
-  }, [toast]);
-
   // Handler for refreshing properties - store the refresh function
   const handleRefreshNeeded = useCallback((refreshFn: () => Promise<Property[] | void>) => {
     refreshPropertiesRef.current = refreshFn;
@@ -64,17 +56,12 @@ export default function LandlordDashboard() {
     if (refreshPropertiesRef.current) {
       try {
         await refreshPropertiesRef.current();
-      } catch (error) {
+      } catch {
         // Error handling logic can be added here if needed
       }
     }
   };
   
-  // Handler to show refresh banner after property add/update
-  const handlePropertyChanged = useCallback(() => {
-    setRefreshBanner(true);
-  }, []);
-
   // Function to render the welcome screen
   const renderWelcomeScreen = (message = "Your landlord dashboard is loading...") => {
     return <LoadingScreen message={message} />;

@@ -37,60 +37,6 @@ export default function PhotosTab({
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   
-  // Function to process existing image URLs into the formData.images format
-  const processExistingImages = () => {
-    if (!formData.existingImages || formData.existingImages.length === 0) return;
-    
-    // Process each existing image
-    const processedImages = formData.existingImages.map((url: string, index: number) => {
-      // Try to determine image type from URL or metadata
-      // For simplicity, we'll assign types based on position
-      // You might want to enhance this with actual metadata if available
-      let imageType = "other";
-      
-      // Use a heuristic to guess image categories if no metadata
-      if (index === 0) {
-        imageType = "exterior"; // First image is usually exterior/cover
-      } else if (index === 1) {
-        imageType = "living";
-      } else if (index === 2) {
-        imageType = "kitchen";
-      } else if (index === 3) {
-        imageType = "bedroom";
-      } else if (index === 4) {
-        imageType = "bathroom";
-      }
-      
-      // Return image object with existing URL
-      return {
-        type: imageType,
-        url: url,
-        existingUrl: true  // Flag to indicate this is an existing image
-      };
-    });
-    
-    // Merge with any images already in formData
-    const newImages = [
-      ...formData.images.filter(img => !img.existingUrl), // Keep locally added images
-      ...processedImages
-    ];
-    
-    // Update form data
-    onChange({
-      images: newImages
-    });
-  };
-
-  // Process existing images on component mount
-  useEffect(() => {
-    // If we have existing images but they're not properly processed, process them
-    if (formData.existingImages && formData.existingImages.length > 0 && 
-        (!formData.images || formData.images.filter(img => img.existingUrl).length === 0)) {
-      
-      processExistingImages();
-    }
-  }, [formData.existingImages, formData.images, processExistingImages]);
-  
   // Group images by category
   const imagesByCategory = ROOM_CATEGORIES.reduce((acc, category) => {
     acc[category.id] = formData.images.filter(img => img.type === category.id)
@@ -248,6 +194,46 @@ export default function PhotosTab({
     
     return Math.round((filledCategories / ROOM_CATEGORIES.length) * 100)
   }
+
+  // Process existing images on component mount
+  useEffect(() => {
+    // Function to process existing image URLs into the formData.images format
+    const processExistingImages = () => {
+      if (!formData.existingImages || formData.existingImages.length === 0) return;
+
+      // Process each existing image
+      const processedImages = formData.existingImages.map((url: string, index: number) => {
+        let imageType = "other";
+        if (index === 0) imageType = "exterior";
+        else if (index === 1) imageType = "living";
+        else if (index === 2) imageType = "kitchen";
+        else if (index === 3) imageType = "bedroom";
+        else if (index === 4) imageType = "bathroom";
+        return {
+          type: imageType,
+          url: url,
+          existingUrl: true
+        };
+      });
+
+      const newImages = [
+        ...formData.images.filter(img => !img.existingUrl),
+        ...processedImages
+      ];
+
+      onChange({
+        images: newImages
+      });
+    };
+
+    if (
+      formData.existingImages &&
+      formData.existingImages.length > 0 &&
+      (!formData.images || formData.images.filter(img => img.existingUrl).length === 0)
+    ) {
+      processExistingImages();
+    }
+  }, [formData.existingImages, formData.images, onChange]);
 
   return (
     <div className="grid gap-6 py-4">

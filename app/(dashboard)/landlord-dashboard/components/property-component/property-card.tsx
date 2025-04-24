@@ -204,7 +204,7 @@ export default function PropertyCard({
     if (!dateString) return null;
     try {
       return format(new Date(dateString), "MMM d, yyyy");
-    } catch (error) {
+    } catch {
       // Comment out console error
       // console.error("Error formatting date:", error);
       return null;

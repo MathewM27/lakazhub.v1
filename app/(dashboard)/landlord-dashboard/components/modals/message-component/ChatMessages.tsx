@@ -1,4 +1,4 @@
-import React, { RefObject } from "react";
+import React from "react";
 import { cn } from "@/utils/lib/utils";
 
 interface UIMessage {
@@ -28,7 +28,6 @@ interface ChatMessagesProps {
   messagesContainerRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   messagesEndRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   loadMoreMessages: () => void;
-  userHasScrolledUp: boolean;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -37,7 +36,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messagesContainerRef,
   messagesEndRef,
   loadMoreMessages,
-  userHasScrolledUp,
 }) => {
   if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
     return (

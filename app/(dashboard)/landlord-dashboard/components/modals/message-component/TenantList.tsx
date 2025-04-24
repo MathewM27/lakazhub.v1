@@ -8,7 +8,7 @@ interface Tenant {
   lastMessage?: string;
   time?: string;
   unread: number;
-  messages: any[];
+  messages: unknown[];
   hasMoreMessages?: boolean;
   currentPage?: number;
   counterparty_id?: string;

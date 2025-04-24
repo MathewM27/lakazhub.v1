@@ -1,4 +1,4 @@
-import React, { forwardRef, Ref } from "react";
+import React, { forwardRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";

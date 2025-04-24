@@ -2,7 +2,10 @@
 
 const PROFILE_CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes
 
-export async function getProfileWithCache(userId: string, fetcher: (etag?: string) => Promise<{data: any, etag?: string, notModified?: boolean}>) {
+export async function getProfileWithCache(
+  userId: string,
+  fetcher: (etag?: string) => Promise<{ data: unknown, etag?: string, notModified?: boolean }>
+) {
   const cacheKey = `profile_${userId}`;
   const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
   const now = Date.now();

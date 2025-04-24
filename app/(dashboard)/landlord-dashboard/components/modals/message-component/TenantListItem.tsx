@@ -11,7 +11,7 @@ interface Tenant {
   lastMessage?: string;
   time?: string;
   unread: number;
-  messages: any[];
+  messages: unknown[];
 }
 
 interface TenantListItemProps {
