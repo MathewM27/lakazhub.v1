@@ -1,6 +1,14 @@
 import React from "react";
 import TenantListItem from "./TenantListItem";
 
+interface UIMessage {
+  id: string;
+  sender: "landlord" | "tenant";
+  text: string;
+  time: string;
+  is_read: boolean;
+}
+
 interface Tenant {
   id: string;
   name: string;
@@ -8,7 +16,7 @@ interface Tenant {
   lastMessage?: string;
   time?: string;
   unread: number;
-  messages: unknown[];
+  messages: UIMessage[];
   hasMoreMessages?: boolean;
   currentPage?: number;
   counterparty_id?: string;

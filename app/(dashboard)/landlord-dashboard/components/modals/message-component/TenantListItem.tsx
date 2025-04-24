@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/utils/lib/utils";
 
+// Add UIMessage interface to match notification-modal.tsx
+interface UIMessage {
+  id: string;
+  sender: "landlord" | "tenant";
+  text: string;
+  time: string;
+  is_read: boolean;
+}
+
 interface Tenant {
   id: string;
   name: string;
@@ -11,7 +20,7 @@ interface Tenant {
   lastMessage?: string;
   time?: string;
   unread: number;
-  messages: unknown[];
+  messages: UIMessage[]; // Changed from unknown[] to UIMessage[]
 }
 
 interface TenantListItemProps {

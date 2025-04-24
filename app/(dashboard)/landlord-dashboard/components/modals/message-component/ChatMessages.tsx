@@ -28,6 +28,7 @@ interface ChatMessagesProps {
   messagesContainerRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   messagesEndRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   loadMoreMessages: () => void;
+  userHasScrolledUp: boolean; // Add this missing property
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -36,6 +37,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messagesContainerRef,
   messagesEndRef,
   loadMoreMessages,
+  userHasScrolledUp, // Add this parameter
 }) => {
   if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
     return (
