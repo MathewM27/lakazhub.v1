@@ -234,7 +234,7 @@ const Navigation = () => {
                     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
                 });
             }
-            window.location.href = 'http://localhost:3000/login'; // Update to use full URL
+            window.location.href = process.env.NEXT_PUBLIC_SITE_URL || 'https://lakazhub.com';
         } catch (err) {
             // console.error('Error logging out:', err);
         }
@@ -345,7 +345,7 @@ const Navigation = () => {
                             </Sheet>
                         </div>
                         
-                        <Link href="http://localhost:3000/" className="group flex items-center">
+                        <Link href="/" className="group flex items-center">
                             <span className="text-2xl font-bold tracking-tight transition-colors text-white">
                                 Lakaz<span className="opacity-70">Hub</span>
                             </span>
@@ -359,7 +359,7 @@ const Navigation = () => {
                     {/* Desktop navigation */}
                     <div className="hidden items-center space-x-1 md:flex">
                         <Link 
-                            href="http://localhost:3000/tenant-dashboard" 
+                            href="/tenant-dashboard" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-black hover:bg-white"
                         >
                             <Home className="mr-2 h-4 w-4" />

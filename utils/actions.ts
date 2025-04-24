@@ -47,7 +47,7 @@ export const signinWithGoogle = async (
     }
   );
 
-  // Update the query params to more explicitly handle landlord role
+  // Update to use environment variable for site URL
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -58,8 +58,8 @@ export const signinWithGoogle = async (
         ...(userType === 'landlord' ? { user_role: 'landlord' } : 
            userType === 'tenant' ? { user_role: 'tenant' } : {})
       },
-      // Add user_role to the callback URL as well for redundancy
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
+      // Use NEXT_PUBLIC_SITE_URL environment variable with fallback
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://lakazhub.com'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
     }
   });
 
@@ -68,7 +68,7 @@ export const signinWithGoogle = async (
   throw new Error('No URL returned from OAuth response');
 };
 
-// Facebook signup is coming soon. The logic is temporarily disabled.
+// Commented out Facebook auth contains localhost:3000 as well
 // export const signinWithFacebook = async (
 //   userType?: 'tenant' | 'landlord'
 // ) => {
@@ -97,7 +97,7 @@ export const signinWithGoogle = async (
 //         ...(userType === 'landlord' ? { user_role: 'landlord' } : 
 //            userType === 'tenant' ? { user_role: 'tenant' } : {})
 //       },
-//       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
+//       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://lakazhub.com'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
 //     }
 //   });
 //   if (error) throw error;
