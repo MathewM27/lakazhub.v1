@@ -29,7 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import dynamic from "next/dynamic";
 import { supabase } from "../../utils/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { useAuth } from "../../auth/AuthHandler";
+import { useAuth } from "../../auth/AuthHandler"; // Remove getSafeAppUrl from import
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -234,7 +234,8 @@ const Navigation = () => {
                     document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
                 });
             }
-            window.location.href = process.env.NEXT_PUBLIC_SITE_URL || 'https://lakazhub.com';
+            // Directly use production URL in production mode instead of getSafeAppUrl
+            window.location.href = 'https://lakazhub.com';
         } catch (err) {
             // console.error('Error logging out:', err);
         }

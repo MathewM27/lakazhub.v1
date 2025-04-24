@@ -1,6 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Add production URL constant
+const PRODUCTION_URL = 'https://lakazhub.com';
+
 // Define public paths once to avoid recomputation
 const PUBLIC_PATHS = [
   '/',
@@ -28,7 +31,7 @@ const getRequiredRole = (pathname: string): string | null => {
   return null;
 };
 
-export async function updateSession(request: NextRequest, skipSessionCheck = false) {
+export async function updateSession(request: NextRequest, skipSessionCheck = false, isProduction = true) {
   // Quick path for auth endpoints - no need for full middleware processing
   if (skipSessionCheck || request.nextUrl.pathname.startsWith('/auth')) {
     return NextResponse.next({ request });

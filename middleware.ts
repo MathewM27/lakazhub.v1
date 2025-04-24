@@ -1,7 +1,13 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from './utils/supabase/middleware'
 
+// Add production URL constant
+const PRODUCTION_URL = 'https://lakazhub.com';
+
 export async function middleware(request: NextRequest) {
+  // Check if we're on the production domain
+  const isProduction = request.headers.get('host') === 'lakazhub.com';
+  
   // Check if this is a redirect from authentication
   const url = new URL(request.url)
   const isAuthCallback = url.pathname === '/auth/callback' || 
@@ -10,12 +16,12 @@ export async function middleware(request: NextRequest) {
   
   // Allow auth callbacks to proceed without session checks
   if (isAuthCallback) {
-    console.log('Auth callback detected, skipping session check')
+    console.log('Auth callback detected, skipping session check');
     return await updateSession(request, true) // Pass true to skip checks
   }
   
-  // For all other requests, process normally
-  return await updateSession(request)
+  // For all other requests, process normally with production flag
+  return await updateSession(request, false, isProduction);
 }
 
 export const config = {

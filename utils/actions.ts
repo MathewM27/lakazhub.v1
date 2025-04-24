@@ -19,6 +19,13 @@ type Provider = 'google' | 'apple' | 'facebook';
 
 // Remove Magic Link sign-up logic and export
 
+// Update to always use production URL
+function getServerSideAppUrl(path: string = '') {
+  // Always use production URL in production mode
+  const baseUrl = 'https://lakazhub.com';
+  return `${baseUrl}${path ? (path.startsWith('/') ? path : `/${path}`) : ''}`;
+}
+
 export const signinWithGoogle = async (
   userType?: 'tenant' | 'landlord'
 ) => {
@@ -47,7 +54,9 @@ export const signinWithGoogle = async (
     }
   );
 
-  // Update to use environment variable for site URL
+  // Use the server-side function to get the redirect URL
+  const redirectUrl = getServerSideAppUrl(`auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`);
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -58,8 +67,7 @@ export const signinWithGoogle = async (
         ...(userType === 'landlord' ? { user_role: 'landlord' } : 
            userType === 'tenant' ? { user_role: 'tenant' } : {})
       },
-      // Use NEXT_PUBLIC_SITE_URL environment variable with fallback
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://lakazhub.com'}/auth/callback?next=/success${userType ? `&user_role=${userType}` : ''}`
+      redirectTo: redirectUrl
     }
   });
 

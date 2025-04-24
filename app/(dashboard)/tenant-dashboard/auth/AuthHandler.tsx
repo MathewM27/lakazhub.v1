@@ -319,3 +319,15 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     </AuthContext.Provider>
   );
 }
+
+// Add this function and export it
+export function getSafeAppUrl(path: string = '') {
+  // For client-side navigation with relative URLs, just return the path
+  if (typeof window !== 'undefined' && path && !path.startsWith('http')) {
+    return path.startsWith('/') ? path : `/${path}`;
+  }
+  
+  // For redirects that need absolute URLs - always use production in prod mode
+  const baseUrl = 'https://lakazhub.com';
+  return `${baseUrl}${path ? (path.startsWith('/') ? path : `/${path}`) : ''}`;
+}

@@ -77,6 +77,8 @@ export const SignupSection = () => {
     try {
       setIsGoogleLoading(true);
       clearAuthStorage();
+      
+      // Use production URL for auth loading
       router.push(`/auth/auth-loading?message=Connecting to Google&user_role=${userType}`);
       await signinWithGoogle(userType);
     } catch (error) {
