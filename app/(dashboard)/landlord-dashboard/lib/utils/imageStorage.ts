@@ -315,14 +315,14 @@ export class ImageStorage {
   static async uploadWithRetry(
     path: string,
     file: File,
-    options: {
+    _options: {
       cacheControl?: string;
       contentType?: string;
       upsert?: boolean;
     } = {},
     maxRetries: number = 3
   ): Promise<{
-    data: any;
+    data: unknown;
     error: Error | null;
   }> {
     let attempt = 0;
@@ -339,7 +339,7 @@ export class ImageStorage {
         
         const result = await supabase.storage
           .from(this.BUCKET_NAME)
-          .upload(finalPath, file, options);
+          .upload(finalPath, file, _options);
           
         if (!result.error) {
           return result;
@@ -371,7 +371,7 @@ export class ImageStorage {
   /**
    * Compress an image to reduce file size
    */
-  static async compressImage(file: File, _maxSizeMB = 1): Promise<File | null> {
+  static async compressImage(file: File, _: number = 1): Promise<File | null> {
     // Implement compression with a library like browser-image-compression
     // For now, just return the original file
     return file;

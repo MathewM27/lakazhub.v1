@@ -50,8 +50,8 @@ const AnimatedDivider = () => (
 export const SignupSection = () => {
   const router = useRouter();
   const [userType, setUserType] = useState<"tenant" | "landlord">("tenant");
-  const [error, setError] = useState<string>("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [error, setError] = useState<string>("");
   // const [isFacebookLoading, setIsFacebookLoading] = useState(false); // Removed unused state
 
   const handleUserTypeChange = useCallback((type: "tenant" | "landlord") => {

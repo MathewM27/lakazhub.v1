@@ -243,6 +243,9 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
   );
 });
 
+// Add display name
+PropertyCard.displayName = 'PropertyCard';
+
 // Property Carousel Component
 const PropertyCarousel = ({
   title,

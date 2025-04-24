@@ -52,7 +52,6 @@ export class PropertyAPI {
         throw new Error('Not authenticated');
       }
 
-      // Direct Supabase query 
       const { data: propertiesData, error } = await supabase
         .from('properties')
         .select('*')

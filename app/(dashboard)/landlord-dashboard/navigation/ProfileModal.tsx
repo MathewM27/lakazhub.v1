@@ -30,11 +30,7 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
   
   const [email, setEmail] = useState(user?.email || '');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // NEW
-  const [showDeletedInfo, setShowDeletedInfo] = useState(false); // NEW
-  const [showEmailInfo, setShowEmailInfo] = useState(false); // NEW
 
   const handleEmailChange = async () => {
     try {
@@ -42,28 +38,10 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
       const { error } = await supabase.auth.updateUser({ email });
       if (error) throw error;
       setIsChangingEmail(false);
-      setShowEmailInfo(true); // Show modal instead of alert
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
       console.error('Error changing email:', err);
       setError(errorObj.message || 'Failed to change email');
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
-    try {
-      setTimeout(() => {
-        setIsDeleting(false);
-        setShowDeleteConfirm(false);
-        setShowDeletedInfo(true); // Show info modal instead of alert
-        onClose();
-      }, 2000);
-    } catch (err: unknown) {
-      const errorObj = err as { message?: string };
-      setError(errorObj.message || 'Failed to delete account');
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
     }
   };
 
@@ -169,16 +147,7 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row gap-2 border-t border-white/10 pt-4">
-            {/*
-            <Button 
-              variant="destructive" 
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? "Processing..." : "Delete Account"}
-            </Button>
-            */}
+            {/* */}
           </DialogFooter>
         </DialogContent>
       </Dialog>

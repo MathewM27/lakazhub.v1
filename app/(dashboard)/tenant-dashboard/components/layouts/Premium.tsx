@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Clock, Bell, ThumbsUp } from "lucide-react";
+import { Clock, Bell, ThumbsUp } from "lucide-react";
 import PremiumFeatures from "@/components/dashboard/PremiumFeatures";
 
 export default function TenantPremiumFeatures() {

@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/nextjs';
-
 // Auth error types enum
 export enum AuthErrorType {
   SESSION_EXPIRED = 'SESSION_EXPIRED',
@@ -10,10 +8,18 @@ export enum AuthErrorType {
   UNKNOWN = 'UNKNOWN',
 }
 
+// Define a specific error type to replace 'any'
+interface ErrorWithMessage {
+  message?: string;
+  name?: string;
+}
+
 // Helper to categorize errors
-export const categorizeAuthError = (error: any): AuthErrorType => {
-  const errorMessage = error?.message?.toLowerCase() || '';
-  const errorName = error?.name || '';
+export const categorizeAuthError = (error: ErrorWithMessage | unknown): AuthErrorType => {
+  // Cast unknown error to our interface with optional properties
+  const err = error as ErrorWithMessage;
+  const errorMessage = err?.message?.toLowerCase() || '';
+  const errorName = err?.name || '';
   
   if (errorName === 'AuthSessionMissingError' || errorMessage.includes('auth session missing')) {
     return AuthErrorType.SESSION_MISSING;

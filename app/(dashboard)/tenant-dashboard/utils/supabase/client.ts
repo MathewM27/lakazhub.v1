@@ -13,6 +13,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 let supabaseInstance: SupabaseClient | null = null;
 
 // Create the Supabase client
+
 export const supabase = isBrowser ? getSupabaseClient() : null as any;
 
 // Function to get or create the Supabase client

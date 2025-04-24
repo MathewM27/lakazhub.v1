@@ -1,4 +1,4 @@
-import { Sparkles, Bell, Star, Crown } from "lucide-react";
+import { Bell, Star, Crown } from "lucide-react";
 import PremiumFeatures from "@/components/dashboard/PremiumFeatures";
 
 export default function OtherProperties() {

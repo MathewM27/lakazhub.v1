@@ -11,9 +11,6 @@ export default function AuthLoadingScreen({
   userType,
   message = 'Preparing your dashboard' 
 }: AuthLoadingScreenProps) {
-  const isPrimaryColor = userType === 'landlord' ? 'amber' : 'blue';
-  const bgColor = `bg-${isPrimaryColor}-500`;
-  const borderColor = `border-${isPrimaryColor}-500`;
   
   return (
     <div className="flex flex-col h-screen bg-black text-white">

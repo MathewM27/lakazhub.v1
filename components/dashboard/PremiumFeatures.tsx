@@ -24,10 +24,6 @@ export default function PremiumFeatures({
     highlightColor === "yellow"
       ? "bg-yellow-900/30 border-yellow-500/30 text-yellow-200"
       : "bg-blue-900/30 border-blue-500/30 text-blue-200";
-  const badgeBg =
-    highlightColor === "yellow"
-      ? "bg-yellow-400"
-      : "bg-blue-400";
   const badgeTextColor =
     highlightColor === "yellow"
       ? "text-yellow-200"

@@ -15,15 +15,8 @@ const isBrowser = typeof window !== 'undefined';
 const AUTH_ROLE = 'tenant';
 
 // Safe logging functions that only log in development
-const logDebug = (_message: string, _data?: unknown) => {
-  if (process.env.NODE_ENV === 'development') {
-    // Comment out all console.log calls
-    // if (data !== undefined) {
-    //   console.log(`[AUTH_HANDLER] ${message}`, data);
-    // } else {
-    //   console.log(`[AUTH_HANDLER] ${message}`);
-    // }
-  }
+const logDebug = (p0: string) => {
+  // No-op
 };
 
 // Create auth context to share authentication state

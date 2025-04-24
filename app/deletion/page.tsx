@@ -27,7 +27,7 @@ export default function DataDeletionPage() {
               <a href="mailto:futurexdesigns.info@gmail.com" className="text-blue-400 underline">
                 futurexdesigns.info@gmail.com
               </a>{" "}
-              from the email address associated with your LakazHub account. Please include "Data Deletion Request" in the subject line.
+              from the email address associated with your LakazHub account. Please include &quot;Data Deletion Request&quot; in the subject line.
             </p>
           </section>
           <section>

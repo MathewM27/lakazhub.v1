@@ -143,7 +143,7 @@ const Header = () => {
             }
 
             // Create notification objects from conversations
-            const notifications: MessageNotification[] = filteredConversations.map((conv: {
+            const notifications = filteredConversations.map((conv: {
               id: string;
               property_id: string;
               properties?: { name?: string };
@@ -236,7 +236,7 @@ const Header = () => {
           .subscribe();
           
         // Listen for the custom event when messages are marked as read in other components
-        const handleMessagesRead = (_event: CustomEvent) => {
+        const handleMessagesRead = () => {
           // Refresh notifications to update the UI
           fetchUnreadMessagesAndNotifications();
         };

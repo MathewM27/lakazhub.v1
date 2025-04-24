@@ -89,7 +89,7 @@ export default function PropertyGrid({
       
       // Refresh properties list
       refreshProperties();
-    } catch (error) {
+    } catch {
       toast({
         title: "Delete failed",
         description: "Unexpected error occurred. Please try again.",

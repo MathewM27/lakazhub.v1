@@ -53,7 +53,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold mb-2 text-white">6. Limitation of Liability</h2>
             <p>
-              LakazHub is provided "as is" and without warranties of any kind. We are not liable for any damages arising from your use of the platform.
+              LakazHub is provided &quot;as is&quot; and without warranties of any kind. We are not liable for any damages arising from your use of the platform.
             </p>
           </section>
           <section>

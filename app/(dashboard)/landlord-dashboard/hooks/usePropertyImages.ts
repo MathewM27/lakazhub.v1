@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Property } from '../types/index';
 import { PropertyService } from '../lib/utils/services/PropertyService';
 
@@ -101,9 +101,7 @@ export function useProperties() {
   };
 }
 
-import { useCallback } from 'react';
-
-export function usePropertyImages(propertyId: string) {
+export function usePropertyImages(_: string) {
   // Function to get optimized URL for images
   const getOptimizedUrl = useCallback((imageUrl: string) => {
     // If the URL is already optimized or is a relative path, return it as is

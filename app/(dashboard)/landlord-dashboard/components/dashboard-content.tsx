@@ -46,22 +46,6 @@ export function DashboardContent({
     return () => window.removeEventListener("propertyChanged", handler);
   }, []);
 
-  // Handler to be called after property add/update
-  const handlePropertyChanged = useCallback(() => {
-    setRefreshNeeded(true);
-  }, []);
-
-  // Handler for refresh button (not used here, but kept for completeness)
-  const handleRefresh = useCallback(async () => {
-    PropertyCache.clearCache();
-    setTimeout(async () => {
-      if (refreshFunction) {
-        await refreshFunction();
-        setRefreshNeeded(false);
-      }
-    }, 200);
-  }, [refreshFunction]);
-
   return (
     <div className="flex-1">
       <HeroSection />

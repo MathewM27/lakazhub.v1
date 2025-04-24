@@ -1,5 +1,5 @@
 import { supabase } from './supabase/client';
-import { logDebug, logError } from './logging';
+import { logError } from './logging';
 import { Session } from '@supabase/supabase-js';
 
 // Automatically refresh session when it's about to expire
@@ -32,7 +32,7 @@ export const setupSessionRefresh = () => {
         }
       }
     } catch (err) {
-      logError('Error during session refresh', err);
+      logError('Error during session refresh', err instanceof Error ? err : new Error(String(err)));
       // Sentry reporting removed
     }
   };

@@ -44,35 +44,36 @@ export const useProperties = () => {
   // Initial fetch
   useEffect(() => {
     fetchProperties();
-  }, []); // Empty dependency array to run only once on mount
+  }, [fetchProperties]); // Add fetchProperties to dependency array
 
   // Listen for cache updates
   useEffect(() => {
-    const handleCacheUpdate = (data: any) => {
+    const handleCacheUpdate = (data: unknown) => {
       // Only process updates if we're not already refreshing
       if (refreshInProgress.current) {
         console.log('[useProperties] Ignoring cache update while refresh in progress');
         return;
       }
-      
-      if (data.type === 'properties') {
-        setProperties(data.data);
-      } else if (data.type === 'property') {
-        // If a single property was updated, refresh the list
-        // Add a slight delay to avoid multiple refreshes
-        setTimeout(() => {
-          fetchProperties(true);
-        }, 100);
-      } else if (data.type === 'clear') {
-        // If cache was cleared, refresh from server after a delay
-        setTimeout(() => {
-          fetchProperties(true);
-        }, 300);
+
+      // Type guard for expected cache update structure
+      if (typeof data === 'object' && data !== null && 'type' in data) {
+        const update = data as { type: string; data?: Property[] };
+        if (update.type === 'properties' && Array.isArray(update.data)) {
+          setProperties(update.data);
+        } else if (update.type === 'property') {
+          setTimeout(() => {
+            fetchProperties(true);
+          }, 100);
+        } else if (update.type === 'clear') {
+          setTimeout(() => {
+            fetchProperties(true);
+          }, 300);
+        }
       }
     };
 
     PropertyCache.addEventListener('update', handleCacheUpdate);
-    
+
     return () => {
       PropertyCache.removeEventListener('update', handleCacheUpdate);
     };

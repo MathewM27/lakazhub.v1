@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Property } from './property-layout/PropertyCard';
 
 // Enhanced amenity icons mapping
-const amenityIcons: { [key: string]: React.ComponentType<any> } = {
+const amenityIcons: { [key: string]: React.ComponentType<React.SVGProps<SVGSVGElement>> } = {
   // Property amenities
   wifi: Wifi,
   tv: Tv,
@@ -145,7 +145,7 @@ const PropertyDetailModal = ({
                 fill
                 className="object-cover"
                 onError={(e) => {
-                  // console.error("Failed to load image:", enhancedProperty.images?.[currentImageIndex]);
+                  // Fall back to placeholder image if loading fails
                   (e.target as HTMLImageElement).src = '/placeholder-property.jpg';
                 }}
               />

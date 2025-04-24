@@ -22,7 +22,6 @@ export default function LandlordDashboard() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
-  const { toast } = useToast();
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successModalProps] = useState({
     title: "",

@@ -101,8 +101,8 @@ export async function getUserProfile(userId: string) {
           } else {
             // console.error('[SUPABASE_CLIENT] Alternative fetch failed:', response.status, response.statusText);
           }
-        } catch (_) {
-          // console.error('[SUPABASE_CLIENT] Alternative fetch error:', _altError);
+        } catch {
+          // console.error('[SUPABASE_CLIENT] Alternative fetch error');
         }
       }
       
@@ -190,8 +190,8 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative update succeeded:', updatedData);
               return updatedData[0] || null;
             }
-          } catch (_) {
-            // console.error('[SUPABASE_CLIENT] Alternative update failed:', _altError);
+          } catch {
+            // console.error('[SUPABASE_CLIENT] Alternative update failed');
           }
         }
         
@@ -232,8 +232,8 @@ export async function createUserProfile(profileData: Partial<UserProfile> & { em
               // console.log('[SUPABASE_CLIENT] Alternative insert succeeded:', insertedData);
               return insertedData[0] || null;
             }
-          } catch (_) {
-            // console.error('[SUPABASE_CLIENT] Alternative insert failed:', _altError);
+          } catch {
+            // console.error('[SUPABASE_CLIENT] Alternative insert failed');
           }
         }
         
@@ -300,7 +300,7 @@ export async function checkAuthStatus() {
           if ((Date.now() - parseInt(cacheTime)) < 60 * 1000) {
             return authStatus;
           }
-        } catch (_) {
+        } catch {
           // Invalid cache, continue with API call
         }
       }
@@ -344,9 +344,9 @@ export async function validateUserRole(userId: string, requiredRole: string) {
     
     // Check if profile exists and has the required role
     return !!profile && profile.user_role === requiredRole;
-  } catch (_) {
+  } catch {
     if (process.env.NODE_ENV === 'development') {
-      // console.error('[SUPABASE_CLIENT] Error validating user role:', _);
+      // console.error('[SUPABASE_CLIENT] Error validating user role');
     }
     return false;
   }

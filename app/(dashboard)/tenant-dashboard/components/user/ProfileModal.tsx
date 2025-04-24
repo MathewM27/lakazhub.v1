@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { User } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Mail, User as UserIcon, X } from "lucide-react";
-import { supabase } from "../../utils/supabase/client";
 import { useAuth } from "../../auth/AuthHandler";
 
 interface ProfileModalProps {
@@ -27,32 +26,9 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
   const { user: contextUser, profile: contextProfile } = useAuth();
   const user = propUser || contextUser;
   
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showDeletedInfo, setShowDeletedInfo] = useState(false); // NEW
 
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
-    setError('');
-    try {
-      const res = await fetch('/api/delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete account');
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-      setShowDeletedInfo(true);
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete account');
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  };
+  // Since the delete functionality is commented out, removed the related state and functions
 
   return (
     <>
@@ -147,82 +123,12 @@ const ProfileModal = ({ isOpen, onClose, user: propUser }: ProfileModalProps) =>
           </div>
 
           <DialogFooter className="flex flex-col sm:flex-row gap-2 border-t border-white/10 pt-3 mt-2">
-            {/* 
-            <Button 
-              variant="destructive" 
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? "Processing..." : "Delete Account"}
-            </Button>
-            */}
+            {/* Delete button is commented out in original code */}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
-      {/* 
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="sm:max-w-sm rounded-xl border border-white/20 bg-black text-white shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              Confirm Account Deletion
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-white/80 text-base">
-              Are you sure you want to delete your account? This action cannot be undone.
-            </p>
-          </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-              disabled={isDeleting}
-              className="w-full sm:w-auto border-white/30 bg-white/10 text-white hover:bg-white/20"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDeletedInfo} onOpenChange={setShowDeletedInfo}>
-        <DialogContent className="sm:max-w-sm rounded-xl border border-white/20 bg-black text-white shadow-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-blue-400" />
-              Account Deletion Requested
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-white/80 text-base">
-              Your account deletion request has been submitted.<br />
-              Support will contact you soon.
-            </p>
-          </div>
-          <DialogFooter className="flex pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeletedInfo(false)}
-              className="w-full border-white/30 bg-white/10 text-white hover:bg-white/20"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      */}
+      {/* Delete confirmation dialogs are commented out in original code */}
     </>
   );
 };

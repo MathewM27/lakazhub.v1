@@ -27,9 +27,6 @@ const PROPERTY_DETAILS_EXPIRY = 7 * 24 * 60 * 60 * 1000;
 // Max cache size (3MB)
 const MAX_CACHE_SIZE = 3 * 1024 * 1024;
 
-// Enable or disable detailed logging
-const ENABLE_DETAILED_LOGS = true;
-
 export class PropertyCache {
   private static CACHE_KEY = 'property_cache_v1';
   private static cache: CacheData = { propertyDetails: {} };
@@ -53,7 +50,7 @@ export class PropertyCache {
   /**
    * Log a message with the [PROPERTY_CACHE] prefix
    */
-  private static log(message: string, level: 'info' | 'warn' | 'error' = 'info'): void {
+  private static log(message: string, _level: 'info' | 'warn' | 'error' = 'info'): void {
     // No-op for production: remove all logs
   }
   
@@ -109,8 +106,7 @@ export class PropertyCache {
       } else {
         this.log('No existing cache found in localStorage, starting with empty cache');
       }
-    } catch (error) {
-      this.log(`Failed to load cache from localStorage: ${error}`, 'error');
+    } catch {
       this.cache = { propertyDetails: {} };
       this.stats = {
         hits: 0,
@@ -138,7 +134,7 @@ export class PropertyCache {
       if (typeof window !== 'undefined') {
         localStorage.setItem(this.CACHE_KEY + '_stats', JSON.stringify(this.stats));
       }
-    } catch (error) {
+    } catch {
       // Removed: console.error('Error updating cache stats:', error);
     }
   }
@@ -154,7 +150,7 @@ export class PropertyCache {
   /**
    * Register a listener for cache updates
    */
-  static addEventListener(event: 'update', callback: (data: any) => void): void {
+  static addEventListener(event: 'update', callback: (data: unknown) => void): void {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
@@ -164,7 +160,7 @@ export class PropertyCache {
   /**
    * Remove a listener
    */
-  static removeEventListener(event: 'update', callback: (data: any) => void): void {
+  static removeEventListener(event: 'update', callback: (data: unknown) => void): void {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
     }
@@ -173,12 +169,12 @@ export class PropertyCache {
   /**
    * Notify listeners of cache updates
    */
-  private static notifyListeners(event: 'update', data: any): void {
+  private static notifyListeners(event: 'update', data: unknown): void {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => {
         try {
           callback(data);
-        } catch (error) {
+        } catch {
           // Removed: console.error('Error in cache listener callback:', error);
         }
       });
@@ -204,8 +200,8 @@ export class PropertyCache {
       localStorage.setItem(this.CACHE_KEY, cacheString);
       this.updateCacheStats();
       this.log(`Saved cache to localStorage (${Math.round(cacheString.length/1024)}KB)`);
-    } catch (error) {
-      this.log(`Failed to save cache to localStorage: ${error}`, 'error');
+    } catch {
+      // this.log(`Failed to save cache to localStorage: ${error}`, 'error');
     }
   }
   

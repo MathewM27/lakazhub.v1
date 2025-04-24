@@ -61,7 +61,7 @@ const Preferences: React.FC<PreferencesProps> = ({ preferredProperties, hasActiv
               <AlertDescription className="text-white/90">
                 <h3 className="text-lg font-medium mb-1">No matching properties found</h3>
                 <p className="text-sm text-white/70 mb-3">
-                  We couldn't find any properties that match your current filters. 
+                  We couldn&apos;t find any properties that match your current filters. 
                   Try adjusting your criteria for better results.
                 </p>
                 <Button

@@ -4,16 +4,10 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Property } from '@/utils/types/property';
 import { Bed, Bath, Square, Home } from 'lucide-react';
-import imageCompression from 'browser-image-compression';
 
 interface PropertyCardProps {
   property: Property;
   onClick?: () => void;
-}
-
-async function handleImageUpload(file: File) {
-  const compressed = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1200 });
-  // ...upload compressed image...
 }
 
 export const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
