@@ -2,16 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
+// import { FaFacebook } from "react-icons/fa"; // Removed unused import
 import { FiUser, FiHome } from "react-icons/fi";
 import { BsShieldLockFill, BsStars } from "react-icons/bs";
 import { HiOutlineSparkles } from "react-icons/hi2";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic"; // Removed unused import
 import { signinWithGoogle /*, signinWithFacebook */ } from "@/utils/actions";
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
-
-const Modal = dynamic(() => import("./../layout/Modal"), { ssr: false });
 
 const StaticBackground = () => (
   <div className="absolute inset-0 z-0 opacity-40">
@@ -54,7 +52,7 @@ export const SignupSection = () => {
   const [userType, setUserType] = useState<"tenant" | "landlord">("tenant");
   const [error, setError] = useState<string>("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
+  // const [isFacebookLoading, setIsFacebookLoading] = useState(false); // Removed unused state
 
   const handleUserTypeChange = useCallback((type: "tenant" | "landlord") => {
     setUserType(type);
