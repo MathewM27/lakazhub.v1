@@ -4,33 +4,35 @@ import { FiCheck, FiArrowRight, FiMessageCircle, FiFilter, FiHome, FiLink } from
 
 export const HeroSection = () => {
   return (
-    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden">
+    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden mt-0 lg:mt-8">
       {/* Simple gradient overlay instead of canvas background */}
       
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 lg:py-0">
         {/* Convert from flex to grid for better performance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
-          {/* Left content column */}
-          <div className="space-y-4 md:space-y-6 lg:max-w-xl">
-            <div>
-              <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
-                Introducing LakazHub
-              </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 items-stretch gap-6 lg:gap-12">
+          {/* Left content column - Changed to flex with space-between for better alignment */}
+          <div className="flex flex-col justify-between h-full py-4">
+            <div className="space-y-4 md:space-y-6">
+              <div>
+                <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
+                  Introducing LakazHub
+                </span>
+              </div>
+
+              <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+                <span className="block">
+                  Where Homes &
+                </span>
+                <span className="block relative">
+                  <span className="relative z-10">People Connect</span>
+                </span>
+              </h1>
+
+              <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
+                Redefining the renting experience by seamlessly connecting property owners and tenants.
+              </p>
             </div>
-
-            <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
-              <span className="block">
-                Where Homes &
-              </span>
-              <span className="block relative">
-                <span className="relative z-10">People Connect</span>
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
-              Redefining the renting experience by seamlessly connecting property owners and tenants.
-            </p>
 
             {/* Mobile image - Only shown on mobile devices */}
             <div className="block md:hidden w-full py-4">
@@ -81,7 +83,7 @@ export const HeroSection = () => {
             </div>
 
             {/* Using grid for button layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-auto">
               <Link
                 href="#signup"
                 className="group min-h-[50px] flex items-center justify-center px-8 py-3 bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300 text-base font-medium focus:outline-none focus:ring-2 focus:ring-white/50"
@@ -98,8 +100,8 @@ export const HeroSection = () => {
               </Link>
             </div>
 
-            {/* Feature highlights */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            {/* Feature highlights - Moved to the bottom for better alignment */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                   <FiCheck className="w-5 h-5 text-white" />
@@ -116,8 +118,8 @@ export const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right image/visual column - Fixed for desktop visibility */}
-          <div className="hidden md:block">
+          {/* Right image/visual column - Ensure same height as left column */}
+          <div className="hidden md:flex md:items-center">
             <div className="w-full max-w-md lg:max-w-lg xl:max-w-xl mx-auto md:ml-auto">
               <div className="aspect-square w-full relative">
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
