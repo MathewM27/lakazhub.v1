@@ -5,8 +5,6 @@ import { Home, ChevronLeft, ChevronRight } from 'lucide-react';
 import { properties } from '@/utils/types/properties';
 import { PropertyCard } from '../ui/property-card';
 
-// Remove Embla and all animation logic
-
 export const PropertySlider = () => {
   const [activeFilters, setActiveFilters] = useState('all');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +51,7 @@ export const PropertySlider = () => {
   };
 
   return (
-    <section id="properties" className="py-24 bg-black relative overflow-hidden">
+    <section id="properties" className="py-16 md:py-24 bg-black relative overflow-hidden">
       {/* ...existing background grid... */}
       <div className="absolute inset-0 opacity-20">
         {/* ...existing code... */}
@@ -65,8 +63,8 @@ export const PropertySlider = () => {
           ></div>
         ))}
       </div>
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="gap-y-8 flex flex-col">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 mb-4">
@@ -75,7 +73,7 @@ export const PropertySlider = () => {
                 </div>
                 <span className="text-white/70 text-sm font-medium">Lakaz-Hub</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+              <h2 className="font-bold mb-4 text-white text-fluid-h2">
                 Discover & List Properties
               </h2>
               <p className="text-base md:text-lg text-white/70">
@@ -111,7 +109,7 @@ export const PropertySlider = () => {
                   filteredProperties.map((property, idx) => (
                     <div
                       key={property.id}
-                      className="min-w-[280px] md:min-w-[320px] snap-start"
+                      className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start"
                     >
                       <PropertyCard
                         id={property.id}

@@ -88,15 +88,15 @@ export const SignupSection = () => {
   const info = userType === "tenant" ? tenantInfo : landlordInfo;
 
   return (
-    <section id="signup" className="bg-black text-white py-16 relative overflow-hidden">
+    <section id="signup" className="bg-black text-white py-16 md:py-24 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black to-black/95"></div>
       <StaticBackground />
-      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-3xl md:text-4xl font-bold text-center mb-10"
+          className="font-bold text-center mb-10 text-fluid-h2"
         >
           Join Our Community
         </motion.h2>

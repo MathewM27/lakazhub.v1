@@ -60,6 +60,9 @@ export default {
       },
       spacing: {
         '4.5': '1.125rem',
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '28': '7rem',
         '128': '32rem',
         '144': '36rem',
       },
@@ -74,10 +77,12 @@ export default {
       container: {
         center: true,
         padding: {
-          DEFAULT: '0.5rem',  
-          sm: '0.5rem',          
-          lg: '0.5rem',        
-          xl: '0.5rem',   
+          DEFAULT: '1rem',
+          sm: '1.5rem',
+          md: '2rem',
+          lg: '2.5rem',
+          xl: '3rem',
+          '2xl': '4rem',
         },
         screens: {
           sm: '640px',
@@ -85,7 +90,8 @@ export default {
           lg: '1024px',
           xl: '1280px',
           '2xl': '1536px',
-        },
+        }
+        // Removed: maxWidth (not supported by Tailwind)
       },
       fontSize: {
         'fluid-sm': 'clamp(0.875rem, 0.8rem + 0.25vw, 1rem)',
@@ -93,6 +99,9 @@ export default {
         'fluid-lg': 'clamp(1.125rem, 1rem + 0.5vw, 1.5rem)',
         'fluid-xl': 'clamp(1.25rem, 1.1rem + 0.75vw, 1.875rem)',
         'fluid-2xl': 'clamp(1.5rem, 1.25rem + 1.25vw, 2.5rem)',
+        // Encourage use of fluid font sizes for headings and body
+        'fluid-h1': 'clamp(2.25rem, 1.5rem + 3vw, 4rem)', // For hero/main headings
+        'fluid-h2': 'clamp(1.5rem, 1.2rem + 2vw, 2.5rem)', // For section headings
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',

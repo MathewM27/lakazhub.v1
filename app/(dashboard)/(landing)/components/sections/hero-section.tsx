@@ -4,15 +4,16 @@ import { FiCheck, FiArrowRight, FiMessageCircle, FiFilter, FiHome, FiLink } from
 
 export const HeroSection = () => {
   return (
-    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden pt-8">
+    <section
+      id="hero"
+      className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-16 md:py-24 bg-black text-white overflow-hidden pt-8"
+    >
       {/* Simple gradient overlay instead of canvas background */}
-      
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 lg:py-0">
-        {/* Convert from flex to grid for better performance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 items-stretch gap-6 lg:gap-12">
-          {/* Left content column - Changed to flex with space-between for better alignment */}
-          <div className="flex flex-col justify-between h-full py-4">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10 py-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
+          {/* Left content column */}
+          <div className="flex flex-col justify-between h-full gap-y-8 py-4">
             <div className="space-y-4 md:space-y-6">
               <div>
                 <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
@@ -20,7 +21,7 @@ export const HeroSection = () => {
                 </span>
               </div>
 
-              <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
+              <h1 className="font-bold text-white leading-tight tracking-tight text-fluid-h1">
                 <span className="block">
                   Where Homes &
                 </span>
@@ -171,7 +172,7 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
-      
+
       <style jsx global>{`
         /* Simpler keyframes that avoid layout shifts */
         @keyframes fadeIn {

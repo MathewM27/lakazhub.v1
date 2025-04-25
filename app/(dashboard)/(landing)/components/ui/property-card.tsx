@@ -62,7 +62,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
   }) => {
     return (
       <div
-        className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative h-full flex flex-col transition-transform duration-200 hover:-translate-y-2"
+        className="bg-black rounded-xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative h-full flex flex-col"
         onClick={onClick}
       >
         {/* Availability indicator at top left */}
@@ -82,7 +82,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
 
         {/* Property Status Tag */}
         <div className="absolute top-4 right-4 z-10">
-          <div className="px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-medium rounded-full border border-white/20 transition-all duration-300">
+          <div className="px-3 py-1 bg-black/50 backdrop-blur-md text-white text-xs font-medium rounded-full border border-white/20">
             {type || 'For Rent'}
           </div>
         </div>
@@ -93,7 +93,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
             <FallbackImage
               src={imageUrl || '/bg1.jpg'}
               alt={name}
-              className="object-cover transition-transform duration-500 group-hover:scale-110 w-full h-52"
+              className="object-cover w-full h-52"
               width={800}
               height={208}
             />
@@ -104,21 +104,21 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority={false}
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className="object-cover"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = '/images/property-placeholder.jpg';
               }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60 group-hover:to-black/80 transition-all duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60" />
         </div>
 
         {/* Content Container */}
         <div className="p-5 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-3">
             <div className="max-w-[60%]">
-              <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors truncate">
+              <h3 className="text-lg font-semibold text-white truncate">
                 {name}
               </h3>
               <p className="text-white/70 flex items-center gap-1 text-sm mt-1 truncate">
@@ -148,15 +148,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = memo(
           </div>
 
           {/* View Details Button */}
-          <div className="mt-auto pt-4 w-full transition-all duration-300">
-            <button className="w-full h-10 bg-transparent border border-white/20 rounded-lg text-white text-sm group-hover:bg-white group-hover:text-black transition-all duration-300">
+          <div className="mt-auto pt-4 w-full">
+            <button className="w-full h-10 bg-transparent border border-white/20 rounded-lg text-white text-sm">
               View Details
             </button>
           </div>
         </div>
-
-        {/* Animated border effect */}
-        <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/30 rounded-xl pointer-events-none transition-colors duration-300"></div>
       </div>
     );
   }

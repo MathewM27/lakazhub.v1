@@ -131,20 +131,20 @@ export const Navbar = () => {
           : 'bg-transparent py-4'
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" 
-                className="group flex items-center" 
+                className="group flex flex-col items-start gap-y-3 md:flex-row md:items-center md:gap-y-0"
                 onClick={(e) => scrollToSection('hero', e)}>
-            <span className="text-2xl font-bold tracking-tight text-white">
+            <span className="font-bold tracking-tight text-white text-fluid-h2">
               Lakaz<span className="opacity-70">Hub</span>
             </span>
             <div className="h-1 bg-white/30 group-hover:bg-white/50 transition-all duration-300 ml-1 mt-1 rounded-full w-0 group-hover:w-full"></div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-3">
             {navLinks.map((link) => (
               <div key={link.href} className="relative px-1">
                 <a 
@@ -185,7 +185,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Menu - CSS transition instead of framer-motion */}
+      {/* Mobile Navigation Menu */}
       <div
         ref={mobileMenuRef}
         className={`md:hidden overflow-hidden transition-all duration-300 ${
@@ -195,7 +195,7 @@ export const Navbar = () => {
         }`}
       >
         <div className="backdrop-blur-xl bg-black/95 shadow-xl">
-          <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className="px-4 pt-2 pb-3 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -211,9 +211,7 @@ export const Navbar = () => {
               </a>
             ))}
           </div>
-          
-          {/* Mobile Authentication Option */}
-          <div className="px-2 pb-3">
+          <div className="px-4 pb-3">
             <div className="mt-3 p-3 rounded-lg bg-white/5">
               <a
                 href="#signup"

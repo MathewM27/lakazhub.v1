@@ -46,7 +46,7 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-black text-white pt-8 pb-4 overflow-hidden">
+    <footer className="relative bg-black text-white pt-16 pb-8 overflow-hidden">
       {/* Background pattern - simple and static for better performance */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-full h-full" 
@@ -60,7 +60,7 @@ export const Footer = () => {
       {/* Decorative elements - simplified */}
       <div className="absolute top-10 right-[20%] w-64 h-64 rounded-full bg-white/5 opacity-0 animate-pulse-slow"></div>
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
         {/* Logo section */}
         <div className="flex justify-center mb-4 opacity-0 animate-fade-in">
           <div className="text-center">
@@ -83,7 +83,7 @@ export const Footer = () => {
               </div>
             </div>
             
-            <h2 className="text-3xl font-bold tracking-tight">
+            <h2 className="font-bold tracking-tight text-fluid-h2">
               Lakaz<span className="text-white/70">Hub</span>
             </h2>
             <div className="h-1 w-12 bg-white/30 mx-auto mt-2 rounded-full" />
@@ -91,10 +91,10 @@ export const Footer = () => {
         </div>
 
         {/* Main footer content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
           {/* About Section */}
           <div className="space-y-4 opacity-0 animate-fade-in delay-200">
-            <h3 className="text-xl font-bold border-b border-white/10 pb-2 mb-4">About Us</h3>
+            <h3 className="text-fluid-lg font-bold border-b border-white/10 pb-2 mb-4">About Us</h3>
             <p className="text-white/70 leading-relaxed">
               Simplifying the rental experience for landlords and tenants across Mauritius with our innovative platform and dedicated service.
             </p>
@@ -103,7 +103,7 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4 opacity-0 animate-fade-in delay-300">
-            <h3 className="text-xl font-bold border-b border-white/10 pb-2 mb-4">Quick Links</h3>
+            <h3 className="text-fluid-lg font-bold border-b border-white/10 pb-2 mb-4">Quick Links</h3>
             <ul className="space-y-3">
               {[
                 { name: 'Home', href: '/' },
@@ -130,9 +130,9 @@ export const Footer = () => {
 
           {/* Social Links */}
           <div className="space-y-4 opacity-0 animate-fade-in delay-400">
-            <h3 className="text-xl font-bold border-b border-white/10 pb-2 mb-4">Follow Us</h3>
+            <h3 className="text-fluid-lg font-bold border-b border-white/10 pb-2 mb-4">Follow Us</h3>
             <p className="text-white/70 mb-4">Stay connected for updates and news</p>
-            <div className="flex space-x-3">
+            <div className="flex space-x-4">
               {[
                 { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61565853924765', label: 'Facebook' },
                 { icon: Instagram, href: 'https://www.instagram.com/futurexdesigns/', label: 'Instagram' },

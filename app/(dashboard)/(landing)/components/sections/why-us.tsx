@@ -57,7 +57,7 @@ export const WhyUsSection = () => {
   return (
     <section 
       id="why-us" 
-      className="relative py-24 bg-black text-white overflow-hidden"
+      className="relative py-16 md:py-24 bg-black text-white overflow-hidden"
     >
       {/* Static pattern background instead of canvas */}
       <div 
@@ -68,10 +68,10 @@ export const WhyUsSection = () => {
         }}
       />
       
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="gap-y-12 flex flex-col">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white relative inline-block">
+            <h2 className="font-bold mb-4 text-white relative inline-block text-fluid-h2">
               Why join the community?
               <span className="absolute -bottom-2 left-0 h-1 bg-white/20 rounded-full w-full"></span>
             </h2>
@@ -89,7 +89,7 @@ export const WhyUsSection = () => {
           </div>
           
           <div
-            className="mt-16 backdrop-blur-sm bg-black border border-white/10 text-white rounded-2xl p-8 md:p-10 relative overflow-hidden"
+            className="mt-16 backdrop-blur-sm bg-black border border-white/10 text-white rounded-2xl p-8 md:p-10 relative overflow-hidden min-h-[200px]"
           >
             <div className="absolute inset-0 overflow-hidden">
               <div className="absolute inset-0 opacity-20 bg-radial-gradient from-white/10 via-transparent to-transparent"></div>
@@ -101,7 +101,7 @@ export const WhyUsSection = () => {
               />
             </div>
             <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+              <h3 className="font-bold mb-4 text-white text-xl md:text-2xl">
                 Ready to transform your rental experience?
               </h3>
               <p className="text-white/80 text-lg">
