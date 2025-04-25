@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useAuth } from './auth/AuthHandler';
-import Hero from "./components/layouts/hero-section";
 import { PageWrapper } from "./components/layouts/PageWrapper";
 import PropertiesSection from "./components/properties/PropertySelection";
 import { Footer } from './components/navigation/Footer';
@@ -127,7 +126,6 @@ export default function Home() {
       
       <PageWrapper>
         <Navigation />
-        <Hero />
         <PropertiesSection />
         <PremiumFeatures />
         <Footer />

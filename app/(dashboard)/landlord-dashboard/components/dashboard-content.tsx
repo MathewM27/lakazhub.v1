@@ -3,10 +3,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import PropertyGrid from './property-component/property-grid';
-import HeroSection from "../layout/hero-section";
 import { Footer } from "../navigation/footer";
 import { Property } from "../types";
-import { PropertyCache } from "../lib/utils/cache/propertyCache";
+
 
 
 // Dynamically import heavy/rarely-used components at the top-level
@@ -47,9 +46,8 @@ export function DashboardContent({
   }, []);
 
   return (
-    <div className="flex-1">
-      <HeroSection />
-      <section className="container mx-auto px-4 py-12">
+    <div className="flex-1 pt-12">
+      <section className="container mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-8">My Properties</h2>
         <PropertyGrid
           onPropertyDetailsAction={onPropertyDetailsAction}

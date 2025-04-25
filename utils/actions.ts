@@ -33,7 +33,7 @@ export const signinWithGoogle = async (
   
   // Add specific logging for landlord flow
   if (userType === 'landlord') {
-    console.log('[AUTH_ACTION] Starting landlord Google sign-in flow');
+    // console.log('[AUTH_ACTION] Starting landlord Google sign-in flow');
   }
   
   const cookieStore = await cookies();
