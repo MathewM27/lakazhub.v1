@@ -46,9 +46,9 @@ export function DashboardContent({
   }, []);
 
   return (
-    <div className="flex-1 pt-12">
-      <section className="container mx-auto px-4 py-8">
-        <h2 className="text-3xl font-bold mb-8">My Properties</h2>
+    <div className="flex-1 pt-8">
+      <section className=" mx-auto px-4 py-8">
+        
         <PropertyGrid
           onPropertyDetailsAction={onPropertyDetailsAction}
           onAvailabilityAction={onAvailabilityAction}
