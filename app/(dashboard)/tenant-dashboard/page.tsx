@@ -22,7 +22,6 @@ const PremiumFeatures = dynamic(() => import('./components/layouts/Premium'), {
 const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") => {
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-      {/* Header with logo */}
       <div className="w-full py-6 px-8 border-b border-zinc-800">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
@@ -31,8 +30,6 @@ const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") =>
           </div>
         </div>
       </div>
-      
-      {/* Welcome content */}
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
           <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub</h2>
@@ -55,43 +52,14 @@ import RegisterSW from '../(landing)/components/pwa/RegisterSW';
 import DashboardInstallPrompt from '../../components/pwa/DashboardInstallPrompt';
 
 export default function Home() {
-  const { isAuthenticated, user, profile, isAuthenticating, hasCorrectRole, signOut } = useAuth();
+  const { user, profile, isAuthenticating, isAuthenticated, hasCorrectRole, signOut } = useAuth();
 
-  useEffect(() => {
-    // Comment out all console.log statements for cleaner production code
-    // console.log('[TENANT_DASHBOARD] Home component mounted');
-    // console.log('[TENANT_DASHBOARD] Authentication state:', { 
-    //   isAuthenticating, 
-    //   isAuthenticated, 
-    //   hasUser: !!user, 
-    //   hasProfile: !!profile,
-    //   hasCorrectRole
-    // });
-    
-    // if (user) {
-    //   console.log('[TENANT_DASHBOARD] User ID:', user.id);
-    //   console.log('[TENANT_DASHBOARD] User email:', user.email);
-    //   console.log('[TENANT_DASHBOARD] User metadata:', JSON.stringify(user.user_metadata));
-    // }
-    
-    // if (profile) {
-    //   console.log('[TENANT_DASHBOARD] Profile details:', {
-    //     id: profile.id,
-    //     full_name: profile.full_name,
-    //     email: profile.email_address,
-    //     role: profile.user_role
-    //   });
-    // }
-    
-    // Log Supabase environment variables availability (not the actual values)
-    // console.log('[TENANT_DASHBOARD] Supabase URL defined:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-    // console.log('[TENANT_DASHBOARD] Supabase Anon Key defined:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  }, [isAuthenticating, isAuthenticated, user, profile, hasCorrectRole]);
-
+  // Show a friendly welcome screen while authentication is being checked
   if (isAuthenticating) {
     return renderWelcomeScreen();
   }
-
+  
+  // Show login prompt if not authenticated
   if (!isAuthenticated || !user) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
@@ -101,7 +69,7 @@ export default function Home() {
           <div className="flex gap-4 justify-center">
             <Link 
               href="/" 
-              className="px-6 py-3 bg-blue-500 text-black font-medium hover:bg-blue-400 rounded-md transition-colors"
+              className="px-6 py-3 bg-blue-600 text-white font-medium hover:bg-blue-500 rounded-md transition-colors"
             >
               Log In
             </Link>
@@ -116,14 +84,17 @@ export default function Home() {
       </div>
     );
   }
-
+  
+  // If authenticated but role check is still pending or failed, show welcome screen first
   if (isAuthenticated && user && !hasCorrectRole) {
+    // Check if we're still in the process of validating the role
     const isStillValidating = profile === null;
     
     if (isStillValidating) {
       return renderWelcomeScreen("Verifying your account permissions...");
     }
     
+    // If we've completed validation and still don't have the correct role, show access denied
     return (
       <div className="flex flex-col items-center justify-center h-screen p-4 bg-black text-white">
         <div className="text-center max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-lg border border-zinc-800">
@@ -132,7 +103,7 @@ export default function Home() {
           <div className="flex gap-4 justify-center">
             <button 
               onClick={signOut}
-              className="px-6 py-3 bg-blue-500 text-black font-medium hover:bg-blue-400 rounded-md transition-colors"
+              className="px-6 py-3 bg-blue-600 text-white font-medium hover:bg-blue-500 rounded-md transition-colors"
             >
               Sign Out
             </button>
@@ -148,25 +119,19 @@ export default function Home() {
     );
   }
 
+  // Render dashboard for authenticated users
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white">
+    <div className="flex flex-col min-h-screen">
       <RegisterSW />
       <DashboardInstallPrompt userRole="tenant" />
-      <Navbar setIsSidebarOpen={setIsSidebarOpen} />
       
-      {/* Main dashboard content */}
-      <div className="flex flex-1 overflow-hidden">
-        <PageWrapper>
-          <Navigation />
-          <Hero />
-          {/* Remove pageSize prop, PropertiesSection paginates internally */}
-          <PropertiesSection />
-          <PremiumFeatures />
-          {/* Example: Render MapComponent if needed */}
-          {/* <MapComponent /> */}
-          <Footer />
-        </PageWrapper>
-      </div>
+      <PageWrapper>
+        <Navigation />
+        <Hero />
+        <PropertiesSection />
+        <PremiumFeatures />
+        <Footer />
+      </PageWrapper>
     </div>
   );
 }
