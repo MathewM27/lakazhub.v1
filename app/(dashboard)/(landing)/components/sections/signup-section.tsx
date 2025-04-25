@@ -2,12 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { FcGoogle } from "react-icons/fc";
-// import { FaFacebook } from "react-icons/fa"; // Removed unused import
 import { FiUser, FiHome } from "react-icons/fi";
 import { BsShieldLockFill, BsStars } from "react-icons/bs";
 import { HiOutlineSparkles } from "react-icons/hi2";
-// import dynamic from "next/dynamic"; // Removed unused import
-import { signinWithGoogle /*, signinWithFacebook */ } from "@/utils/actions";
+import { AiOutlineCheck } from "react-icons/ai";
+import { signinWithGoogle } from "@/utils/actions";
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
 
@@ -43,7 +42,7 @@ const AnimatedDivider = () => (
     initial={{ scaleX: 0 }}
     animate={{ scaleX: 1 }}
     transition={{ duration: 0.7, delay: 0.2, type: "spring" }}
-    className="w-full h-1 bg-gradient-to-r from-blue-500 via-white/30 to-amber-400 rounded-full my-8 origin-left"
+    className="w-full h-1 bg-gradient-to-r from-blue-500 via-white/30 to-amber-400 rounded-full my-6 origin-left"
   />
 );
 
@@ -52,7 +51,6 @@ export const SignupSection = () => {
   const [userType, setUserType] = useState<"tenant" | "landlord">("tenant");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  // const [isFacebookLoading, setIsFacebookLoading] = useState(false); // Removed unused state
 
   const handleUserTypeChange = useCallback((type: "tenant" | "landlord") => {
     setUserType(type);
@@ -93,7 +91,7 @@ export const SignupSection = () => {
     <section id="signup" className="bg-black text-white py-16 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black to-black/95"></div>
       <StaticBackground />
-      <div className="container mx-auto px-4 relative z-10 max-w-5xl">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +100,9 @@ export const SignupSection = () => {
         >
           Join Our Community
         </motion.h2>
-        <div className="max-w-sm mx-auto mb-8">
+        
+        {/* User Type Selector - Centered at the top */}
+        <div className="max-w-xs mx-auto mb-8">
           <div className="flex rounded-lg border border-white/10 p-1 bg-black/40 backdrop-blur-sm">
             <button
               onClick={() => handleUserTypeChange("tenant")}
@@ -129,96 +129,110 @@ export const SignupSection = () => {
           </div>
         </div>
 
-        {/* Animated Info Card */}
-        <motion.div
-          key={userType}
-          initial={{ opacity: 0, y: 30, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5, type: "spring" }}
-          className={`mx-auto w-full  mb-4 bg-gradient-to-br ${info.color} rounded-xl shadow-lg border border-white/10 p-5 flex items-center gap-4`}
-        >
+        {/* Grid Layout */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Left Column - Info Card */}
           <motion.div
-            initial={{ rotate: -10, scale: 0.8 }}
-            animate={{ rotate: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="flex-shrink-0"
+            key={`${userType}-info`}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className={`w-full bg-gradient-to-br ${info.color} rounded-xl shadow-lg border border-white/10 p-6 md:p-8 flex flex-col justify-center`}
           >
-            {info.icon}
-          </motion.div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-lg">{info.title}</span>
-              <motion.span
-                initial={{ scale: 0.7, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, type: "spring" }}
-                className="inline-flex"
+            <div className="flex flex-col items-center text-center">
+              <motion.div
+                initial={{ rotate: -10, scale: 0.8 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="mb-4"
               >
-                <BsStars className={`w-4 h-4 ${userType === "tenant" ? "text-blue-300" : "text-amber-300"}`} />
-              </motion.span>
-            </div>
-            <p className="text-white/70 text-sm">{info.description}</p>
-          </div>
-        </motion.div>
-
-        {/* Animated Divider */}
-        <AnimatedDivider />
-
-        <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
-          <div className="p-6 md:p-8">
-            {/* Animated Secure Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="flex items-center justify-center mb-4"
-            >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-800/60 to-amber-700/40 border border-white/10 text-xs font-semibold text-white/80 shadow-sm animate-pulse">
-                <BsShieldLockFill className="w-4 h-4 text-blue-300" />
-                Secure Google Sign-In
-                <HiOutlineSparkles className="w-4 h-4 text-amber-300" />
-              </span>
-            </motion.div>
-            {error && (
-              <div className="bg-red-900/20 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm mb-6">
-                {error}
+                {info.icon}
+              </motion.div>
+              <div>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="font-semibold text-xl">{info.title}</span>
+                  <motion.span
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, type: "spring" }}
+                    className="inline-flex"
+                  >
+                    <BsStars className={`w-4 h-4 ${userType === "tenant" ? "text-blue-300" : "text-amber-300"}`} />
+                  </motion.span>
+                </div>
+                <p className="text-white/80 text-sm max-w-md mx-auto">
+                  {info.description}
+                </p>
               </div>
-            )}
-            <div className="flex flex-col gap-4">
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isGoogleLoading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all disabled:opacity-70"
-              >
-                {isGoogleLoading ? (
-                  <>
-                    <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${userType === "tenant" ? "border-blue-400" : "border-amber-400"}`}></div>
-                    <span>Connecting...</span>
-                  </>
-                ) : (
-                  <>
-                    <FcGoogle className="w-5 h-5" />
-                    <span>Continue with Google</span>
-                  </>
-                )}
-              </button>
-              {/* 
-              <button
-                type="button"
-                disabled
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-blue-600 text-white border border-white/10 opacity-60 cursor-not-allowed"
-                title="Facebook signup coming soon"
-              >
-                <FaFacebook className="w-5 h-5" />
-                <span>Continue with Facebook (coming soon)</span>
-              </button>
-              */}
             </div>
-            <p className="text-center text-xs text-white/50 mt-6">
-              By continuing, you agree to our Terms of Service and Privacy Policy
-            </p>
-          </div>
+          </motion.div>
+          
+          {/* Right Column - Sign In */}
+          <motion.div
+            key={`${userType}-signin`}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, type: "spring" }}
+            className="bg-black/30 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden"
+          >
+            <div className="p-6 md:p-8">
+              {/* Animated One Tap Sign-In Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="flex items-center justify-center mb-6"
+              >
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-blue-800/60 to-amber-700/40 border border-white/10 text-xs font-semibold text-white/80 shadow-sm animate-pulse">
+                  <BsShieldLockFill className="w-4 h-4 text-blue-300" />
+                  One Tap Sign-In
+                  <HiOutlineSparkles className="w-4 h-4 text-amber-300" />
+                </span>
+              </motion.div>
+              {error && (
+                <div className="bg-red-900/20 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm mb-6">
+                  {error}
+                </div>
+              )}
+              <motion.div 
+                className="flex flex-col gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+              >
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
+                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all disabled:opacity-70 ${
+                    userType === "tenant" ? "hover:border-blue-400/40" : "hover:border-amber-400/40"
+                  }`}
+                >
+                  {isGoogleLoading ? (
+                    <>
+                      <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${userType === "tenant" ? "border-blue-400" : "border-amber-400"}`}></div>
+                      <span>Connecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FcGoogle className="w-5 h-5" />
+                      <span>Continue with Google</span>
+                    </>
+                  )}
+                </button>
+                
+                {/* Additional sign in options could go here */}
+              </motion.div>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="text-center text-xs text-white/50 mt-6"
+              >
+                By continuing, you agree to our Terms of Service and Privacy Policy
+              </motion.p>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

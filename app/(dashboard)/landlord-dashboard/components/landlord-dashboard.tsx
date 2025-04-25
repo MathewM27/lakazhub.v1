@@ -9,6 +9,9 @@ import Header from "../navigation/header";
 import { DashboardContent } from './dashboard-content';
 import { useAuth } from '../auth/AuthHandler';
 import { Property } from "../types";
+// Import PWA components
+import RegisterSW from '../../(landing)/components/pwa/RegisterSW';
+import DashboardInstallPrompt from '../../../components/pwa/DashboardInstallPrompt';
 
 // Dynamically import modals to reduce initial JS bundle
 const PropertyModal = dynamic(() => import('./modals/property-modal-details'), { ssr: false, loading: () => null });
@@ -92,6 +95,8 @@ export default function LandlordDashboard() {
   // Render dashboard for authenticated users
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
+      <RegisterSW />
+      <DashboardInstallPrompt userRole="landlord" />
       <Header />
 
       <DashboardContent

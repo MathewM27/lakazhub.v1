@@ -50,6 +50,10 @@ const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") =>
   );
 };
 
+// Import PWA components
+import RegisterSW from '../(landing)/components/pwa/RegisterSW';
+import DashboardInstallPrompt from '../../components/pwa/DashboardInstallPrompt';
+
 export default function Home() {
   const { isAuthenticated, user, profile, isAuthenticating, hasCorrectRole, signOut } = useAuth();
 
@@ -145,15 +149,24 @@ export default function Home() {
   }
 
   return (
-    <PageWrapper>
-      <Navigation />
-      <Hero />
-      {/* Remove pageSize prop, PropertiesSection paginates internally */}
-      <PropertiesSection />
-      <PremiumFeatures />
-      {/* Example: Render MapComponent if needed */}
-      {/* <MapComponent /> */}
-      <Footer />
-    </PageWrapper>
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      <RegisterSW />
+      <DashboardInstallPrompt userRole="tenant" />
+      <Navbar setIsSidebarOpen={setIsSidebarOpen} />
+      
+      {/* Main dashboard content */}
+      <div className="flex flex-1 overflow-hidden">
+        <PageWrapper>
+          <Navigation />
+          <Hero />
+          {/* Remove pageSize prop, PropertiesSection paginates internally */}
+          <PropertiesSection />
+          <PremiumFeatures />
+          {/* Example: Render MapComponent if needed */}
+          {/* <MapComponent /> */}
+          <Footer />
+        </PageWrapper>
+      </div>
+    </div>
   );
 }
