@@ -116,10 +116,10 @@ export const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right image/visual column - Only shown on tablet/desktop */}
-          <div className="hidden md:block lg:flex lg:justify-end">
-            <div className="relative">
-              <div className="aspect-square w-full max-w-md lg:max-w-lg xl:max-w-xl ml-auto relative">
+          {/* Right image/visual column - Fixed for desktop visibility */}
+          <div className="hidden md:block">
+            <div className="w-full max-w-md lg:max-w-lg xl:max-w-xl mx-auto md:ml-auto">
+              <div className="aspect-square w-full relative">
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
                   <Image
                     src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rKK7Ddt1IOoyT7XcfgWzM5StlhDCGFRdBvaUm"
