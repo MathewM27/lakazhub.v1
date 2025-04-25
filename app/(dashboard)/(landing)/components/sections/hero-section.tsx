@@ -4,7 +4,7 @@ import { FiCheck, FiArrowRight, FiMessageCircle, FiFilter, FiHome, FiLink } from
 
 export const HeroSection = () => {
   return (
-    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden mt-0 lg:mt-8">
+    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden pt-8">
       {/* Simple gradient overlay instead of canvas background */}
       
 
