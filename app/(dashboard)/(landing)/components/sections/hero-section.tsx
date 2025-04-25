@@ -4,15 +4,15 @@ import { FiCheck, FiArrowRight, FiMessageCircle, FiFilter, FiHome, FiLink } from
 
 export const HeroSection = () => {
   return (
-    <section id="hero" className="relative min-h-[90svh] py-8 sm:py-12 bg-black text-white overflow-hidden">
+    <section id="hero" className="relative flex items-center justify-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-8 sm:py-12 lg:py-0 bg-black text-white overflow-hidden">
       {/* Simple gradient overlay instead of canvas background */}
       
 
-      <div className=" mx-auto px-4 sm:px-4 lg:px-4 relative z-10 mt-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 lg:py-0">0 mt-12">
         {/* Convert from flex to grid for better performance */}
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
           {/* Left content column */}
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-4 md:space-y-6 lg:max-w-xl">
             <div>
               <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
                 Introducing LakazHub
@@ -117,18 +117,17 @@ export const HeroSection = () => {
           </div>
 
           {/* Right image/visual column - Only shown on tablet/desktop */}
-          <div className="hidden md:block">
-            <div className="relative mx-auto">
-              <div className="aspect-square w-full max-w-lg ml-auto relative">
+          <div className="hidden md:block lg:flex lg:justify-end">
+            <div className="relative">
+              <div className="aspect-square w-full max-w-md lg:max-w-lg xl:max-w-xl ml-auto relative">
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-black border border-white/10 shadow-2xl overflow-hidden">
-                  {/* Progressive image loading for desktop */}
                   <Image
                     src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rKK7Ddt1IOoyT7XcfgWzM5StlhDCGFRdBvaUm"
                     alt="Home interior"
                     fill
                     priority
-                    fetchPriority="high" // <--- Add this line for desktop image as well
-                    sizes="(max-width: 1280px) 50vw, 40vw"
+                    fetchPriority="high"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 40vw"
                     className="object-contain transform scale-105 hover:scale-110 transition-transform duration-700"
                     quality={85}
                   />
@@ -199,6 +198,19 @@ export const HeroSection = () => {
         .delay-400 { animation-delay: 0.4s; }
         .delay-500 { animation-delay: 0.5s; }
         .delay-600 { animation-delay: 0.6s; }
+        
+        /* Fluid height adjustments for larger screens */
+        @media (min-height: 1000px) {
+          #hero {
+            min-height: 75vh;
+          }
+        }
+        
+        @media (min-height: 1200px) {
+          #hero {
+            min-height: 70vh;
+          }
+        }
       `}</style>
     </section>
   );
