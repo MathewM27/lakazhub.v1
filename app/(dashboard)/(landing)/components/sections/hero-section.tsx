@@ -8,7 +8,7 @@ export const HeroSection = () => {
       {/* Simple gradient overlay instead of canvas background */}
       
 
-      <div className="container mx-auto px-4 sm:px-4 lg:px-4 relative z-10 mt-12">
+      <div className=" mx-auto px-4 sm:px-4 lg:px-4 relative z-10 mt-12">
         {/* Convert from flex to grid for better performance */}
         <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
           {/* Left content column */}

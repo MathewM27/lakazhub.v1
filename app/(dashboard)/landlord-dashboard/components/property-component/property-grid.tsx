@@ -120,19 +120,6 @@ export default function PropertyGrid({
 
   return (
     <section className="py-12 bg-black relative overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
-        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
-        {[...Array(10)].map((_, i) => (
-          <div 
-            key={i} 
-            className="absolute w-px h-full bg-white/5" 
-            style={{ left: `${i * 10}%` }}
-          ></div>
-        ))}
-      </div>
-
       <div className="container mx-auto px-4 relative z-10">
         <div 
           className="max-w-6xl mx-auto opacity-0 translate-y-5 animate-fade-in-up"
