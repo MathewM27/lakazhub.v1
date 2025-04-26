@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'LakazHub - Rent Properties in Mauritius',
     description: 'Easily rent and find properties, houses, and apartments across Mauritius. Connect landlords and tenants seamlessly with LakazHub.',
-    url: 'https://lakazhub.vercel.app/',
+    url: 'https://lakazhub.com/',
     type: 'website',
     images: [
       {
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false
   },
-  authors: [{ name: 'LakazHub', url: 'https://lakazhub.vercel.app/' }]
+  authors: [{ name: 'LakazHub', url: 'https://lakazhub.com/' }]
 }
 
 export default function RootLayout({
@@ -68,7 +68,7 @@ export default function RootLayout({
         <meta property="og:title" content="LakazHub - Rent Properties in Mauritius" />
         <meta property="og:description" content="Easily rent and find properties, houses, and apartments across Mauritius. Connect landlords and tenants seamlessly with LakazHub." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://lakazhub.vercel.app/" />
+        <meta property="og:url" content="https://lakazhub.com/" />
         <meta property="og:image" content="/lakaz-hub.png" />
         <meta name="robots" content="index, follow" />
         {/* Add this line for better PWA experience */}

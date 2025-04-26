@@ -23,7 +23,7 @@ export default function Home() {
         <meta property="og:title" content="LakazHub - Rent Properties in Mauritius" />
         <meta property="og:description" content="Easily rent and find properties across Mauritius." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://lakazhub.vercel.app/" />
+        <meta property="og:url" content="https://lakazhub.com/" />
         <meta property="og:image" content="/lakaz-hub.png" />
         <meta name="robots" content="index, follow" />
       </Head>
