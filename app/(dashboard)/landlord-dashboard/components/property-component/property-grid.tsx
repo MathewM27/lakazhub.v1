@@ -139,6 +139,54 @@ export default function PropertyGrid({
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const useSlider = Array.isArray(properties) && properties.length > SLIDER_THRESHOLD;
 
+  // Categorize properties
+  const availableProperties = Array.isArray(properties)
+    ? properties.filter((p) => p.available)
+    : [];
+  const rentedProperties = Array.isArray(properties)
+    ? properties.filter((p) => !p.available)
+    : [];
+
+  // Helper for slider row
+  const renderSliderRow = (
+    title: string,
+    propertyList: Property[],
+    emptyText: string
+  ) => (
+    <div className="mb-12">
+      <h3 className="font-bold text-white text-lg md:text-xl mb-4">{title}</h3>
+      {propertyList.length > 0 ? (
+        <div className="relative">
+          <div
+            ref={containerRef}
+            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {propertyList.slice(0, visibleCount).map((property, index) => (
+              <div
+                key={property.id}
+                className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start mx-auto ${
+                  deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
+                } opacity-0 animate-fade-in-up`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <PropertyCard
+                  property={property}
+                  onDetailsAction={() => onPropertyDetailsAction(property)}
+                  onAvailabilityAction={() => handleAvailabilityAction(property)}
+                  onNotificationsAction={handleNotificationClick}
+                  onDeleteAction={handleDeleteProperty}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="w-full py-8 text-center text-white/60">{emptyText}</div>
+      )}
+    </div>
+  );
+
   return (
     <section className="py-16 md:py-24 bg-black relative overflow-hidden">
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
@@ -192,83 +240,39 @@ export default function PropertyGrid({
             </div>
           </div>
 
-          {/* Slider for mobile if property count is high */}
-          {useSlider ? (
-            <div className="relative">
-              <div
-                ref={containerRef}
-                className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
-                style={{ scrollBehavior: 'smooth' }}
-              >
-                {properties.slice(0, visibleCount).map((property, index) => (
-                  <div
-                    key={property.id}
-                    className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start mx-auto ${
-                      deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
-                    } opacity-0 animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <PropertyCard
-                      property={property}
-                      onDetailsAction={() => onPropertyDetailsAction(property)}
-                      onAvailabilityAction={() => handleAvailabilityAction(property)}
-                      onNotificationsAction={handleNotificationClick}
-                      onDeleteAction={handleDeleteProperty}
-                    />
+          {/* --- SLIDER MODE (if many properties) --- */}
+          {Array.isArray(properties) && properties.length > SLIDER_THRESHOLD ? (
+            <>
+              {renderSliderRow(
+                "My Available Properties",
+                availableProperties,
+                "No available properties"
+              )}
+              {renderSliderRow(
+                "Rented Properties",
+                rentedProperties,
+                "No rented properties"
+              )}
+              <div className="mb-12">
+                <h3 className="font-bold text-white text-lg md:text-xl mb-4">Add New Property</h3>
+                <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory">
+                  <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start flex items-center justify-center mx-auto opacity-0 animate-fade-in-up animation-delay-300">
+                    <button
+                      onClick={onAddNewPropertyAction}
+                      className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
+                        <Plus className="w-7 h-7" />
+                      </div>
+                      <span className="font-medium text-lg">Add New Property</span>
+                      <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
+                        Click here to add a new property to your portfolio
+                      </p>
+                    </button>
                   </div>
-                ))}
-                {/* Add New Property Card */}
-                <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start flex items-center justify-center mx-auto opacity-0 animate-fade-in-up animation-delay-300">
-                  <button
-                    onClick={onAddNewPropertyAction}
-                    className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
-                  >
-                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
-                      <Plus className="w-7 h-7" />
-                    </div>
-                    <span className="font-medium text-lg">Add New Property</span>
-                    <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
-                      Click here to add a new property to your portfolio
-                    </p>
-                  </button>
                 </div>
               </div>
-              {/* Slider navigation buttons (desktop only) */}
-              <button
-                onClick={() => handleScroll('left')}
-                className={`hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
-                  scrollPosition <= 0 ? 'opacity-30 cursor-not-allowed' : ''
-                }`}
-                disabled={scrollPosition <= 0}
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5 group-hover:scale-95 transition-transform" />
-              </button>
-              <button
-                onClick={() => handleScroll('right')}
-                className={`hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
-                  scrollPosition >= maxScroll - 5 ? 'opacity-30 cursor-not-allowed' : ''
-                }`}
-                disabled={scrollPosition >= maxScroll - 5}
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5 group-hover:scale-95 transition-transform" />
-              </button>
-              {/* Progress bar */}
-              {properties.length > 0 && (
-                <div className="mt-3 h-0.5 bg-white/5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-white/40 transition-all duration-300"
-                    style={{
-                      width:
-                        maxScroll > 0
-                          ? `${Math.min((scrollPosition / maxScroll) * 100, 100)}%`
-                          : '0%',
-                    }}
-                  ></div>
-                </div>
-              )}
-              {/* Load More button centered on mobile/slider */}
+              {/* Load More button centered on slider */}
               {visibleCount < properties.length && (
                 <div className="flex justify-center w-full mt-6">
                   <button
@@ -279,9 +283,9 @@ export default function PropertyGrid({
                   </button>
                 </div>
               )}
-            </div>
+            </>
           ) : (
-            // Grid for desktop or when property count is low
+            // --- GRID MODE (few properties) ---
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading ? (
                 <div className="col-span-3 flex flex-col items-center justify-center py-20 space-y-4 opacity-0 animate-fade-in">
