@@ -61,7 +61,6 @@ const TenantListItem: React.FC<TenantListItemProps> = ({
     <div className="flex-1 min-w-0">
       <div className="flex justify-between items-center">
         <span className="font-medium text-sm truncate text-white">{tenant.name}</span>
-        <span className="text-[10px] text-zinc-500">{tenant.time}</span>
       </div>
       <div className="flex justify-between items-center">
         <p className="text-xs text-zinc-400 truncate max-w-[100px]">{tenant.lastMessage}</p>

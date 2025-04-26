@@ -255,8 +255,8 @@ export default function PropertyGrid({
               )}
               <div className="mb-12">
                 <h3 className="font-bold text-white text-lg md:text-xl mb-4">Add New Property</h3>
-                <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory">
-                  <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start flex items-center justify-center mx-auto opacity-0 animate-fade-in-up animation-delay-300">
+                <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start">
+                  <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start opacity-0 animate-fade-in-up animation-delay-300">
                     <button
                       onClick={onAddNewPropertyAction}
                       className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
@@ -312,7 +312,7 @@ export default function PropertyGrid({
                     </div>
                   ))}
                   {/* Add New Property Card */}
-                  <div className="mx-auto w-full max-w-xs md:max-w-sm flex items-center justify-center opacity-0 animate-fade-in-up animation-delay-300">
+                  <div className="w-full max-w-xs md:max-w-sm opacity-0 animate-fade-in-up animation-delay-300">
                     <button
                       onClick={onAddNewPropertyAction}
                       className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
