@@ -43,7 +43,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 }) => {
   if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
     return (
-      <div className="flex items-center justify-center h-32" key="loading-container">
+      <div className="flex items-center justify-center flex-1 min-h-0" key="loading-container">
         <div className="animate-pulse flex space-x-2" key="loading-pulse">
           <div className="h-2 w-2 bg-zinc-600 rounded-full"></div>
           <div className="h-2 w-2 bg-zinc-600 rounded-full"></div>
@@ -55,7 +55,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   if (!selectedTenant) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-tenant-selected">
+      <div className="flex flex-col items-center justify-center flex-1 min-h-0 text-zinc-500" key="no-tenant-selected">
         <p>Select a conversation to view messages</p>
       </div>
     );
@@ -63,7 +63,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   if (!selectedTenant.messages || selectedTenant.messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-zinc-500" key="no-messages">
+      <div className="flex flex-col items-center justify-center flex-1 min-h-0 text-zinc-500" key="no-messages">
         <p>No messages in this conversation yet</p>
         <p className="text-xs mt-2">Send a message to get started</p>
       </div>
