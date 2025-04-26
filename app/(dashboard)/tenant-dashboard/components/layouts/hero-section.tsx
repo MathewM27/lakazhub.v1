@@ -102,16 +102,16 @@ const HeroSection = () => {
                 <div className="absolute w-80 h-80 border border-white/15 rotate-45 transform-gpu"></div>
                 <div className="absolute w-96 h-96 border border-white/10 rotate-45 transform-gpu"></div>
                 
-                {/* Center piece - using blue accent and improved positioning */}
+                {/* Center piece - static, blue accent, no animation */}
                 <div className="relative z-10 w-40 h-40">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl animate-pulse-slow">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-5xl font-bold transform -rotate-45">LH</div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Floating elements - Carefully positioned to not overflow into nav */}
+                {/* Floating elements - keep subtle animation for background only */}
                 <div className="absolute top-16 right-16 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
                 <div className="absolute bottom-16 left-16 w-10 h-10 bg-blue-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
                 <div className="absolute bottom-32 right-16 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
@@ -133,9 +133,9 @@ const HeroSection = () => {
                 <div className="absolute w-52 h-52 border border-white/15 rotate-45 transform-gpu"></div>
                 <div className="absolute w-64 h-64 border border-white/10 rotate-45 transform-gpu"></div>
                 
-                {/* Center piece - Adjusted for mobile */}
+                {/* Center piece - static, blue accent, no animation */}
                 <div className="relative z-10 w-32 h-32">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl animate-pulse-slow">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
                     </div>
@@ -167,10 +167,6 @@ const HeroSection = () => {
         
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 4s ease-in-out infinite;
         }
         
         .animation-delay-700 {
