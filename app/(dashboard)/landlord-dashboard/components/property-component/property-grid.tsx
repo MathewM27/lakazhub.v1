@@ -111,7 +111,17 @@ export default function PropertyGrid({
     if (onRefreshNeeded) {
       onRefreshNeeded(refreshProperties);
     }
-  }, [onRefreshNeeded, refreshProperties]);
+    // Listen for custom event to trigger Add New Property
+    const handleTriggerAdd = () => {
+      if (surveyStatus === "hide") {
+        onAddNewPropertyAction();
+      }
+    };
+    window.addEventListener("triggerAddNewProperty", handleTriggerAdd);
+    return () => {
+      window.removeEventListener("triggerAddNewProperty", handleTriggerAdd);
+    };
+  }, [onRefreshNeeded, refreshProperties, onAddNewPropertyAction, surveyStatus]);
 
   // Slider scroll logic for mobile
   useEffect(() => {
@@ -260,6 +270,7 @@ export default function PropertyGrid({
                 <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start">
                   <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start opacity-0 animate-fade-in-up animation-delay-300">
                     <button
+                      data-add-property-btn
                       onClick={onAddNewPropertyAction}
                       disabled={surveyStatus !== "hide"}
                       className={`flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm
@@ -318,8 +329,11 @@ export default function PropertyGrid({
                   {/* Add New Property Card */}
                   <div className="w-full max-w-xs md:max-w-sm opacity-0 animate-fade-in-up animation-delay-300">
                     <button
+                      data-add-property-btn
                       onClick={onAddNewPropertyAction}
-                      className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
+                      disabled={surveyStatus !== "hide"}
+                      className={`flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm
+                        ${surveyStatus !== "hide" ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
                       <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
                         <Plus className="w-7 h-7" />
@@ -343,9 +357,29 @@ export default function PropertyGrid({
                   )}
                 </>
               ) : (
-                <p className="text-white col-span-full text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in">
-                  No properties found
-                </p>
+                <>
+                  <p className="text-white col-span-full text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in">
+                    No properties found
+                  </p>
+                  {/* Always show Add New Property Card even if no properties */}
+                  <div className="w-full max-w-xs md:max-w-sm opacity-0 animate-fade-in-up animation-delay-300 mx-auto mt-8">
+                    <button
+                      data-add-property-btn
+                      onClick={onAddNewPropertyAction}
+                      disabled={surveyStatus !== "hide"}
+                      className={`flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm
+                        ${surveyStatus !== "hide" ? "opacity-60 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
+                        <Plus className="w-7 h-7" />
+                      </div>
+                      <span className="font-medium text-lg">Add New Property</span>
+                      <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
+                        Click here to add a new property to your portfolio
+                      </p>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}

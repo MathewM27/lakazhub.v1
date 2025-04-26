@@ -18,6 +18,21 @@ const LandlordHeroSection = () => {
     { text: 'Lease', icon: FiFileText }
   ];
 
+  // Handler to scroll to or trigger Add New Property
+  const handleAddPropertyClick = () => {
+    // Try to scroll to the Add New Property card if it exists
+    const addBtn = document.querySelector('[data-add-property-btn]');
+    if (addBtn) {
+      (addBtn as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (addBtn as HTMLElement).focus();
+      // Optionally, trigger click if you want modal to open immediately:
+      // (addBtn as HTMLElement).click();
+    } else {
+      // Fallback: dispatch a custom event that dashboard listens for
+      window.dispatchEvent(new CustomEvent("triggerAddNewProperty"));
+    }
+  };
+
   return (
     <section 
       className="relative flex items-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-16 md:py-24 bg-black text-white overflow-hidden"
@@ -65,13 +80,14 @@ const LandlordHeroSection = () => {
 
             {/* Button area - Positioned with consistent spacing */}
             <div className="grid grid-cols-1 gap-4 pt-4 mt-auto">
-              <Link
-                href="/add-property"
+              <button
+                type="button"
+                onClick={handleAddPropertyClick}
                 className="group min-h-[50px] flex items-center justify-center px-8 py-3 bg-white hover:bg-amber-400 text-black rounded-lg shadow-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
               >
                 <span>Add Your Property</span>
                 <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-              </Link>
+              </button>
             </div>
 
             {/* Quick Features - Updated spacing to match landing page */}
