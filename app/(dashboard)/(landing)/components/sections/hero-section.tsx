@@ -15,12 +15,6 @@ export const HeroSection = () => {
           {/* Left content column */}
           <div className="flex flex-col justify-between h-full gap-y-8 py-4">
             <div className="space-y-4 md:space-y-4 mt-4">
-              <div>
-                <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20 mb-4">
-                  Introducing LakazHub
-                </span>
-              </div>
-
               <h1 className="font-bold text-white leading-tight tracking-tight text-fluid-h1">
                 <span className="block">
                   Where Homes &
