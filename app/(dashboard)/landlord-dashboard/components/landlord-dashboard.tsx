@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
@@ -9,6 +9,7 @@ import Header from "../navigation/header";
 import { DashboardContent } from './dashboard-content';
 import { useAuth } from '../auth/AuthHandler';
 import { Property } from "../types";
+import LandlordVerificationSurvey from "./landlord-verification-survey";
 // Import PWA components
 import RegisterSW from '../../(landing)/components/pwa/RegisterSW';
 import DashboardInstallPrompt from '../../../components/pwa/DashboardInstallPrompt';
@@ -32,6 +33,14 @@ export default function LandlordDashboard() {
     message: "",
   });
   const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
+  const [showSurvey, setShowSurvey] = useState(false);
+
+  useEffect(() => {
+    // Only show for landlords, and only if not already filled
+    if (profile?.user_role === "landlord" && !localStorage.getItem("lh_landlord_surveyed")) {
+      setShowSurvey(true);
+    }
+  }, [profile?.user_role]);
 
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
@@ -145,6 +154,16 @@ export default function LandlordDashboard() {
           title={successModalProps.title}
           message={successModalProps.message}
           autoClose={true}
+        />
+      )}
+
+      {showSurvey && user && profile && (
+        <LandlordVerificationSurvey
+          userId={user.id}
+          fullName={profile.full_name}
+          email={profile.email_address}
+          open={showSurvey}
+          onCloseAction={() => setShowSurvey(false)}
         />
       )}
     </div>

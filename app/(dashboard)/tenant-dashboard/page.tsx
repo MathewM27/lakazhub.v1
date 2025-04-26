@@ -9,11 +9,11 @@ import Navigation from "./components/navigation/Navbar";
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
-// Dynamically import PremiumFeatures for better FCP/LCP
-const PremiumFeatures = dynamic(() => import('./components/layouts/Premium'), {
-  loading: () => <div className="text-white/70 py-12 text-center">Loading premium features...</div>,
-  ssr: false,
-});
+// // Dynamically import PremiumFeatures for better FCP/LCP
+// const PremiumFeatures = dynamic(() => import('./components/layouts/Premium'), {
+//   loading: () => <div className="text-white/70 py-12 text-center">Loading premium features...</div>,
+//   ssr: false,
+// });
 
 // Example: If you have a map component, import it dynamically like this:
 // const MapComponent = dynamic(() => import('./components/MapComponent'), { ssr: false });
@@ -129,7 +129,7 @@ export default function Home() {
         <Navigation />
         <HeroSection />
         <PropertiesSection />
-        <PremiumFeatures />
+        
         <Footer />
       </PageWrapper>
     </div>
