@@ -586,7 +586,9 @@ const Header = () => {
                                         <button 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
                                             onClick={() => {
-                                                // Only try to open a conversation if there are messages
+                                                // For mobile, we should open the notification modal with message context
+                                                // This should behave exactly like the desktop dropdown for messages
+                                                // We'll open the notification modal with a conversation context
                                                 if (messageNotifications.length > 0) {
                                                     handleMessageNotificationClick(messageNotifications[0]);
                                                 } else {
@@ -611,7 +613,9 @@ const Header = () => {
                                         <button 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
                                             onClick={() => {
-                                                // Open notification modal without a conversation context
+                                                // On desktop, clicking Notifications opens a dropdown with notifications
+                                                // For mobile, we'll open the notification modal directly without conversation context
+                                                // This ensures consistent behavior between desktop and mobile
                                                 setSelectedProperty(null);
                                                 setSelectedConversationId(null);
                                                 setNotificationModalOpen(true);
