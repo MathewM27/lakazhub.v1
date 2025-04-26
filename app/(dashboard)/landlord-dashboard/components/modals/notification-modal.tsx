@@ -97,6 +97,8 @@ export default function NotificationsModal({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [tenantToDelete, setTenantToDelete] = useState<string | null>(null)
   const [isCacheStale, setIsCacheStale] = useState(false)
+  // Add state to detect mobile view
+  const [isMobileView, setIsMobileView] = useState(false)
   
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -113,6 +115,27 @@ export default function NotificationsModal({
   // Modal title
   const modalTitle = selectedTenant ? selectedTenant.name : "Messenger"
   
+  // Function to detect mobile view
+  const checkIsMobileView = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobileView(window.innerWidth < 640) // 640px is the 'sm' breakpoint in Tailwind
+    }
+  }, [])
+
+  // Set up mobile detection on mount and when window resizes
+  useEffect(() => {
+    checkIsMobileView()
+    
+    const handleResize = () => {
+      checkIsMobileView()
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [checkIsMobileView])
+
   // Format message time
   const formatMessageTime = useCallback((timestamp: string) => {
     try {
@@ -412,8 +435,8 @@ export default function NotificationsModal({
       setTenants(cachedData.conversations)
       setLastRefreshAt(new Date(cachedData.timestamp))
 
-      // If initialConversationId is provided, select that conversation
-      if (initialConversationId) {
+      // If initialConversationId is provided, select that conversation (unless on mobile)
+      if (initialConversationId && !isMobileView) {
         const targetTenant = cachedData.conversations.find(t => t.id === initialConversationId)
         if (targetTenant) {
           setSelectedTenant(targetTenant);
@@ -438,8 +461,8 @@ export default function NotificationsModal({
           }
         }
       } 
-      // Otherwise use previous selection or first tenant logic
-      else if (selectedTenant) {
+      // Otherwise use previous selection or first tenant logic (but not on mobile)
+      else if (selectedTenant && !isMobileView) {
         const cachedTenant = cachedData.conversations.find((t: Tenant) => t.id === selectedTenant.id)
         if (cachedTenant) {
           const cachedMessages = cachedData.messages[selectedTenant.id] || []
@@ -468,8 +491,8 @@ export default function NotificationsModal({
             })
           }
         }
-      } else if (cachedData.conversations.length > 0) {
-        // Select first tenant if none was selected
+      } else if (cachedData.conversations.length > 0 && !isMobileView) {
+        // Select first tenant if none was selected (but not on mobile)
         const firstTenant = cachedData.conversations[0]
         setSelectedTenant(firstTenant)
 
@@ -516,7 +539,7 @@ export default function NotificationsModal({
       // No valid cache, fetch fresh data
       fetchConversations(initialConversationId)
     }
-  }, [open, property?.id, user?.id, initialConversationId])
+  }, [open, property?.id, user?.id, initialConversationId, isMobileView])
 
   // Function to fetch conversations - now extracted as its own function
   const fetchConversations = useCallback(async (targetConversationId?: string) => {
@@ -596,8 +619,8 @@ export default function NotificationsModal({
 
       setTenants(formattedTenants);
 
-      // Select tenant based on initialConversationId if provided
-      if (targetConversationId) {
+      // Select tenant based on initialConversationId if provided (unless on mobile)
+      if (targetConversationId && !isMobileView) {
         const targetTenant = formattedTenants.find((t: Tenant) => t.id === targetConversationId);
         if (targetTenant) {
           setSelectedTenant(targetTenant);
@@ -621,7 +644,8 @@ export default function NotificationsModal({
             });
           }
         }
-      } else if (formattedTenants.length > 0) {
+      } else if (formattedTenants.length > 0 && !isMobileView) {
+        // Only auto-select first tenant if not on mobile
         setSelectedTenant(formattedTenants[0]);
         fetchMessages(formattedTenants[0].id, 0, 20).then(messages => {
           setSelectedTenant({
@@ -656,7 +680,7 @@ export default function NotificationsModal({
     } finally {
       setLoading(false);
     }
-  }, [user?.id, property?.id, toast, fetchMessages, formatMessageTime]);
+  }, [user?.id, property?.id, toast, fetchMessages, formatMessageTime, isMobileView]);
 
   // Function to manually fetch everything (conversations + messages)
   const refreshAll = useCallback(async () => {

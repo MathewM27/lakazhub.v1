@@ -12,6 +12,7 @@ import { Property } from "../types";
 // Import PWA components
 import RegisterSW from '../../(landing)/components/pwa/RegisterSW';
 import DashboardInstallPrompt from '../../../components/pwa/DashboardInstallPrompt';
+import HeroSection from '../layout/hero-section';
 
 // Dynamically import modals to reduce initial JS bundle
 const PropertyModal = dynamic(() => import('./modals/property-modal-details'), { ssr: false, loading: () => null });
@@ -98,6 +99,7 @@ export default function LandlordDashboard() {
       <RegisterSW />
       <DashboardInstallPrompt userRole="landlord" />
       <Header />
+      <HeroSection />
 
       <DashboardContent
         onPropertyDetailsAction={handlePropertyDetails}
