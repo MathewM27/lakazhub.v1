@@ -8,21 +8,22 @@ interface MessagedPropertiesProps {
 }
 
 const MessagedProperties: React.FC<MessagedPropertiesProps> = ({ messagedProperties, className }) => {
-
-  // Debug whether we're returning null or rendering the component
   if (!messagedProperties || messagedProperties.length === 0) {
     return null;
   }
 
   return (
-    <div className={cn("property-section mb-16 relative", className)}>
-      {/* Add a special indicator for messaged properties section */}
-      <PropertyCarousel 
-        title="Properties You've Messaged" 
-        properties={messagedProperties}
-        customBadge="Conversation"
-      />
-    </div>
+    <section className="py-16 md:py-24 bg-black relative overflow-hidden">
+      <div className={cn("max-w-screen-xl mx-auto px-4 md:px-8 relative z-10", className)}>
+        <div className="property-section mb-16 relative">
+          <PropertyCarousel 
+            title="Properties You've Messaged" 
+            properties={messagedProperties}
+            customBadge="Conversation"
+          />
+        </div>
+      </div>
+    </section>
   );
 };
 

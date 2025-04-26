@@ -39,18 +39,22 @@ const RentedProperties: React.FC<RentedPropertiesProps> = ({ allProperties, load
   if ((rentedProperties.length === 0 && !loading) || !allProperties) return null;
 
   return (
-    <div className="property-section mt-8 relative">
-      <div className="border-t border-white/10 pt-8">
-        <PropertyCarousel
-          title="Previously Rented"
-          properties={paginatedProperties}
-          disableInteractions={true}
-          onLoadMore={() => setPage(p => p + 1)}
-          hasMore={hasMore}
-          isLoadingMore={false}
-        />
+    <section className="py-16 md:py-24 bg-black relative overflow-hidden">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="property-section mt-8 relative">
+          <div className="border-t border-white/10 pt-8">
+            <PropertyCarousel
+              title="Previously Rented"
+              properties={paginatedProperties}
+              disableInteractions={true}
+              onLoadMore={() => setPage(p => p + 1)}
+              hasMore={hasMore}
+              isLoadingMore={false}
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

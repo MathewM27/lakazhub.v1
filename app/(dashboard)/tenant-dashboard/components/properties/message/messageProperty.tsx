@@ -692,7 +692,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         <div className="border-t border-white/10 p-3 flex gap-2 bg-black/80 sticky bottom-0">
           <Textarea
             ref={messageInputRef}
-            placeholder="Type your message here... (Shift+Enter for new line)"
+            placeholder="Type your message here..."
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
