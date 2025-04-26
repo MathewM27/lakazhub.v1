@@ -41,7 +41,7 @@ const HeroSection = () => {
         {/* Using same grid layout as landlord dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
           
-          {/* Left: Text Content */}
+          {/* Left: Text Content - No changes needed here */}
           <div className={`flex flex-col justify-between h-full gap-y-8 py-4 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="space-y-4 md:space-y-4 mt-4">
               <div className="inline-block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
@@ -91,49 +91,60 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right: Geometric Design - Using same structure but with blue accent */}
+          {/* Right: Geometric Design - Improved positioning and sizing */}
           <div className={`hidden md:flex md:items-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="w-full max-w-md lg:max-w-lg xl:max-w-xl mx-auto md:ml-auto">
-              <div className="relative aspect-square w-full">
-                {/* 3D-like grid effect */}
+              {/* Containing box with better positioning */}
+              <div className="relative aspect-square w-full flex items-center justify-center">
+                {/* 3D-like grid effect - Adjusted positioning and sizing */}
                 <div className="absolute w-64 h-64 border border-white/20 rotate-45 transform-gpu"></div>
                 <div className="absolute w-80 h-80 border border-white/15 rotate-45 transform-gpu"></div>
                 <div className="absolute w-96 h-96 border border-white/10 rotate-45 transform-gpu"></div>
                 
-                {/* Center piece - using blue accent instead of amber */}
-                <div className="relative z-10 flex items-center justify-center h-full">
-                  <div className="w-40 h-40 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                {/* Center piece - using blue accent and improved positioning */}
+                <div className="relative z-10 w-40 h-40">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-5xl font-bold transform -rotate-45">LH</div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Floating elements - with blue accent */}
-                <div className="absolute top-20 right-40 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
-                <div className="absolute bottom-24 left-32 w-10 h-10 bg-blue-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
-                <div className="absolute bottom-40 right-20 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
+                {/* Floating elements - Carefully positioned to not overflow into nav */}
+                <div className="absolute top-16 right-16 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
+                <div className="absolute bottom-16 left-16 w-10 h-10 bg-blue-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
+                <div className="absolute bottom-32 right-16 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
+                
+                {/* Additional subtle elements to match screenshot */}
+                <div className="absolute top-32 left-16 w-4 h-4 bg-blue-400/10 rounded-full animate-float-slow animation-delay-1500"></div>
+                <div className="absolute top-24 right-32 w-3 h-3 bg-white/5 rounded-full animate-float-slow animation-delay-700"></div>
               </div>
             </div>
           </div>
           
-          {/* Mobile view of the geometric design - Only shown on mobile */}
+          {/* Mobile view of the geometric design - Improved to match desktop version */}
           <div className="block md:hidden w-full py-4 mt-8">
             <div className="relative mx-auto max-w-md">
-              <div className="relative aspect-square w-full">
-                {/* 3D-like grid effect */}
-                <div className="absolute w-48 h-48 border border-white/20 rotate-45 transform-gpu"></div>
-                <div className="absolute w-64 h-64 border border-white/15 rotate-45 transform-gpu"></div>
-                <div className="absolute w-80 h-80 border border-white/10 rotate-45 transform-gpu"></div>
+              {/* Containing box with better positioning */}
+              <div className="relative aspect-square w-full flex items-center justify-center">
+                {/* 3D-like grid effect - Scaled down for mobile */}
+                <div className="absolute w-40 h-40 border border-white/20 rotate-45 transform-gpu"></div>
+                <div className="absolute w-52 h-52 border border-white/15 rotate-45 transform-gpu"></div>
+                <div className="absolute w-64 h-64 border border-white/10 rotate-45 transform-gpu"></div>
                 
-                {/* Center piece */}
-                <div className="relative z-10 flex items-center justify-center h-full">
-                  <div className="w-32 h-32 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                {/* Center piece - Adjusted for mobile */}
+                <div className="relative z-10 w-32 h-32">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
                     </div>
                   </div>
                 </div>
+                
+                {/* Floating elements - Properly sized and positioned for mobile */}
+                <div className="absolute top-12 right-12 w-10 h-10 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
+                <div className="absolute bottom-12 left-12 w-8 h-8 bg-blue-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
+                <div className="absolute bottom-24 right-12 w-5 h-5 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
               </div>
             </div>
           </div>
@@ -143,7 +154,7 @@ const HeroSection = () => {
       <style jsx global>{`
         @keyframes float-slow {
           0% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(10px, -10px) rotate(5deg); }
+          50% { transform: translate(5px, -5px) rotate(5deg); }
           100% { transform: translate(0, 0) rotate(0deg); }
         }
         
@@ -151,8 +162,16 @@ const HeroSection = () => {
           animation: float-slow 8s ease-in-out infinite;
         }
         
+        .animation-delay-700 {
+          animation-delay: 0.7s;
+        }
+        
         .animation-delay-1000 {
           animation-delay: 1s;
+        }
+        
+        .animation-delay-1500 {
+          animation-delay: 1.5s;
         }
         
         .animation-delay-2000 {
