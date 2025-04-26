@@ -139,7 +139,7 @@ export const Navbar = () => {
             className="group flex items-center"
             onClick={(e) => scrollToSection('hero', e)}
           >
-            <span className="font-bold tracking-tight text-white text-fluid-h2">
+            <span className="font-bold tracking-tight text-white text-2xl">
               Lakaz<span className="opacity-70">Hub</span>
             </span>
             <div className="h-1 bg-white/30 group-hover:bg-white/50 transition-all duration-300 ml-1 mt-1 rounded-full w-0 group-hover:w-full"></div>

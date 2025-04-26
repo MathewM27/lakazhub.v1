@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiArrowRight, FiCheck, FiSearch, FiHome, FiFilter } from "react-icons/fi";
+import { FiArrowRight, FiCheck, FiSearch, FiHome, FiFilter, FiMessageSquare, FiKey } from "react-icons/fi";
 
 const HeroSection = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -13,9 +13,9 @@ const HeroSection = () => {
   }, []);
 
   const quickFeatures = [
-    { text: 'Find your perfect home', icon: FiHome },
-    { text: 'Apply personalized filters', icon: FiFilter },
-    { text: 'Connect with landlords', icon: FiSearch }
+    { text: 'Find', icon: FiHome },
+    { text: 'Message', icon: FiMessageSquare },
+    { text: 'Rent', icon: FiKey }
   ];
 
   return (

@@ -371,7 +371,7 @@ const Header = () => {
             >
                 <div className="max-w-screen-xl mx-auto px-4 md:px-8 flex items-center justify-between py-4">
                     <Link href="/landlord-dashboard" className="group flex items-center">
-                        <span className="font-bold tracking-tight text-white text-fluid-h2 transition-colors">
+                        <span className="font-bold tracking-tight text-white text-2xl transition-colors">
                             Lakaz<span className="opacity-70">Hub</span>
                         </span>
                         <div 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiArrowRight, FiCheck, FiHome, FiSettings, FiBarChart2 } from "react-icons/fi";
+import { FiArrowRight, FiCheck, FiHome, FiSettings, FiBarChart2, FiMessageSquare, FiFileText } from "react-icons/fi";
 
 const LandlordHeroSection = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -13,9 +13,9 @@ const LandlordHeroSection = () => {
   }, []);
 
   const quickFeatures = [
-    { text: 'Manage multiple properties', icon: FiHome },
-    { text: 'Control your listings easily', icon: FiSettings },
-    { text: 'Track performance metrics', icon: FiBarChart2 }
+    { text: 'Manage', icon: FiHome },
+    { text: 'Message', icon: FiMessageSquare },
+    { text: 'Lease', icon: FiFileText }
   ];
 
   return (
