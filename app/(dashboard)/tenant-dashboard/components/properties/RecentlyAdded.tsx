@@ -42,19 +42,15 @@ const RecentlyAdded: React.FC<RecentlyAddedProps> = ({ allProperties, loading })
   if ((recentlyAddedProperties.length === 0 && !loading) || !allProperties) return null;
 
   return (
-    <section className="py-16 md:py-24 bg-black relative overflow-hidden">
-      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
-        <div className="property-section mb-16 relative">
-          <PropertyCarousel
-            title="Recently Added"
-            properties={paginatedProperties}
-            onLoadMore={() => setPage(p => p + 1)}
-            hasMore={hasMore}
-            isLoadingMore={false}
-          />
-        </div>
-      </div>
-    </section>
+    <div className="property-section mb-16 relative">
+      <PropertyCarousel
+        title="Recently Added"
+        properties={paginatedProperties}
+        onLoadMore={() => setPage(p => p + 1)}
+        hasMore={hasMore}
+        isLoadingMore={false}
+      />
+    </div>
   );
 };
 
