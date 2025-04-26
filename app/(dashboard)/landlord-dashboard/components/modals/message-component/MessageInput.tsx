@@ -9,15 +9,15 @@ interface MessageInputProps {
   handleSendMessage: () => void;
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   disabled?: boolean;
-  // We don't need messageInputRef here since we're using forwardRef
+  mobile?: boolean;
 }
 
 const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
-  ({ messageText, setMessageText, handleSendMessage, handleKeyDown, disabled }, ref) => (
+  ({ messageText, setMessageText, handleSendMessage, handleKeyDown, disabled, mobile }, ref) => (
     <div className="border-t border-zinc-800 p-2 flex gap-2 h-[60px] min-h-[60px] bg-zinc-950 rounded-b-2xl shadow-md">
       <Textarea
         ref={ref}
-        placeholder="Type your message here... (Shift+Enter for new line)"
+        placeholder="Type your message here..."
         value={messageText}
         onChange={(e) => setMessageText(e.target.value)}
         onKeyDown={handleKeyDown}

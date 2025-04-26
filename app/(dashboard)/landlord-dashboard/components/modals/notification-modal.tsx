@@ -1097,121 +1097,115 @@ export default function NotificationsModal({
       }}
     >
       <DialogContent
-      className="p-0 max-w-[800px] h-[600px] max-h-[90vh] overflow-hidden flex flex-col 
+        className="p-0 max-w-[800px] h-[600px] max-h-[90vh] overflow-hidden flex flex-col 
         bg-black border border-zinc-800 text-zinc-100 
         rounded-2xl shadow-2xl backdrop-blur-md"
-      style={{
-        boxShadow: "0 8px 32px 0 rgba(0,0,0,0.45)",
-        borderRadius: "1.25rem",
-        border: "1px solid #27272a",
-        background: "rgba(10,10,10,0.97)",
-        backdropFilter: "blur(8px)",
-      }}
-    >
-      {/* ...existing code... */}
-      {/* Add DialogTitle (can be visually hidden if needed) */}
-      <DialogTitle className="sr-only">{modalTitle}</DialogTitle>
-      
-      {/* Header */}
-      <ChatHeader
-        modalTitle={modalTitle}
-        lastRefreshAt={lastRefreshAt}
-        onClose={() => onOpenChangeAction(false)}
-      />
-
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-full sm:w-1/3 md:w-1/4 border-r hidden sm:flex flex-col h-full bg-black">
-          <TenantList
-            tenants={tenants}
-            loading={loading}
-            selectedTenant={selectedTenant}
-            onSelect={handleTenantSelect}
-            onDelete={confirmDeleteChat}
-          />
+        style={{
+          boxShadow: "0 8px 32px 0 rgba(0,0,0,0.45)",
+          borderRadius: "1.25rem",
+          border: "1px solid #27272a",
+          background: "rgba(10,10,10,0.97)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {/* Only one header: LakazHub Messenger centered */}
+        <div className="bg-zinc-950 border-b border-white p-3 flex items-center justify-center rounded-t-2xl shadow-md">
+          <span className="font-bold text-white text-base sm:text-lg">LakazHub Messenger</span>
         </div>
 
-        {/* Mobile view */}
-        <div className="sm:hidden w-full flex flex-col h-full bg-black">
-          {!selectedTenant ? (
+        {/* Main content area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-full sm:w-1/3 md:w-1/4 border-r hidden sm:flex flex-col h-full bg-black">
             <TenantList
               tenants={tenants}
               loading={loading}
               selectedTenant={selectedTenant}
               onSelect={handleTenantSelect}
               onDelete={confirmDeleteChat}
-              mobile
-              refreshAll={refreshAll}
-              refreshStatusInfo={refreshStatusInfo}
-              isRefreshing={isRefreshing}
             />
-          ) : (
-            <div className="flex flex-col h-full">
-              <ChatHeader
-                selectedTenant={selectedTenant}
-                property={property}
-                onBack={() => setSelectedTenant(null)}
-                refreshAll={refreshAll}
-                refreshStatus={refreshStatus}
-                isRefreshing={isRefreshing}
-                mobile
-              />
-              <ChatMessages
+          </div>
+
+          {/* Mobile view */}
+          <div className="sm:hidden w-full flex flex-col h-full bg-black">
+            {/* Always show conversation list first on mobile */}
+            {!selectedTenant ? (
+              <TenantList
+                tenants={tenants}
                 loading={loading}
                 selectedTenant={selectedTenant}
-                messagesContainerRef={messagesContainerRef}
-                messagesEndRef={messagesEndRef}
-                loadMoreMessages={loadMoreMessages}
-                userHasScrolledUp={userHasScrolledUp}
+                onSelect={handleTenantSelect}
+                onDelete={confirmDeleteChat}
+                mobile
+                refreshAll={refreshAll}
+                refreshStatusInfo={refreshStatusInfo}
+                isRefreshing={isRefreshing}
               />
-              <MessageInput
-                messageText={messageText}
-                setMessageText={setMessageText}
-                handleSendMessage={handleSendMessage}
-                handleKeyDown={handleKeyDown}
-                disabled={!selectedTenant}
-                ref={messageInputRef}
-              />
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex flex-col h-full">
+                {/* Conversation header (back button, etc) */}
+                <ChatHeader
+                  selectedTenant={selectedTenant}
+                  property={property}
+                  onBack={() => setSelectedTenant(null)}
+                  refreshAll={refreshAll}
+                  refreshStatus={refreshStatus}
+                  isRefreshing={isRefreshing}
+                  mobile
+                />
+                <ChatMessages
+                  loading={loading}
+                  selectedTenant={selectedTenant}
+                  messagesContainerRef={messagesContainerRef}
+                  messagesEndRef={messagesEndRef}
+                  loadMoreMessages={loadMoreMessages}
+                  userHasScrolledUp={userHasScrolledUp}
+                />
+                {/* Message input always docked at bottom */}
+                <MessageInput
+                  messageText={messageText}
+                  setMessageText={setMessageText}
+                  handleSendMessage={handleSendMessage}
+                  handleKeyDown={handleKeyDown}
+                  disabled={!selectedTenant}
+                  ref={messageInputRef}
+                  mobile
+                />
+              </div>
+            )}
+          </div>
 
-        {/* Desktop chat area */}
-        <div className="hidden sm:flex flex-col flex-1 h-full bg-black">
-          <ChatHeader
-            selectedTenant={selectedTenant}
-            property={property}
-            refreshAll={refreshAll}
-            refreshStatus={refreshStatus}
-            isRefreshing={isRefreshing}
-          />
-          <ChatMessages
-            loading={loading}
-            selectedTenant={selectedTenant}
-            messagesContainerRef={messagesContainerRef}
-            messagesEndRef={messagesEndRef}
-            loadMoreMessages={loadMoreMessages}
-            userHasScrolledUp={userHasScrolledUp}
-          />
-          <MessageInput
-            messageText={messageText}
-            setMessageText={setMessageText}
-            handleSendMessage={handleSendMessage}
-            handleKeyDown={handleKeyDown}
-            disabled={!selectedTenant}
-            ref={messageInputRef}
-          />
+          {/* Desktop chat area */}
+          <div className="hidden sm:flex flex-col flex-1 h-full bg-black">
+            {/* Remove extra ChatHeader here */}
+            <ChatMessages
+              loading={loading}
+              selectedTenant={selectedTenant}
+              messagesContainerRef={messagesContainerRef}
+              messagesEndRef={messagesEndRef}
+              loadMoreMessages={loadMoreMessages}
+              userHasScrolledUp={userHasScrolledUp}
+            />
+            {/* Message input always docked at bottom */}
+            <MessageInput
+              messageText={messageText}
+              setMessageText={setMessageText}
+              handleSendMessage={handleSendMessage}
+              handleKeyDown={handleKeyDown}
+              disabled={!selectedTenant}
+              ref={messageInputRef}
+              mobile={false}
+            />
+          </div>
         </div>
-      </div>
-    </DialogContent>
+      </DialogContent>
 
-    <DeleteDialog
-      open={deleteDialogOpen}
-      onOpenChange={setDeleteDialogOpen}
-      onConfirm={handleDeleteChat}
-    />
-  </Dialog>
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteChat}
+      />
+    </Dialog>
   )
 }
 

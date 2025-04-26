@@ -95,39 +95,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
   }
 
-  // Desktop or modal header
-  return (
-    <div className="bg-zinc-950 border-b border-white p-3 flex items-center justify-between rounded-t-2xl shadow-md">
-      <div className="flex flex-col sm:hidden">
-        <span className="font-bold text-white truncate max-w-[120px]">{modalTitle}</span>
-      </div>
-      <div className="items-center space-x-2 hidden sm:flex">
-        <span className="font-bold text-white">LakazHub</span>
-        <span className="text-xs text-zinc-400">Messenger</span>
-      </div>
-      <div className="text-center hidden sm:block">
-        <h3 className="text-sm font-medium truncate text-white">{modalTitle}</h3>
-        {lastRefreshAt && (
-          <div className="text-[10px] text-zinc-400">
-            Last updated {formatDistanceToNow(lastRefreshAt, { addSuffix: true })}
-          </div>
-        )}
-      </div>
-      <div className="flex justify-center items-center space-x-2">
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 mt-4 rounded-full text-white hover:text-white hover:bg-zinc-800"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4 text-white" />
-            <span className="sr-only">Close</span>
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+  // Remove desktop/modal header (handled in parent)
+  return null;
 };
 
 export default ChatHeader;
