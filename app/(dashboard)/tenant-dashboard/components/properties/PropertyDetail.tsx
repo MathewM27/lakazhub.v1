@@ -116,10 +116,22 @@ const PropertyDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-black/95 backdrop-blur-xl border border-white/20 text-white max-w-xl md:max-w-xl p-0 overflow-hidden w-[40vw] h-auto">
-        <DialogHeader className="p-4 border-b border-white/10">
+      <DialogContent
+        className="
+          bg-black/95 backdrop-blur-xl border border-white/20 text-white
+          w-full max-w-full sm:max-w-lg md:max-w-2xl
+          p-0 overflow-hidden
+          rounded-2xl
+          sm:p-0
+        "
+        style={{
+          padding: 0,
+          borderRadius: '1.25rem',
+        }}
+      >
+        <DialogHeader className="p-4 md:p-6 border-b border-white/10">
           <div className="flex justify-between items-center">
-            <DialogTitle className="text-lg md:text-xl font-bold text-white line-clamp-1">{enhancedProperty.name}</DialogTitle>
+            <DialogTitle className="text-lg md:text-2xl font-bold text-white line-clamp-1">{enhancedProperty.name}</DialogTitle>
             <Button 
               variant="ghost" 
               size="icon"
@@ -135,9 +147,9 @@ const PropertyDetailModal = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="max-h-[60vh] overflow-y-auto">
-          {/* Image Carousel - Slightly taller */}
-          <div className="relative w-full h-48 sm:h-52 md:h-56">
+        <div className="max-h-[70vh] overflow-y-auto">
+          {/* Image Carousel - Responsive height */}
+          <div className="relative w-full h-48 sm:h-60 md:h-72">
             {enhancedProperty.images && enhancedProperty.images.length > 0 ? (
               <Image 
                 src={enhancedProperty.images[currentImageIndex] || '/placeholder-property.jpg'} 
@@ -145,7 +157,6 @@ const PropertyDetailModal = ({
                 fill
                 className="object-cover"
                 onError={(e) => {
-                  // Fall back to placeholder image if loading fails
                   (e.target as HTMLImageElement).src = '/placeholder-property.jpg';
                 }}
               />
@@ -154,10 +165,7 @@ const PropertyDetailModal = ({
                 <Home className="h-12 w-12 text-gray-600" />
               </div>
             )}
-            
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-            
-            {/* Only show navigation if we have multiple images */}
             {enhancedProperty.images && enhancedProperty.images.length > 1 && (
               <>
                 <button 
@@ -172,7 +180,6 @@ const PropertyDetailModal = ({
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
-                
                 <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-md bg-black/60 text-sm text-white/90">
                   {currentImageIndex + 1} / {enhancedProperty.images.length}
                 </div>
@@ -180,10 +187,10 @@ const PropertyDetailModal = ({
             )}
           </div>
           
-          {/* Main content - Better organized layout */}
-          <div className="p-4 md:p-5">
+          {/* Main content - Responsive padding and stacking */}
+          <div className="p-4 sm:p-6">
             {/* Price, status and key metrics */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <div>
                 <h3 className="text-lg md:text-xl font-semibold text-white">
                   Rs {enhancedProperty.monthly_rent.toLocaleString()}
@@ -197,8 +204,6 @@ const PropertyDetailModal = ({
                   {enhancedProperty.availability || (enhancedProperty.available ? 'Available' : 'Not Available')}
                 </div>
               </div>
-              
-              {/* Property specs */}
               <div className="flex items-start justify-end gap-2.5">
                 <div className="flex items-center bg-white/5 px-3 py-1 rounded-lg border border-white/10">
                   <Bed className="h-4 w-4 text-white/70 mr-1.5" />
@@ -210,30 +215,22 @@ const PropertyDetailModal = ({
                 </div>
               </div>
             </div>
-            
-            {/* Key property details in a more compact grid */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              {/* Contract length */}
+            {/* Key property details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10">
-                
                 <div className='flex items-center'>
-                <Clock className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
+                  <Clock className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
                   <div className="text-sm text-white">{enhancedProperty.contractLength}</div>
                 </div>
               </div>
-              
-              {/* Security deposit */}
               <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10">
-                
                 <div className='flex items-center'>
-                <DollarSign className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
+                  <DollarSign className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
                   <div className="text-sm text-white">Rs {enhancedProperty.security_deposit.toLocaleString()}</div>
                 </div>
               </div>
-              
-              {/* Next Available Date - Only for rented properties */}
               {isRented && enhancedProperty.availableDate && (
-                <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10 col-span-2">
+                <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10 col-span-1 sm:col-span-2">
                   <Calendar className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
                   <div>
                     <div className="text-xs uppercase text-white/60 leading-tight">Next Available</div>
@@ -242,13 +239,11 @@ const PropertyDetailModal = ({
                 </div>
               )}
             </div>
-            
-            {/* Amenities using an organized approach with inline icons */}
+            {/* Amenities */}
             <div className="mb-3">
               <h3 className="text-xs uppercase text-white/70 mb-3">Amenities & Utilities</h3>
-              
               {allAmenities.length > 0 ? (
-                <div className="grid grid-cols-3 gap-x-3 gap-y-2 justify-between">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2 justify-between">
                   {allAmenities.map((amenity, index) => {
                     const AmenityIcon = amenityIcons[amenity.icon as keyof typeof amenityIcons] || Home;
                     return (
@@ -267,11 +262,10 @@ const PropertyDetailModal = ({
             </div>
           </div>
         </div>
-        
-        {/* Footer Actions - Modified to have only Message Landlord button */}
-        <div className="flex p-4 border-t border-white/10">
+        {/* Footer Actions */}
+        <div className="flex p-4 border-t border-white/10 bg-black/90">
           <Button 
-            className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto"
+            className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto min-h-[44px]"
             onClick={onMessageLandlord}
           >
             <MessageSquare className="w-4 h-4 mr-2" />

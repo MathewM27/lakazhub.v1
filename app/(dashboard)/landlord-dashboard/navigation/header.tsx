@@ -583,55 +583,157 @@ const Header = () => {
                                             </div>
                                             <ChevronRight className="h-4 w-4 text-white/50" />
                                         </button>
-                                        <button 
-                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
-                                            onClick={() => {
-                                                // For mobile, we should open the notification modal with message context
-                                                // This should behave exactly like the desktop dropdown for messages
-                                                // We'll open the notification modal with a conversation context
-                                                if (messageNotifications.length > 0) {
-                                                    handleMessageNotificationClick(messageNotifications[0]);
-                                                } else {
-                                                    // Show empty conversation modal with placeholder
-                                                    setSelectedProperty(null);
-                                                    setSelectedConversationId(null);
-                                                    setNotificationModalOpen(true);
-                                                }
-                                            }}
-                                        >
-                                            <div className="flex items-center">
-                                                <MessageCircle className="mr-3 h-5 w-5 text-white/70" />
-                                                <span>Messages</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                {unreadMessagesCount > 0 && (
-                                                    <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                                        {/* Messages Dropdown (Mobile, same as desktop) */}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className="flex items-center justify-between w-full px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 text-left"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <MessageCircle className="mr-3 h-5 w-5 text-white/70" />
+                                                        <span>Messages</span>
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        {unreadMessagesCount > 0 && (
+                                                            <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                                                        )}
+                                                        <ChevronRight className="h-4 w-4 text-white/50" />
+                                                    </div>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                                align="start"
+                                                className="w-80 bg-black/95 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-xl"
+                                            >
+                                                <DropdownMenuLabel className="font-normal border-b border-white/10 bg-black/80">
+                                                    <div className="flex flex-col space-y-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="text-sm font-medium text-white">Messages</p>
+                                                            {unreadMessagesCount > 0 && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-xs text-white/70 hover:text-white hover:bg-white/10"
+                                                                    onClick={markAllMessagesAsRead}
+                                                                >
+                                                                    Mark all as read
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-white/60">
+                                                            {messageNotifications.length > 0
+                                                                ? `You have ${unreadMessagesCount} unread messages`
+                                                                : "No messages"}
+                                                        </p>
+                                                    </div>
+                                                </DropdownMenuLabel>
+                                                <ScrollArea className="h-[300px]">
+                                                    {messageNotifications.length > 0 ? (
+                                                        messageNotifications.map((notification) => (
+                                                            <DropdownMenuItem
+                                                                key={notification.conversationId}
+                                                                className={`cursor-pointer px-4 py-3 hover:bg-white/5 border-b border-white/5 ${!notification.isRead ? 'bg-white/5' : ''}`}
+                                                                onClick={() => handleMessageNotificationClick(notification)}
+                                                            >
+                                                                <div className="flex items-start space-x-3 w-full">
+                                                                    <div className="flex-shrink-0 mt-1">
+                                                                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+                                                                            {notification.senderInitial}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex justify-between items-center">
+                                                                            <p className="text-sm font-medium truncate text-white">
+                                                                                {notification.senderName}
+                                                                            </p>
+                                                                            <span className="text-xs text-white/50 flex-shrink-0">{notification.time}</span>
+                                                                        </div>
+                                                                        <p className="text-xs text-white/70 font-medium mt-0.5">
+                                                                            {notification.propertyName}
+                                                                            {notification.messageCount > 1 && (
+                                                                                <span className="ml-1 text-white/50">
+                                                                                    ({notification.messageCount} messages)
+                                                                                </span>
+                                                                            )}
+                                                                        </p>
+                                                                        <p className="text-xs text-white/80 line-clamp-2 mt-1">
+                                                                            {notification.message}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </DropdownMenuItem>
+                                                        ))
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-full text-white/50 text-sm py-8">
+                                                            No messages
+                                                        </div>
+                                                    )}
+                                                </ScrollArea>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        {/* Notifications Dropdown (Mobile, same as desktop) */}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className="flex items-center justify-between w-full px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 text-left"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <Bell className="mr-3 h-5 w-5 text-white/70" />
+                                                        <span>Notifications</span>
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        {unreadNotificationsCount > 0 && (
+                                                            <div className="h-3 w-3 rounded-full bg-amber-500 animate-pulse mr-2"></div>
+                                                        )}
+                                                        <ChevronRight className="h-4 w-4 text-white/50" />
+                                                    </div>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                                align="start"
+                                                className="w-80 bg-black/95 backdrop-blur-md border border-white/20 text-white rounded-xl shadow-xl"
+                                            >
+                                                <DropdownMenuLabel className="font-normal border-b border-white/10 bg-black/80">
+                                                    <div className="flex flex-col space-y-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="text-sm font-medium text-white">Notifications</p>
+                                                            {unreadNotificationsCount > 0 && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-xs text-white/70 hover:text-white hover:bg-white/10"
+                                                                    onClick={markAllNotificationsAsRead}
+                                                                >
+                                                                    Mark all as read
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-white/60">
+                                                            {unreadNotificationsCount > 0
+                                                                ? `You have ${unreadNotificationsCount} unread notifications`
+                                                                : "No notifications"}
+                                                        </p>
+                                                    </div>
+                                                </DropdownMenuLabel>
+                                                <ScrollArea className="h-[300px]">
+                                                    <div className="flex items-center justify-center h-full text-white/50 text-sm py-8">
+                                                        No notifications
+                                                    </div>
+                                                </ScrollArea>
+                                                {notifications.length > 0 && (
+                                                    <div className="p-2 border-t border-white/10">
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="w-full text-xs text-white/80 hover:text-white hover:bg-white/10"
+                                                        >
+                                                            View all notifications
+                                                        </Button>
+                                                    </div>
                                                 )}
-                                                <ChevronRight className="h-4 w-4 text-white/50" />
-                                            </div>
-                                        </button>
-                                        <button 
-                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
-                                            onClick={() => {
-                                                // On desktop, clicking Notifications opens a dropdown with notifications
-                                                // For mobile, we'll open the notification modal directly without conversation context
-                                                // This ensures consistent behavior between desktop and mobile
-                                                setSelectedProperty(null);
-                                                setSelectedConversationId(null);
-                                                setNotificationModalOpen(true);
-                                            }}
-                                        >
-                                            <div className="flex items-center">
-                                                <Bell className="mr-3 h-5 w-5 text-white/70" />
-                                                <span>Notifications</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                {unreadNotificationsCount > 0 && (
-                                                    <div className="h-3 w-3 rounded-full bg-amber-500 animate-pulse mr-2"></div>
-                                                )}
-                                                <ChevronRight className="h-4 w-4 text-white/50" />
-                                            </div>
-                                        </button>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </nav>
                                 </ScrollArea>
                             </SheetContent>
