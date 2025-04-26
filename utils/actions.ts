@@ -63,9 +63,7 @@ export const signinWithGoogle = async (
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
-       
-        ...(userType === 'landlord' ? { user_role: 'landlord' } : 
-           userType === 'tenant' ? { user_role: 'tenant' } : {})
+        ...(userType ? { user_role: userType } : {})
       },
       redirectTo: redirectUrl
     }

@@ -84,42 +84,37 @@ export async function GET(request: Request) {
     if (!session?.user) {
       return errorRedirect(`${origin}/auth/auth-loading?error=no_session`);
     }
-    
+
+    // --- Ensure user metadata is updated with correct role before redirect ---
+    if (userRole && (session.user.app_metadata?.provider === 'google' || session.user.app_metadata?.provider === 'facebook')) {
+      try {
+        const metadata = session.user.user_metadata || {};
+        const firstName = metadata.given_name || 
+                         (metadata.full_name ? metadata.full_name.split(' ')[0] : 'Unknown');
+        const lastName = metadata.family_name || 
+                        (metadata.full_name ? metadata.full_name.split(' ').slice(1).join(' ') : 'User');
+        // Synchronously update user metadata with correct role
+        await supabase.auth.updateUser({
+          data: {
+            full_name: `${firstName} ${lastName}`,
+            phone_number: '', 
+            user_role: userRole === 'landlord' ? 'landlord' : 'tenant'
+          }
+        });
+      } catch (updateError) {
+        logInBackground({
+          type: 'profile_update_error',
+          error: String(updateError),
+          userId: session.user.id
+        });
+      }
+    }
+
     // Log success in background (non-blocking)
     queueMicrotask(() => {
       logInBackground({ type: 'auth_success', provider: session.user.app_metadata?.provider || 'unknown' });
     });
     
-    // Update user metadata in background without blocking the redirect
-    if (
-      (session.user.app_metadata?.provider === 'google' || session.user.app_metadata?.provider === 'facebook')
-      && userRole
-    ) {
-      queueMicrotask(async () => {
-        try {
-          const metadata = session.user.user_metadata || {};
-          const firstName = metadata.given_name || 
-                           (metadata.full_name ? metadata.full_name.split(' ')[0] : 'Unknown');
-          const lastName = metadata.family_name || 
-                          (metadata.full_name ? metadata.full_name.split(' ').slice(1).join(' ') : 'User');
-          
-          await supabase.auth.updateUser({
-            data: {
-              full_name: `${firstName} ${lastName}`,
-              phone_number: '', 
-              user_role: userRole === 'landlord' ? 'landlord' : 'tenant'
-            }
-          });
-        } catch (updateError) {
-          logInBackground({
-            type: 'profile_update_error',
-            error: String(updateError),
-            userId: session.user.id
-          });
-        }
-      });
-    }
-
     // Determine redirect path
     const dashboardPath = 
       userRole === 'landlord' ? '/landlord-dashboard' :
