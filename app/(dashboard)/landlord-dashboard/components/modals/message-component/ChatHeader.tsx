@@ -51,7 +51,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         : undefined;
 
     return (
-      <div className="border-b border-white p-2 flex items-center bg-black">
+      <div className="border-b border-white p-2 flex items-center bg-zinc-950 rounded-t-2xl shadow-md">
         <Button
           variant="ghost"
           size="icon"
@@ -97,7 +97,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   // Desktop or modal header
   return (
-    <div className="bg-black border-b border-white p-3 flex items-center justify-between">
+    <div className="bg-zinc-950 border-b border-white p-3 flex items-center justify-between rounded-t-2xl shadow-md">
       <div className="flex flex-col sm:hidden">
         <span className="font-bold text-white truncate max-w-[120px]">{modalTitle}</span>
       </div>

@@ -22,7 +22,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = ({
   onConfirm,
 }) => (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+    <AlertDialogContent className="bg-zinc-900 border-zinc-800 text-zinc-100 rounded-2xl shadow-2xl">
       <AlertDialogHeader>
         <AlertDialogTitle>Archive Conversation</AlertDialogTitle>
         <AlertDialogDescription className="text-zinc-400">

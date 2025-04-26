@@ -17,18 +17,24 @@ interface BasicInfoTabProps {
 // Expanded list of common locations in Mauritius
 const mauritiusLocations = [
   // North
-  "Grand Baie", "Pereybere", "Cap Malheureux", "Grand Gaube", "Goodlands", "Rivière du Rempart", "Mapou", "Poudre d'Or", "Calodyne", "Mont Choisy", "Trou aux Biches", "Pointe aux Canonniers", "Bain Boeuf", "Anse La Raie",
+  "Grand Baie", "Pereybere", "Cap Malheureux", "Grand Gaube", "Goodlands", "Rivière du Rempart", "Mapou", "Poudre d'Or", "Calodyne", "Mont Choisy", "Trou aux Biches", "Pointe aux Canonniers", "Bain Boeuf", "Anse La Raie", "Fond du Sac", "Petit Raffray", "Amaury", "Plaines des Roches",
+
   // West
-  "Flic en Flac", "Tamarin", "Black River", "Albion", "Cascavelle", "Petite Rivière", "La Gaulette", "Le Morne", "Case Noyale",
+  "Flic en Flac", "Tamarin", "Black River", "Albion", "Cascavelle", "Petite Rivière", "La Gaulette", "Le Morne", "Case Noyale", "Bambous", "Geoffroy", "Gros Cailloux", "Richelieu", "Grande Rivière Noire",
+
   // South
-  "Mahebourg", "Blue Bay", "Le Bouchon", "Souillac", "Surinam", "Chemin Grenier", "Bel Ombre", "Baie du Cap", "Rivière des Anguilles", "Rivière des Galets", "St Felix", "Gris Gris",
+  "Mahebourg", "Blue Bay", "Le Bouchon", "Souillac", "Surinam", "Chemin Grenier", "Bel Ombre", "Baie du Cap", "Rivière des Anguilles", "Rivière des Galets", "St Felix", "Gris Gris", "Batimarais", "Pomponnette", "Choisy", "Benares", "Grand Bois", "Camp Diable",
+
   // East
-  "Centre de Flacq", "Bel Air", "Trou d'Eau Douce", "Palmar", "Belle Mare", "Poste Lafayette", "Roche Noires", "Quatre Cocos", "Lallmatie", "Camp de Masque", "Queen Victoria", "Sebastopol", "Beau Champ",
+  "Centre de Flacq", "Bel Air", "Trou d'Eau Douce", "Palmar", "Belle Mare", "Poste Lafayette", "Roche Noires", "Quatre Cocos", "Lallmatie", "Camp de Masque", "Queen Victoria", "Sebastopol", "Beau Champ", "Deep River", "Grande Rivière Sud Est", "Providence", "Grande Retraite", "Petit Sable", "Deux Frères",
+
   // Central/Urban
-  "Port Louis", "Curepipe", "Vacoas", "Quatre Bornes", "Rose Hill", "Beau Bassin", "Phoenix", "Ebène", "Moka", "Floréal", "Plaine Wilhems", "Pailles", "Coromandel", "Highlands",
+  "Port Louis", "Curepipe", "Vacoas", "Quatre Bornes", "Rose Hill", "Beau Bassin", "Phoenix", "Ebène", "Moka", "Floréal", "Plaine Wilhems", "Pailles", "Coromandel", "Highlands", "Les Pailles", "Belle Rose", "Camp Fouquereaux", "Sorèze", "La Laura", "Le Hochet",
+
   // Other towns/villages
-  "Triolet", "Terre Rouge", "Pamplemousses", "Montagne Longue", "Long Mountain", "Plaine Magnien", "Rose Belle", "New Grove", "Camp Diable", "Mare d'Albert", "Mare Tabac", "Petit Bel Air", "Riche Mare", "St Pierre", "Dagotière", "Verdun", "Mont Ida", "Petit Paquet", "Camp Ithier", "Camp Thorel", "Petit Gabriel", "Camp Carol", "Camp Fouquereaux", "Camp Levieux"
+  "Triolet", "Terre Rouge", "Pamplemousses", "Montagne Longue", "Long Mountain", "Plaine Magnien", "Rose Belle", "New Grove", "Camp Diable", "Mare d'Albert", "Mare Tabac", "Petit Bel Air", "Riche Mare", "St Pierre", "Dagotière", "Verdun", "Mont Ida", "Petit Paquet", "Camp Ithier", "Camp Thorel", "Petit Gabriel", "Camp Carol", "Camp Fouquereaux", "Camp Levieux", "Henrietta", "Phoenix Les Halles", "La Louise", "Sainte Croix", "Valetta", "Bois Cheri", "La Flora", "Cluny", "Midlands", "La Marie", "Forest Side", "Gokhoola", "Petit Verger", "Beaux Songes", "Dubreuil", "Notre Dame"
 ];
+
 
 export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTabProps) {
   // Handle form input changes

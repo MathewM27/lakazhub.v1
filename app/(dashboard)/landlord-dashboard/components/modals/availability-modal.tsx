@@ -189,23 +189,25 @@ export default function AvailabilityModal({
         {!onboardingComplete ? (
           // Onboarding view - your existing code
           <div className="py-8">
-            <AnimatePresence initial={false}>
-              {open && (
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex flex-col items-center text-center"
-                >
-                  {onboardingSlides[step].icon}
-                  <h3 className="text-xl font-semibold mb-2">{onboardingSlides[step].title}</h3>
-                  <p className="text-muted-foreground mb-6">{onboardingSlides[step].description}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
+            {/* Add a fixed minHeight to prevent modal jump, and use mode="wait" */}
+            <div style={{ minHeight: 220 }}>
+              <AnimatePresence mode="wait" initial={false}>
+                {open && (
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col items-center text-center"
+                  >
+                    {onboardingSlides[step].icon}
+                    <h3 className="text-xl font-semibold mb-2">{onboardingSlides[step].title}</h3>
+                    <p className="text-muted-foreground mb-6">{onboardingSlides[step].description}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <div className="flex justify-center mt-6">
               {onboardingSlides.map((_, index) => (
                 <div
@@ -214,7 +216,6 @@ export default function AvailabilityModal({
                 />
               ))}
             </div>
-
             <div className="flex justify-center mt-8">
               <Button onClick={handleStartForm}>Set Availability</Button>
             </div>

@@ -38,9 +38,13 @@ const TenantListItem: React.FC<TenantListItemProps> = ({
 }) => (
   <div
     className={cn(
-      "group flex items-center gap-3 p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors",
-      isSelected && "bg-zinc-900"
+      "group flex items-center gap-3 p-3 cursor-pointer transition-colors",
+      "rounded-xl mb-1 shadow-sm",
+      isSelected
+        ? "bg-gradient-to-r from-indigo-900/80 to-black border border-indigo-700"
+        : "hover:bg-zinc-900/80"
     )}
+    style={{ minHeight: 60 }}
     onClick={() => onSelect(tenant)}
   >
     <div className="relative flex-shrink-0">

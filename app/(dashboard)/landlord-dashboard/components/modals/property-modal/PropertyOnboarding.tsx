@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Camera, DollarSign } from "lucide-react"
+import { Home, Camera, Banknote } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface PropertyOnboardingProps {
@@ -25,7 +25,7 @@ export default function PropertyOnboarding({ onComplete }: PropertyOnboardingPro
     {
       title: "Set Pricing",
       description: "Set rental price and additional utilities.",
-      icon: <DollarSign className="h-12 w-12 mb-4" />,
+      icon: <Banknote className="h-12 w-12 mb-4" />,
     },
   ]
   

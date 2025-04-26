@@ -69,9 +69,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   }
 
   return (
-    <div ref={messagesContainerRef} className="space-y-3 flex-1 overflow-y-auto p-3">
+    <div
+      ref={messagesContainerRef}
+      className="space-y-3 flex-1 overflow-y-auto p-4 bg-zinc-950 rounded-b-2xl shadow-inner"
+      style={{ minHeight: 0 }}
+    >
       {selectedTenant.hasMoreMessages && (
-        <div className="flex justify-center py-2" key="load-more-container">
+        <div className="flex justify-center py-2">
           <button
             onClick={loadMoreMessages}
             className="text-xs text-zinc-400 hover:text-white px-3 py-1 rounded-full bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors"
@@ -83,15 +87,25 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       {selectedTenant.messages.map((message, idx) => (
         <div
           key={message.id || `${idx}-${message.time}`}
-          className={cn("flex", message.sender === "landlord" ? "justify-end" : "justify-start")}
+          className={cn(
+            "flex",
+            message.sender === "landlord" ? "justify-end" : "justify-start"
+          )}
         >
           <div
             className={cn(
-              "max-w-[80%] rounded-lg px-4 py-2",
+              "max-w-[80%] px-4 py-2 mb-1 rounded-2xl shadow-md",
               message.sender === "landlord"
-                ? "bg-indigo-600 text-white rounded-br-none"
-                : "bg-zinc-800 text-zinc-100 rounded-bl-none"
+                ? "bg-gradient-to-br from-indigo-700 via-indigo-600 to-indigo-800 text-white rounded-br-md"
+                : "bg-zinc-800 text-zinc-100 rounded-bl-md"
             )}
+            style={{
+              borderTopLeftRadius: message.sender === "landlord" ? 18 : 8,
+              borderTopRightRadius: message.sender === "landlord" ? 8 : 18,
+              borderBottomLeftRadius: 18,
+              borderBottomRightRadius: 18,
+              boxShadow: "0 2px 8px 0 rgba(0,0,0,0.10)",
+            }}
           >
             <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>
             <div
