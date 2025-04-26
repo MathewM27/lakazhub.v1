@@ -21,6 +21,7 @@ const HeroSection = () => {
   return (
     <section 
       className="relative flex items-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-16 md:py-24 bg-black text-white overflow-hidden"
+      id="tenant-hero"
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -103,7 +104,7 @@ const HeroSection = () => {
                 
                 {/* Center piece - using blue accent and improved positioning */}
                 <div className="relative z-10 w-40 h-40">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl animate-pulse-slow">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-5xl font-bold transform -rotate-45">LH</div>
                     </div>
@@ -134,7 +135,7 @@ const HeroSection = () => {
                 
                 {/* Center piece - Adjusted for mobile */}
                 <div className="relative z-10 w-32 h-32">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl animate-pulse-slow">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
                     </div>
@@ -154,12 +155,22 @@ const HeroSection = () => {
       <style jsx global>{`
         @keyframes float-slow {
           0% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(5px, -5px) rotate(5deg); }
+          50% { transform: translate(10px, -10px) rotate(5deg); }
           100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        
+        @keyframes pulse-slow {
+          0% { transform: rotate(45deg) scale(1); }
+          50% { transform: rotate(45deg) scale(1.05); }
+          100% { transform: rotate(45deg) scale(1); }
         }
         
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
         }
         
         .animation-delay-700 {

@@ -370,7 +370,7 @@ const Header = () => {
                 }`}
             >
                 <div className="max-w-screen-xl mx-auto px-4 md:px-8 flex items-center justify-between py-4">
-                    <Link href="/" className="group flex items-center">
+                    <Link href="/landlord-dashboard" className="group flex items-center">
                         <span className="font-bold tracking-tight text-white text-fluid-h2 transition-colors">
                             Lakaz<span className="opacity-70">Hub</span>
                         </span>
@@ -382,7 +382,7 @@ const Header = () => {
                     {/* Desktop navigation */}
                     <div className="hidden md:flex items-center space-x-3">
                         <Link 
-                            href="/" 
+                            href="/landlord-dashboard" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-white"
                         >
                             <Home className="mr-2 h-4 w-4" />
@@ -573,19 +573,30 @@ const Header = () => {
                                 </SheetHeader>
                                 <ScrollArea className="h-[40vh]">
                                     <nav className="flex flex-col space-y-1">
-                                        <Link 
-                                            href="/" 
-                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
+                                        <button 
+                                            onClick={() => window.location.href = "/landlord-dashboard"}
+                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
                                         >
                                             <div className="flex items-center">
                                                 <Home className="mr-3 h-5 w-5 text-white/70" />
                                                 <span>Home</span>
                                             </div>
                                             <ChevronRight className="h-4 w-4 text-white/50" />
-                                        </Link>
-                                        <Link 
-                                            href="/chat" 
-                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
+                                        </button>
+                                        <button 
+                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
+                                            onClick={() => handleMessageNotificationClick(messageNotifications[0] || {
+                                                conversationId: '',
+                                                propertyId: '',
+                                                propertyName: '',
+                                                senderName: '',
+                                                message: '',
+                                                time: '',
+                                                isRead: false,
+                                                senderInitial: '',
+                                                messageCount: 0,
+                                                latestMessageId: ''
+                                            })}
                                         >
                                             <div className="flex items-center">
                                                 <MessageCircle className="mr-3 h-5 w-5 text-white/70" />
@@ -597,10 +608,10 @@ const Header = () => {
                                                 )}
                                                 <ChevronRight className="h-4 w-4 text-white/50" />
                                             </div>
-                                        </Link>
-                                        <Link 
-                                            href="/notifications" 
-                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200"
+                                        </button>
+                                        <button 
+                                            className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
+                                            onClick={() => setNotificationModalOpen(true)}
                                         >
                                             <div className="flex items-center">
                                                 <Bell className="mr-3 h-5 w-5 text-white/70" />
@@ -612,7 +623,7 @@ const Header = () => {
                                                 )}
                                                 <ChevronRight className="h-4 w-4 text-white/50" />
                                             </div>
-                                        </Link>
+                                        </button>
                                     </nav>
                                 </ScrollArea>
                             </SheetContent>
