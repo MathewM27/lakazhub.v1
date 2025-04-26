@@ -91,17 +91,18 @@ const LandlordHeroSection = () => {
             </div>
           </div>
 
-          {/* Right: Modern Geometric Design */}
-          <div className={`hidden md:flex md:items-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="w-full max-w-md lg:max-w-lg xl:max-w-xl mx-auto md:ml-auto">
-              <div className="relative aspect-square w-full">
-                {/* 3D-like grid effect */}
+          {/* Right: Fixed Modern Geometric Design - Properly contained in the section */}
+          <div className={`hidden md:flex md:items-center justify-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="relative w-full max-w-md h-[380px] lg:max-w-lg xl:max-w-xl mx-auto">
+              {/* Container to center and constrain the geometric elements */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Concentric diamond borders with fixed positioning */}
                 <div className="absolute w-64 h-64 border border-white/20 rotate-45 transform-gpu"></div>
                 <div className="absolute w-80 h-80 border border-white/15 rotate-45 transform-gpu"></div>
                 <div className="absolute w-96 h-96 border border-white/10 rotate-45 transform-gpu"></div>
                 
-                {/* Center piece */}
-                <div className="relative z-10 flex items-center justify-center h-full">
+                {/* Center piece - LH logo */}
+                <div className="relative z-10">
                   <div className="w-40 h-40 bg-gradient-to-tr from-white via-white to-amber-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-5xl font-bold transform -rotate-45">LH</div>
@@ -109,31 +110,35 @@ const LandlordHeroSection = () => {
                   </div>
                 </div>
                 
-                {/* Floating elements */}
-                <div className="absolute top-20 right-40 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
-                <div className="absolute bottom-24 left-32 w-10 h-10 bg-amber-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
-                <div className="absolute bottom-40 right-20 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
+                {/* Floating elements - positioned relative to center */}
+                <div className="absolute top-6 right-20 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
+                <div className="absolute bottom-12 left-16 w-10 h-10 bg-amber-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
+                <div className="absolute bottom-20 right-16 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
               </div>
             </div>
           </div>
           
           {/* Mobile view of the geometric design - Only shown on mobile */}
           <div className="block md:hidden w-full py-4 mt-8">
-            <div className="relative mx-auto max-w-md">
-              <div className="relative aspect-square w-full">
-                {/* 3D-like grid effect */}
+            <div className="relative mx-auto max-w-[280px] h-[280px]">
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* Concentric diamond borders with fixed positioning */}
                 <div className="absolute w-48 h-48 border border-white/20 rotate-45 transform-gpu"></div>
                 <div className="absolute w-64 h-64 border border-white/15 rotate-45 transform-gpu"></div>
                 <div className="absolute w-80 h-80 border border-white/10 rotate-45 transform-gpu"></div>
                 
                 {/* Center piece */}
-                <div className="relative z-10 flex items-center justify-center h-full">
+                <div className="relative z-10">
                   <div className="w-32 h-32 bg-gradient-to-tr from-white via-white to-amber-400 rounded-lg transform rotate-45 shadow-2xl">
                     <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
                       <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
                     </div>
                   </div>
                 </div>
+
+                {/* Adding a couple subtle floating elements for mobile too */}
+                <div className="absolute top-4 right-12 w-8 h-8 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
+                <div className="absolute bottom-8 left-12 w-6 h-6 bg-amber-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
               </div>
             </div>
           </div>
