@@ -49,6 +49,7 @@ const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") =>
 // Import PWA components
 import RegisterSW from '../(landing)/components/pwa/RegisterSW';
 import DashboardInstallPrompt from '../../components/pwa/DashboardInstallPrompt';
+import HeroSection from './components/layouts/hero-section';
 
 export default function Home() {
   const { user, profile, isAuthenticating, isAuthenticated, hasCorrectRole, signOut } = useAuth();
@@ -126,6 +127,7 @@ export default function Home() {
       
       <PageWrapper>
         <Navigation />
+        <HeroSection />
         <PropertiesSection />
         <PremiumFeatures />
         <Footer />
