@@ -134,9 +134,11 @@ export const Navbar = () => {
       <div className="max-w-screen-xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" 
-                className="group flex flex-col items-start gap-y-3 md:flex-row md:items-center md:gap-y-0"
-                onClick={(e) => scrollToSection('hero', e)}>
+          <Link
+            href="/"
+            className="group flex items-center"
+            onClick={(e) => scrollToSection('hero', e)}
+          >
             <span className="font-bold tracking-tight text-white text-fluid-h2">
               Lakaz<span className="opacity-70">Hub</span>
             </span>
@@ -173,7 +175,7 @@ export const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
+          <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-full bg-white text-black hover:bg-white/90 transition-all duration-300 focus:outline-none"
