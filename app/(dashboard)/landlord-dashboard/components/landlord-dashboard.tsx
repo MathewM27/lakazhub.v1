@@ -14,6 +14,7 @@ import LandlordVerificationSurvey from "./landlord-verification-survey";
 import RegisterSW from '../../(landing)/components/pwa/RegisterSW';
 import DashboardInstallPrompt from '../../../components/pwa/DashboardInstallPrompt';
 import HeroSection from '../layout/hero-section';
+import { supabase } from "../lib/utils/supabase/client";
 
 // Dynamically import modals to reduce initial JS bundle
 const PropertyModal = dynamic(() => import('./modals/property-modal-details'), { ssr: false, loading: () => null });
@@ -33,14 +34,40 @@ export default function LandlordDashboard() {
     message: "",
   });
   const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
-  const [showSurvey, setShowSurvey] = useState(false);
+  // Remove old showSurvey state
+  // const [showSurvey, setShowSurvey] = useState(false);
+
+  // New survey status: "checking" | "show" | "hide"
+  const [surveyStatus, setSurveyStatus] = useState<"checking" | "show" | "hide">("checking");
 
   useEffect(() => {
-    // Only show for landlords, and only if not already filled
-    if (profile?.user_role === "landlord" && !localStorage.getItem("lh_landlord_surveyed")) {
-      setShowSurvey(true);
+    // Only check for landlords
+    if (profile?.user_role !== "landlord" || !user) {
+      setSurveyStatus("hide");
+      return;
     }
-  }, [profile?.user_role]);
+    setSurveyStatus("checking");
+    if (localStorage.getItem("lh_landlord_surveyed")) {
+      setSurveyStatus("hide");
+      return;
+    }
+    async function checkSurvey() {
+      // user is not null here due to the check above
+      const { data } = await supabase
+        .from("landlord_verification_surveys")
+        .select("id")
+        .eq("user_id", user!.id)
+        .limit(1)
+        .maybeSingle();
+      if (data && data.id) {
+        localStorage.setItem("lh_landlord_surveyed", "1");
+        setSurveyStatus("hide");
+      } else {
+        setSurveyStatus("show");
+      }
+    }
+    checkSurvey();
+  }, [profile?.user_role, user]);
 
   // Handler functions for property actions
   const handlePropertyDetails = useCallback((property: Property) => {
@@ -79,8 +106,8 @@ export default function LandlordDashboard() {
     return <LoadingScreen message={message} />;
   };
   
-  // Show a friendly welcome screen while authentication is being checked
-  if (isAuthenticating) {
+  // Show a friendly welcome screen while authentication or survey check is being done
+  if (isAuthenticating || surveyStatus === "checking") {
     return renderWelcomeScreen();
   }
   
@@ -157,13 +184,13 @@ export default function LandlordDashboard() {
         />
       )}
 
-      {showSurvey && user && profile && (
+      {surveyStatus === "show" && user && profile && (
         <LandlordVerificationSurvey
           userId={user.id}
           fullName={profile.full_name}
           email={profile.email_address}
-          open={showSurvey}
-          onCloseAction={() => setShowSurvey(false)}
+          open={true}
+          onCloseAction={() => setSurveyStatus("hide")}
         />
       )}
     </div>
