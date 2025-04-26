@@ -213,12 +213,12 @@ export default function PropertyCard({
 
   return (
     <div
-      className="bg-black border border-white/10 rounded-lg overflow-hidden h-full shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="bg-black border border-white/10 rounded-lg overflow-hidden h-full shadow-lg transform transition-all duration-300"
     >
-      {/* Property Image Section - Now with prioritized exterior image */}
+      {/* Property Image Section */}
       <div className="relative aspect-[16/9] overflow-hidden">
         <div 
-          className="w-full h-full bg-cover bg-center transition-all duration-500 hover:scale-105" 
+          className="w-full h-full bg-cover bg-center transition-all duration-500" 
           style={{ backgroundImage: `url(${propertyImage})` }}
         ></div>
 

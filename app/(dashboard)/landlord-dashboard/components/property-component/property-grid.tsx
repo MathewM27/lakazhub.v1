@@ -159,7 +159,7 @@ export default function PropertyGrid({
         <div className="relative">
           <div
             ref={containerRef}
-            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
+            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start"
             style={{ scrollBehavior: 'smooth' }}
           >
             {propertyList.slice(0, visibleCount).map((property, index) => (
