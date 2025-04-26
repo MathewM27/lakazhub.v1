@@ -1,31 +1,29 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
-import { Plus, Home, RefreshCw } from "lucide-react";
+import { Plus, Home, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProperties } from "../../hooks/useProperties";
-import { supabase } from "../../lib/utils/supabase/client"; // Use direct Supabase
-import { PropertyCache } from "../../lib/utils/cache/propertyCache"; // Add this for cache operations
+import { supabase } from "../../lib/utils/supabase/client";
+import { PropertyCache } from "../../lib/utils/cache/propertyCache";
 import { useToast } from "../../hooks/use-toast";
-// Dynamic import for rarely-used modal
 import dynamic from "next/dynamic";
 
 // Dynamically import modals/dialogs
 const NotificationsModal = dynamic(() => import("../modals/notification-modal"), { ssr: false });
-// ...add other modals/dialogs as needed...
 
 interface PropertyGridProps {
   onPropertyDetailsAction: (property: Property) => void;
   onAvailabilityAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
   onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
-  // Add these props for refresh indicator
   refreshNeeded?: boolean;
   onRefreshClear?: () => void;
 }
 
 const PAGE_SIZE = 9;
+const SLIDER_THRESHOLD = 5; // If more than 5 properties, use slider on mobile
 
 export default function PropertyGrid({ 
   onPropertyDetailsAction, 
@@ -44,6 +42,11 @@ export default function PropertyGrid({
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // Slider state
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [maxScroll, setMaxScroll] = useState(0);
+
   // Handler for improved refresh button (clear cache, then refresh)
   const handleRefresh = useCallback(async () => {
     PropertyCache.clearCache();
@@ -57,17 +60,14 @@ export default function PropertyGrid({
     }, 200);
   }, [refreshProperties, onRefreshClear, toast]);
 
-  // Memoized delete handler - update to use direct Supabase
+  // Memoized delete handler
   const handleDeleteProperty = useCallback(async (propertyId: string) => {
     try {
       setDeletingPropertyId(propertyId);
-      
-      // Delete the property using direct Supabase query
       const { error } = await supabase
         .from('properties')
         .delete()
         .eq('id', propertyId);
-      
       if (error) {
         toast({
           title: "Delete failed",
@@ -76,18 +76,13 @@ export default function PropertyGrid({
         });
         return;
       }
-      
-      // Update cache
       PropertyCache.invalidatePropertyCache(propertyId);
       PropertyCache.setProperties([], undefined);
-      
       toast({
         title: "Property deleted",
         description: "The property has been successfully deleted",
         variant: "default"
       });
-      
-      // Refresh properties list
       refreshProperties();
     } catch {
       toast({
@@ -106,10 +101,8 @@ export default function PropertyGrid({
     setNotificationModalOpen(true);
   }, []);
 
-  // Handle availability action to capture the property and provide a refresh callback
   const handleAvailabilityAction = useCallback((property: Property) => {
     onAvailabilityAction(property);
-    // Make sure onAvailabilityAction receives this property
   }, [onAvailabilityAction]);
 
   useEffect(() => {
@@ -118,44 +111,61 @@ export default function PropertyGrid({
     }
   }, [onRefreshNeeded, refreshProperties]);
 
+  // Slider scroll logic for mobile
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const handleScrollEvent = () => {
+      setScrollPosition(container.scrollLeft);
+      setMaxScroll(container.scrollWidth - container.clientWidth);
+    };
+    handleScrollEvent();
+    container.addEventListener('scroll', handleScrollEvent);
+    window.addEventListener('resize', handleScrollEvent);
+    return () => {
+      container.removeEventListener('scroll', handleScrollEvent);
+      window.removeEventListener('resize', handleScrollEvent);
+    };
+  }, [properties?.length, visibleCount]);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const scrollAmount = direction === 'left' ? -320 : 320;
+    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  // Determine if slider should be used (mobile, > threshold)
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const useSlider = Array.isArray(properties) && properties.length > SLIDER_THRESHOLD;
+
   return (
-    <section className="py-12 bg-black relative overflow-hidden">
-      <div className="container mx-auto px-4 relative z-10">
-        <div 
-          className="max-w-6xl mx-auto opacity-0 translate-y-5 animate-fade-in-up"
-        >
+    <section className="py-16 md:py-24 bg-black relative overflow-hidden">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
+        <div className="opacity-0 translate-y-5 animate-fade-in-up">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
             <div className="max-w-2xl">
-              <div
-                className="flex items-center gap-2 mb-4 opacity-0 translate-y-2 animate-fade-in-up"
-              >
+              <div className="flex items-center gap-2 mb-4 opacity-0 translate-y-2 animate-fade-in-up">
                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                   <Home className="w-4 h-4 text-black" />
                 </div>
                 <span className="text-white/70 text-sm font-medium">Your Property Portfolio</span>
               </div>
-              
-              <h2 
-                className="text-3xl md:text-4xl font-bold mb-4 text-white opacity-0 translate-y-2 animate-fade-in-up animation-delay-100"
-              >
+              <h2 className="font-bold mb-4 text-white text-fluid-h2 opacity-0 translate-y-2 animate-fade-in-up animation-delay-100">
                 Manage Your Properties
               </h2>
-              
-              <p 
-                className="text-base md:text-lg text-white/70 opacity-0 translate-y-2 animate-fade-in-up animation-delay-200"
-              >
+              <p className="text-base md:text-lg text-white/70 opacity-0 translate-y-2 animate-fade-in-up animation-delay-200">
                 View and manage all your properties in one place with real-time information
               </p>
             </div>
-            {/* Improved Refresh Button with Glow and Animation */}
+            {/* Improved Refresh Button */}
             <div className="mt-6 md:mt-0">
               <button
                 onClick={handleRefresh}
                 className={
                   `px-4 py-2 text-sm rounded-full transition-all duration-300 flex items-center gap-2
                   bg-white/10 text-white/70 hover:bg-white/20
-                  ${refreshNeeded ? "shadow-[0_0_16px_4px_rgba(34,197,94,0.5)] ring-2 ring-green-400/80 animate-glow" : ""}
-                  `
+                  ${refreshNeeded ? "shadow-[0_0_16px_4px_rgba(34,197,94,0.5)] ring-2 ring-green-400/80 animate-glow" : ""}`
                 }
                 style={{
                   position: "relative",
@@ -182,24 +192,20 @@ export default function PropertyGrid({
             </div>
           </div>
 
-          <div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {loading ? (
-              <div 
-                className="col-span-3 flex flex-col items-center justify-center py-20 space-y-4 opacity-0 animate-fade-in"
+          {/* Slider for mobile if property count is high */}
+          {useSlider ? (
+            <div className="relative">
+              <div
+                ref={containerRef}
+                className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
+                style={{ scrollBehavior: 'smooth' }}
               >
-                <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                <p className="text-white/70">Loading properties...</p>
-              </div>
-            ) : Array.isArray(properties) && properties.length > 0 ? (
-              <>
                 {properties.slice(0, visibleCount).map((property, index) => (
-                  <div 
+                  <div
                     key={property.id}
-                    className={`transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
+                    className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start mx-auto ${
                       deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
-                    }`}
+                    } opacity-0 animate-fade-in-up`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <PropertyCard
@@ -211,45 +217,133 @@ export default function PropertyGrid({
                     />
                   </div>
                 ))}
-                {visibleCount < properties.length && (
-                  <div className="col-span-3 flex justify-center mt-6">
-                    <button
-                      onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, properties.length))}
-                      className="px-6 py-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+                {/* Add New Property Card */}
+                <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start flex items-center justify-center mx-auto opacity-0 animate-fade-in-up animation-delay-300">
+                  <button
+                    onClick={onAddNewPropertyAction}
+                    className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
+                      <Plus className="w-7 h-7" />
+                    </div>
+                    <span className="font-medium text-lg">Add New Property</span>
+                    <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
+                      Click here to add a new property to your portfolio
+                    </p>
+                  </button>
+                </div>
+              </div>
+              {/* Slider navigation buttons (desktop only) */}
+              <button
+                onClick={() => handleScroll('left')}
+                className={`hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
+                  scrollPosition <= 0 ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+                disabled={scrollPosition <= 0}
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-5 h-5 group-hover:scale-95 transition-transform" />
+              </button>
+              <button
+                onClick={() => handleScroll('right')}
+                className={`hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm items-center justify-center text-white transition-all duration-300 border border-white/20 group ${
+                  scrollPosition >= maxScroll - 5 ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+                disabled={scrollPosition >= maxScroll - 5}
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-5 h-5 group-hover:scale-95 transition-transform" />
+              </button>
+              {/* Progress bar */}
+              {properties.length > 0 && (
+                <div className="mt-3 h-0.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white/40 transition-all duration-300"
+                    style={{
+                      width:
+                        maxScroll > 0
+                          ? `${Math.min((scrollPosition / maxScroll) * 100, 100)}%`
+                          : '0%',
+                    }}
+                  ></div>
+                </div>
+              )}
+              {/* Load More button centered on mobile/slider */}
+              {visibleCount < properties.length && (
+                <div className="flex justify-center w-full mt-6">
+                  <button
+                    onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, properties.length))}
+                    className="px-6 py-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Grid for desktop or when property count is low
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {loading ? (
+                <div className="col-span-3 flex flex-col items-center justify-center py-20 space-y-4 opacity-0 animate-fade-in">
+                  <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <p className="text-white/70">Loading properties...</p>
+                </div>
+              ) : Array.isArray(properties) && properties.length > 0 ? (
+                <>
+                  {properties.slice(0, visibleCount).map((property, index) => (
+                    <div
+                      key={property.id}
+                      className={`mx-auto w-full max-w-xs md:max-w-sm transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
+                        deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
+                      }`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      Load More
+                      <PropertyCard
+                        property={property}
+                        onDetailsAction={() => onPropertyDetailsAction(property)}
+                        onAvailabilityAction={() => handleAvailabilityAction(property)}
+                        onNotificationsAction={handleNotificationClick}
+                        onDeleteAction={handleDeleteProperty}
+                      />
+                    </div>
+                  ))}
+                  {/* Add New Property Card */}
+                  <div className="mx-auto w-full max-w-xs md:max-w-sm flex items-center justify-center opacity-0 animate-fade-in-up animation-delay-300">
+                    <button
+                      onClick={onAddNewPropertyAction}
+                      className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
+                        <Plus className="w-7 h-7" />
+                      </div>
+                      <span className="font-medium text-lg">Add New Property</span>
+                      <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
+                        Click here to add a new property to your portfolio
+                      </p>
                     </button>
                   </div>
-                )}
-              </>
-            ) : (
-              <p 
-                className="text-white col-span-3 text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in"
-              >
-                No properties found
-              </p>
-            )}
-
-            <div 
-              className="flex items-center justify-center border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden opacity-0 animate-fade-in-up animation-delay-300 hover:-translate-y-2.5 transition-all duration-300"
-            >
-              <button
-                onClick={onAddNewPropertyAction}
-                className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group"
-              >
-                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
-                  <Plus className="w-7 h-7" />
-                </div>
-                <span className="font-medium text-lg">Add New Property</span>
-                <p className="text-white/50 text-sm mt-2 text-center max-w-[200px]">
-                  Click here to add a new property to your portfolio
+                  {/* Load More button centered */}
+                  {visibleCount < properties.length && (
+                    <div className="col-span-full flex justify-center w-full mt-6">
+                      <button
+                        onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, properties.length))}
+                        className="px-6 py-2 bg-white/10 text-white rounded-full hover:bg-white/20 transition"
+                      >
+                        Load More
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-white col-span-full text-center py-12 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 opacity-0 animate-fade-in">
+                  No properties found
                 </p>
-              </button>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
-      <NotificationsModal 
+      <NotificationsModal
         open={notificationModalOpen}
         onOpenChangeAction={setNotificationModalOpen}
         property={selectedProperty ? {
@@ -258,6 +352,15 @@ export default function PropertyGrid({
           name: selectedProperty.name
         } : undefined}
       />
+      <style jsx global>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </section>
   );
 }

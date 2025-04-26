@@ -369,9 +369,9 @@ const Header = () => {
                         : "bg-transparent border-b border-white/20"
                 }`}
             >
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+                <div className="max-w-screen-xl mx-auto px-4 md:px-8 flex items-center justify-between py-4">
                     <Link href="/" className="group flex items-center">
-                        <span className="text-2xl font-bold tracking-tight transition-colors text-white">
+                        <span className="font-bold tracking-tight text-white text-fluid-h2 transition-colors">
                             Lakaz<span className="opacity-70">Hub</span>
                         </span>
                         <div 
@@ -380,7 +380,7 @@ const Header = () => {
                     </Link>
 
                     {/* Desktop navigation */}
-                    <div className="hidden items-center space-x-1 md:flex">
+                    <div className="hidden md:flex items-center space-x-3">
                         <Link 
                             href="/" 
                             className="px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 text-white/90 hover:text-white"
@@ -536,8 +536,8 @@ const Header = () => {
                         </DropdownMenu>
                     </div>
                     
-                     {/* Mobile menu button */}
-                     <div className="md:hidden">
+                    {/* Mobile menu button */}
+                    <div className="flex items-center md:hidden">
                         <Sheet>
                             <SheetTrigger asChild>
                                 <Button 
