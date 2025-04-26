@@ -8,7 +8,7 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen">
+      <main className="min-h-screen bg-black">
         {children}
       </main>
     </>
