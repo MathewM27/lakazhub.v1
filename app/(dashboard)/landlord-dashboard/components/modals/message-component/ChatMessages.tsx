@@ -28,7 +28,8 @@ interface ChatMessagesProps {
   messagesContainerRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   messagesEndRef: React.RefObject<HTMLDivElement | null> | React.RefObject<HTMLDivElement>;
   loadMoreMessages: () => void;
-  userHasScrolledUp: boolean; // Add this missing property
+  userHasScrolledUp: boolean;
+  noGradient?: boolean; // new prop
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -37,7 +38,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messagesContainerRef,
   messagesEndRef,
   loadMoreMessages,
-  userHasScrolledUp, // Add this parameter
+  userHasScrolledUp,
+  noGradient,
 }) => {
   if (loading && (!selectedTenant || selectedTenant?.messages.length === 0)) {
     return (
@@ -96,7 +98,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             className={cn(
               "max-w-[80%] px-4 py-2 mb-1 rounded-2xl shadow-md",
               message.sender === "landlord"
-                ? "bg-gradient-to-br from-indigo-700 via-indigo-600 to-indigo-800 text-white rounded-br-md"
+                ? noGradient
+                  ? "bg-zinc-800 text-zinc-100 rounded-br-md"
+                  : "bg-zinc-800 text-zinc-100 rounded-br-md"
                 : "bg-zinc-800 text-zinc-100 rounded-bl-md"
             )}
             style={{

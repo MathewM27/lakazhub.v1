@@ -66,9 +66,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         >
           {tenantName?.charAt(0)?.toUpperCase() || "?"}
         </div>
-        <div>
-          <div className="font-medium text-sm text-white">{tenantName}</div>
-          <p className="text-xs text-zinc-400">
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-white truncate max-w-[120px]">{tenantName}</div>
+          <p className="text-xs text-zinc-400 truncate max-w-[140px]">
             Inquiring about {propertyName || "your property"}
           </p>
         </div>
@@ -95,7 +95,61 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
   }
 
-  // Remove desktop/modal header (handled in parent)
+  // Desktop/modal header for conversation
+  if (!mobile && selectedTenant) {
+    const tenantName =
+      typeof selectedTenant === "object" &&
+      selectedTenant !== null &&
+      "name" in selectedTenant &&
+      typeof (selectedTenant as { name?: unknown }).name === "string"
+        ? (selectedTenant as { name: string }).name
+        : undefined;
+
+    const propertyName =
+      typeof property === "object" &&
+      property !== null &&
+      "name" in property &&
+      typeof (property as { name?: unknown }).name === "string"
+        ? (property as { name: string }).name
+        : undefined;
+
+    return (
+      <div className="border-b border-white p-3 flex items-center bg-zinc-950 rounded-t-2xl shadow-md">
+        <div
+          className="h-8 w-8 mr-3 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: "#FFA500", color: "white", fontWeight: "bold", fontSize: "1rem" }}
+        >
+          {tenantName?.charAt(0)?.toUpperCase() || "?"}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-white truncate max-w-[160px]">{tenantName}</div>
+          <p className="text-xs text-zinc-400 truncate max-w-[200px]">
+            Inquiring about {propertyName || "your property"}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 w-8 bg-black text-zinc-300 hover:bg-zinc-700 hover:text-white rounded-full ml-auto",
+            refreshStatus === "updated" && "text-green-400"
+          )}
+          onClick={refreshAll}
+          disabled={isRefreshing}
+        >
+          {refreshStatus === "refreshing" ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : refreshStatus === "updated" ? (
+            <Check className="h-4 w-4 text-green-500" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          <span className="sr-only">Refresh</span>
+        </Button>
+      </div>
+    );
+  }
+
   return null;
 };
 

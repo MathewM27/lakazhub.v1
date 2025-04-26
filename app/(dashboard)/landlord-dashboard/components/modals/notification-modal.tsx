@@ -1176,26 +1176,39 @@ export default function NotificationsModal({
           </div>
 
           {/* Desktop chat area */}
-          <div className="hidden sm:flex flex-col flex-1 h-full bg-black">
-            {/* Remove extra ChatHeader here */}
-            <ChatMessages
-              loading={loading}
-              selectedTenant={selectedTenant}
-              messagesContainerRef={messagesContainerRef}
-              messagesEndRef={messagesEndRef}
-              loadMoreMessages={loadMoreMessages}
-              userHasScrolledUp={userHasScrolledUp}
-            />
-            {/* Message input always docked at bottom */}
-            <MessageInput
-              messageText={messageText}
-              setMessageText={setMessageText}
-              handleSendMessage={handleSendMessage}
-              handleKeyDown={handleKeyDown}
-              disabled={!selectedTenant}
-              ref={messageInputRef}
-              mobile={false}
-            />
+          <div className="hidden sm:flex flex-col flex-1 h-full bg-black min-w-[340px] max-w-[540px] mx-auto">
+            {/* Desktop conversation header with refresh button */}
+            {selectedTenant && (
+              <ChatHeader
+                selectedTenant={selectedTenant}
+                property={property}
+                refreshAll={refreshAll}
+                refreshStatus={refreshStatus}
+                isRefreshing={isRefreshing}
+                mobile={false}
+              />
+            )}
+            <div className="flex flex-col flex-1 min-h-0">
+              <ChatMessages
+                loading={loading}
+                selectedTenant={selectedTenant}
+                messagesContainerRef={messagesContainerRef}
+                messagesEndRef={messagesEndRef}
+                loadMoreMessages={loadMoreMessages}
+                userHasScrolledUp={userHasScrolledUp}
+                noGradient
+              />
+              {/* Message input always docked at bottom, even if no messages */}
+              <MessageInput
+                messageText={messageText}
+                setMessageText={setMessageText}
+                handleSendMessage={handleSendMessage}
+                handleKeyDown={handleKeyDown}
+                disabled={!selectedTenant}
+                ref={messageInputRef}
+                mobile={false}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>
