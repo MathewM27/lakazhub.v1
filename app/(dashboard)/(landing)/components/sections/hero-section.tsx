@@ -14,7 +14,7 @@ export const HeroSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
           {/* Left content column */}
           <div className="flex flex-col justify-between h-full gap-y-8 py-4">
-            <div className="space-y-4 md:space-y-6">
+            <div className="space-y-4 md:space-y-4 mt-4">
               <div>
                 <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20 mb-4">
                   Introducing LakazHub
