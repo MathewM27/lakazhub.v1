@@ -45,8 +45,9 @@ const RentedProperties: React.FC<RentedPropertiesProps> = ({ allProperties, load
           title="Previously Rented"
           properties={paginatedProperties}
           disableInteractions={true}
-          onLoadMore={() => setPage(p => p + 1)}
-          hasMore={hasMore}
+          // Only show load more if there are more than 5 rented properties
+          onLoadMore={rentedProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
+          hasMore={rentedProperties.length > 5 ? hasMore : false}
           isLoadingMore={false}
         />
       </div>
