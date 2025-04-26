@@ -585,18 +585,17 @@ const Header = () => {
                                         </button>
                                         <button 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
-                                            onClick={() => handleMessageNotificationClick(messageNotifications[0] || {
-                                                conversationId: '',
-                                                propertyId: '',
-                                                propertyName: '',
-                                                senderName: '',
-                                                message: '',
-                                                time: '',
-                                                isRead: false,
-                                                senderInitial: '',
-                                                messageCount: 0,
-                                                latestMessageId: ''
-                                            })}
+                                            onClick={() => {
+                                                // Only try to open a conversation if there are messages
+                                                if (messageNotifications.length > 0) {
+                                                    handleMessageNotificationClick(messageNotifications[0]);
+                                                } else {
+                                                    // Show empty conversation modal with placeholder
+                                                    setSelectedProperty(null);
+                                                    setSelectedConversationId(null);
+                                                    setNotificationModalOpen(true);
+                                                }
+                                            }}
                                         >
                                             <div className="flex items-center">
                                                 <MessageCircle className="mr-3 h-5 w-5 text-white/70" />
@@ -611,7 +610,12 @@ const Header = () => {
                                         </button>
                                         <button 
                                             className="flex items-center justify-between px-2 py-3 hover:bg-white/10 rounded-md transition-all duration-200 w-full text-left"
-                                            onClick={() => setNotificationModalOpen(true)}
+                                            onClick={() => {
+                                                // Open notification modal without a conversation context
+                                                setSelectedProperty(null);
+                                                setSelectedConversationId(null);
+                                                setNotificationModalOpen(true);
+                                            }}
                                         >
                                             <div className="flex items-center">
                                                 <Bell className="mr-3 h-5 w-5 text-white/70" />
