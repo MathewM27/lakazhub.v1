@@ -1,182 +1,179 @@
-// 'use client'
+'use client';
 
-// import { useState, useEffect } from "react";
-// import Link from "next/link";
-// import { FiArrowRight, FiCheck, FiSearch, FiMapPin } from "react-icons/fi";
-// import Image from "next/image";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { FiArrowRight, FiCheck, FiSearch, FiHome, FiFilter } from "react-icons/fi";
 
-// const HeroSection = () => {
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [isVisible, setIsVisible] = useState(false);
+const HeroSection = () => {
+  const [isVisible, setIsVisible] = useState(false);
 
-//   useEffect(() => {
-//     const loadTimer = setTimeout(() => {
-//       setIsLoading(false);
-//       const visibilityTimer = setTimeout(() => {
-//         setIsVisible(true);
-//       }, 100);
-//       return () => clearTimeout(visibilityTimer);
-//     }, 500);
-//     return () => clearTimeout(loadTimer);
-//   }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
-//   const quickFeatures = [
-//     { text: 'Access curated listings', icon: FiCheck },
-//     { text: 'Contact landlords directly', icon: FiCheck },
-//   ];
+  const quickFeatures = [
+    { text: 'Find your perfect home', icon: FiHome },
+    { text: 'Apply personalized filters', icon: FiFilter },
+    { text: 'Connect with landlords', icon: FiSearch }
+  ];
 
-//   return (
-//     <section className="relative min-h-screen py-8 flex items-center justify-center bg-black overflow-hidden text-white pt-6">
-//       <div className="container mx-auto relative z-10 px-4 sm:px-6">
-//         {isLoading ? (
-//           <div className="text-center max-w-4xl mx-auto">
-//             {/* Loading skeleton */}
-//             <div className="h-8 bg-white/20 w-1/2 mx-auto mb-4 rounded animate-pulse"></div>
-//             <div className="h-4 bg-white/10 w-3/4 mx-auto mb-6 rounded animate-pulse"></div>
-//             <div className="w-full h-16 bg-white/5 border border-white/10 rounded-xl animate-pulse mb-10" />
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-//               <div className="space-y-4">
-//                 <div className="h-6 bg-white/10 rounded-lg w-3/4 animate-pulse" />
-//                 <div className="h-6 bg-white/10 rounded-lg w-1/2 animate-pulse" />
-//                 <div className="h-12 bg-white/10 rounded-lg w-full animate-pulse mt-6" />
-//               </div>
-//               <div className="relative h-60 bg-white/5 rounded-xl animate-pulse" />
-//             </div>
-//           </div>
-//         ) : (
-//           <div className="w-full max-w-7xl mx-auto">
-//             {/* Responsive grid: stack on mobile, side-by-side on md+ */}
-//             <div className="flex flex-col-reverse md:grid md:grid-cols-2 gap-10 md:gap-16 items-center md:items-start pt-8 md:pt-20">
-//               {/* Left column - Improved layout */}
-//               <div
-//                 className={`flex flex-col justify-center h-full transition-all duration-700 delay-300 ease-out ${
-//                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-//                 }`}
-//               >
-//                 <div className="max-w-xl mx-auto md:mx-0 text-center md:text-left">
-//                   <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-4">
-//                     Find Your <span className="text-blue-400">Ideal Rental</span> Property
-//                   </h1>
-//                   <p className="mt-2 mb-6 text-base xs:text-lg sm:text-xl text-white/80 max-w-lg mx-auto md:mx-0">
-//                     Discover homes and connect directly with property owners for a seamless rental experience.
-//                   </p>
-//                 </div>
-//                 {/* Features */}
-//                 <div className="flex flex-col sm:flex-row sm:justify-start gap-4 sm:gap-8 mt-2 mb-8 max-w-xl mx-auto md:mx-0">
-//                   {quickFeatures.map((feature, index) => (
-//                     <div
-//                       key={index}
-//                       className="flex items-center gap-3 bg-white/5 rounded-lg px-4 py-2 shadow-sm transition-all duration-500 ease-out"
-//                       style={{
-//                         transitionDelay: `${400 + (index * 100)}ms`,
-//                         opacity: isVisible ? 1 : 0,
-//                         transform: isVisible ? 'translateX(0)' : 'translateX(-10px)'
-//                       }}
-//                     >
-//                       <div className="w-8 h-8 rounded-full bg-blue-700/20 flex items-center justify-center">
-//                         <feature.icon className="w-4 h-4 text-blue-400" />
-//                       </div>
-//                       <span className="text-white/90 text-base font-medium">{feature.text}</span>
-//                     </div>
-//                   ))}
-//                 </div>
-//                 {/* CTA Button */}
-//                 <div
-//                   className={`flex justify-center md:justify-start pt-2 transition-all duration-500 delay-700 ease-out ${
-//                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-//                   }`}
-//                 >
-//                   <Link
-//                     href="/properties"
-//                     className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-7 py-3 rounded-xl shadow-lg font-semibold text-lg transition-all group"
-//                   >
-//                     <span>Browse Properties</span>
-//                     <FiArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-//                   </Link>
-//                 </div>
-//               </div>
-//               {/* Right column - Featured property card */}
-//               <div
-//                 className={`relative rounded-2xl overflow-hidden border border-white/10 shadow-lg transition-all duration-700 delay-500 ease-out w-full max-w-md mx-auto md:mx-0 ${
-//                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-//                 }`}
-//               >
-//                 {/* Explicit aspect ratio and min-height for image container */}
-//                 <div className="aspect-[4/3] relative w-full min-h-[260px] sm:min-h-[320px]">
-//                   <div className="absolute inset-0 z-10">
-//                     <Image 
-//                       src="https://qqqes0fuio.ufs.sh/f/7I9AgfULkX7rtck9gM4M5F0Eg9U6YQvHh2Gnc1e3Wr4dbuLj" 
-//                       alt="Featured Property"
-//                       fill
-//                       className="object-cover"
-//                       priority
-//                       sizes="(max-width: 768px) 100vw, 400px"
-//                     />
-//                   </div>
-//                   <div className="absolute inset-0 z-20 bg-gradient-to-b from-transparent via-transparent to-black/90"></div>
-                  
-//                   {/* Property tag - positioned at top-left */}
-//                   <div className="absolute top-4 left-4 z-30">
-//                     <div className="bg-blue-700/90 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-blue-400/30">
-//                       New Listing
-//                     </div>
-//                   </div>
-                  
-//                   {/* Search indicator - positioned at top-right, similar to the connection indicator in landlord dashboard */}
-//                   <div className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-sm rounded-full z-30">
-//                     <FiSearch className="h-4 w-4 text-blue-400" />
-//                   </div>
-                  
-//                   {/* Small decorative elements at corners - consistent with landlord dashboard */}
-//                   <div className="absolute top-4 right-16 w-2 h-2 rounded-full bg-white/40"></div>
-//                   <div className="absolute top-4 right-20 w-1 h-1 rounded-full bg-white/30"></div>
-//                   <div className="absolute bottom-20 left-4 w-2 h-2 rounded-full bg-white/40"></div>
-//                   <div className="absolute bottom-16 left-8 w-1 h-1 rounded-full bg-white/30"></div>
-                  
-//                   {/* Pre-allocate space for property info overlay */}
-//                   <div className="absolute bottom-0 left-0 right-0 p-5 z-30 min-h-[70px]">
-//                     <div className="flex items-start justify-between">
-//                       <div>
-//                         <h3 className="text-lg font-bold text-white">Modern Lakeside Apartment</h3>
-//                         <div className="flex items-center gap-1 text-white/70 text-sm mt-1">
-//                           <FiMapPin className="w-3 h-3" />
-//                           <span>Flic en Flac, Mauritius</span>
-//                         </div>
-//                       </div>
-//                       <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1">
-//                         <span className="text-white font-bold">Rs 28,000</span>
-//                         <span className="text-white/70 text-xs">/month</span>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
+  return (
+    <section 
+      className="relative flex items-center min-h-[80vh] lg:min-h-[85vh] xl:min-h-[80vh] py-16 md:py-24 bg-black text-white overflow-hidden"
+    >
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 grid grid-cols-12 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="h-full w-px bg-white/20 transform translate-x-[50%]"></div>
+          ))}
+        </div>
+        <div className="absolute inset-0 grid grid-rows-12 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="w-full h-px bg-white/20 transform translate-y-[50%]"></div>
+          ))}
+        </div>
+      </div>
+
+      {/* Content wrapper - Using same structure as landlord dashboard */}
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10 w-full py-0">
+        {/* Using same grid layout as landlord dashboard */}
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 lg:gap-12">
+          
+          {/* Left: Text Content */}
+          <div className={`flex flex-col justify-between h-full gap-y-8 py-4 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="space-y-4 md:space-y-4 mt-4">
+              <div className="inline-block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-medium text-white">Tenant Dashboard</span>
+              </div>
+              
+              {/* Heading structure matches landlord dashboard */}
+              <h1 className="font-bold text-white leading-tight tracking-tight text-4xl md:text-5xl lg:text-6xl">
+                <span className="block">
+                  Find Your
+                </span>
+                <span className="block">
+                  <span className="text-blue-400">Dream Home</span>
+                </span>
+              </h1>
+              
+              <p className="text-base sm:text-lg text-white/80 max-w-xl leading-relaxed">
+                Search properties, connect with landlords, and discover your next perfect rental — all in one place.
+              </p>
+            </div>
+
+            {/* Button area - Positioned with consistent spacing */}
+            <div className="grid grid-cols-1 gap-4 pt-4 mt-auto">
+              <Link
+                href="/properties"
+                className="group min-h-[50px] flex items-center justify-center px-8 py-3 bg-white hover:bg-blue-400 text-black rounded-lg shadow-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+              >
+                <span>Browse Properties</span>
+                <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
+            </div>
+
+            {/* Quick Features - Using same structure as landlord dashboard */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              {quickFeatures.map((feature, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center gap-3 transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+                  style={{ transitionDelay: `${index * 150}ms` }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                    <feature.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm text-white/80">{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Geometric Design - Using same structure but with blue accent */}
+          <div className={`hidden md:flex md:items-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="w-full max-w-md lg:max-w-lg xl:max-w-xl mx-auto md:ml-auto">
+              <div className="relative aspect-square w-full">
+                {/* 3D-like grid effect */}
+                <div className="absolute w-64 h-64 border border-white/20 rotate-45 transform-gpu"></div>
+                <div className="absolute w-80 h-80 border border-white/15 rotate-45 transform-gpu"></div>
+                <div className="absolute w-96 h-96 border border-white/10 rotate-45 transform-gpu"></div>
                 
-//                 {/* Property features - maintaining the same layout as landlord dashboard */}
-//                 <div className="bg-white/5 backdrop-blur-md p-4 flex justify-between">
-//                   <div className="text-center">
-//                     <span className="text-white/70 text-xs">Bedrooms</span>
-//                     <p className="text-white font-medium">2</p>
-//                   </div>
-//                   <div className="text-center">
-//                     <span className="text-white/70 text-xs">Bathrooms</span>
-//                     <p className="text-white font-medium">1</p>
-//                   </div>
-//                   <div className="text-center">
-//                     <span className="text-white/70 text-xs">Area</span>
-//                     <p className="text-white font-medium">95m²</p>
-//                   </div>
-//                   <div className="text-center">
-//                     <span className="text-white/70 text-xs">Type</span>
-//                     <p className="text-white font-medium">Apartment</p>
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </section>
-//   );
-// };
+                {/* Center piece - using blue accent instead of amber */}
+                <div className="relative z-10 flex items-center justify-center h-full">
+                  <div className="w-40 h-40 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                    <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
+                      <div className="text-white text-5xl font-bold transform -rotate-45">LH</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Floating elements - with blue accent */}
+                <div className="absolute top-20 right-40 w-16 h-16 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
+                <div className="absolute bottom-24 left-32 w-10 h-10 bg-blue-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
+                <div className="absolute bottom-40 right-20 w-6 h-6 bg-white/10 rounded-sm rotate-45 animate-float-slow animation-delay-2000"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Mobile view of the geometric design - Only shown on mobile */}
+          <div className="block md:hidden w-full py-4 mt-8">
+            <div className="relative mx-auto max-w-md">
+              <div className="relative aspect-square w-full">
+                {/* 3D-like grid effect */}
+                <div className="absolute w-48 h-48 border border-white/20 rotate-45 transform-gpu"></div>
+                <div className="absolute w-64 h-64 border border-white/15 rotate-45 transform-gpu"></div>
+                <div className="absolute w-80 h-80 border border-white/10 rotate-45 transform-gpu"></div>
+                
+                {/* Center piece */}
+                <div className="relative z-10 flex items-center justify-center h-full">
+                  <div className="w-32 h-32 bg-gradient-to-tr from-white via-white to-blue-400 rounded-lg transform rotate-45 shadow-2xl">
+                    <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
+                      <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <style jsx global>{`
+        @keyframes float-slow {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(10px, -10px) rotate(5deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        
+        .animate-float-slow {
+          animation: float-slow 8s ease-in-out infinite;
+        }
+        
+        .animation-delay-1000 {
+          animation-delay: 1s;
+        }
+        
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        
+        /* Fluid height adjustments for larger screens */
+        @media (min-height: 1000px) {
+          #tenant-hero {
+            min-height: 75vh;
+          }
+        }
+        
+        @media (min-height: 1200px) {
+          #tenant-hero {
+            min-height: 70vh;
+          }
+        }
+      `}</style>
+    </section>
+  );
+};
 
-// export default HeroSection;
+export default HeroSection;
