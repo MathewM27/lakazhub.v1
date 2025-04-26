@@ -387,11 +387,11 @@ const PropertiesSection = () => {
 
   // --- Render ---
   return (
-    <section className="py-16 bg-black relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-black relative overflow-hidden">
       {/* ...existing background grid... */}
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 relative z-10">
         <motion.div 
-          className="max-w-7xl mx-auto"
+          className="space-y-8"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
@@ -413,8 +413,8 @@ const PropertiesSection = () => {
               </div>
             </div>
           )}
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">Discover Properties</h2>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-fluid-h2 font-bold text-white">Discover Properties</h2>
             <div className="flex items-center gap-2">
               {/* Visual indicator for cache */}
               {/* 
@@ -484,16 +484,39 @@ const PropertiesSection = () => {
               )}
             </div>
           </div>
-          {/* --- FIX: Show Preferences carousel if filters are active --- */}
-          <Preferences 
-            preferredProperties={preferredProperties}
-            hasActiveFilters={hasActiveFilters(activeFilters)}
-            clearFilters={clearFilters}
-          />
-          <MessagedProperties messagedProperties={messagedProperties} />
-          <RecentlyAdded allProperties={allProperties} loading={loading} />
-          <AvailableProperties allProperties={allProperties} loading={loading} />
-          <RentedProperties allProperties={allProperties} loading={loading} />
+          {/* --- Preferences Carousel (if filters active) --- */}
+          <div className="space-y-8">
+            <Preferences 
+              preferredProperties={preferredProperties}
+              hasActiveFilters={hasActiveFilters(activeFilters)}
+              clearFilters={clearFilters}
+            />
+            {/* Messaged Properties */}
+            <div className="space-y-8">
+              <MessagedProperties messagedProperties={messagedProperties} />
+            </div>
+            {/* Recently Added */}
+            <div className="space-y-8">
+              <RecentlyAdded 
+                allProperties={allProperties} 
+                loading={loading} 
+              />
+            </div>
+            {/* Available Properties */}
+            <div className="space-y-8">
+              <AvailableProperties 
+                allProperties={allProperties} 
+                loading={loading} 
+              />
+            </div>
+            {/* Rented Properties */}
+            <div className="space-y-8">
+              <RentedProperties 
+                allProperties={allProperties} 
+                loading={loading} 
+              />
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
