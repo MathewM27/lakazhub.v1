@@ -16,7 +16,7 @@ export const HeroSection = () => {
           <div className="flex flex-col justify-between h-full gap-y-8 py-4">
             <div className="space-y-4 md:space-y-6">
               <div>
-                <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20">
+                <span className="inline-block text-sm font-medium bg-white/10 text-white/90 py-1 px-3 rounded-full border border-white/20 mb-4">
                   Introducing LakazHub
                 </span>
               </div>
