@@ -10,13 +10,15 @@ interface DashboardContentProps {
   onAvailabilityAction: (property: Property) => void;
   onAddNewPropertyAction: () => void;
   onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
+  surveyStatus?: "checking" | "show" | "hide"; // Add surveyStatus prop
 }
 
 export function DashboardContent({
   onPropertyDetailsAction,
   onAvailabilityAction,
   onAddNewPropertyAction,
-  onRefreshNeeded
+  onRefreshNeeded,
+  surveyStatus // Add surveyStatus
 }: DashboardContentProps) {
   const [refreshFunction, setRefreshFunction] = useState<() => Promise<Property[] | void>>();
   const [refreshNeeded, setRefreshNeeded] = useState(false);
@@ -45,6 +47,7 @@ export function DashboardContent({
           onRefreshNeeded={handleRefreshNeeded}
           refreshNeeded={refreshNeeded}
           onRefreshClear={() => setRefreshNeeded(false)}
+          surveyStatus={surveyStatus} // Pass surveyStatus to PropertyGrid
         />
       </section>
       <Footer />

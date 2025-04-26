@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormData } from "../types"
+import { useRef } from "react"
 
 interface PricingTabProps {
   formData: FormData
@@ -23,12 +24,27 @@ export default function PricingTab({
   isUploading,
   onSuccess
 }: PricingTabProps) {
-  // Handle form input changes
+  // Format number with thousand separators
+  const formatNumber = (value: string | number) => {
+    if (typeof value === "number") value = value.toString();
+    // Remove non-digit except dot
+    const cleaned = value.replace(/[^\d.]/g, "");
+    // Split integer and decimal
+    const [int, dec] = cleaned.split(".");
+    const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return dec !== undefined ? `${formatted}.${dec}` : formatted;
+  };
+
+  // Unified input change handler
   const handleInputChange = (field: string, value: string | number | boolean) => {
-    onChange({
-      [field]: value
-    })
-  }
+    // For price and deposit, remove commas for storage
+    if (field === "price" || field === "deposit") {
+      const raw = typeof value === "string" ? value.replace(/,/g, "") : value;
+      onChange({ [field]: raw });
+    } else {
+      onChange({ [field]: value });
+    }
+  };
 
   // Handle utility checkbox changes
   const handleUtilityChange = (utility: string, checked: boolean) => {
@@ -38,15 +54,6 @@ export default function PricingTab({
         [utility]: checked
       }
     })
-  }
-
-  // Handle form submission with success callback
-  const handleSubmit = async () => {
-    await onSubmit();
-    // Call onSuccess callback after successful submission if it exists
-    if (!isSubmitting && onSuccess) {
-      onSuccess();
-    }
   }
 
   return (
@@ -59,24 +66,30 @@ export default function PricingTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="monthly-rent">Monthly Rent ($)</Label>
+        <div className="mb-6">
+          <label htmlFor="monthly-rent" className="block mb-2 text-sm font-medium">
+            Monthly Rent
+          </label>
           <Input
             id="monthly-rent"
-            type="number"
-            placeholder="e.g. 1200"
-            value={formData.price}
-            onChange={(e) => handleInputChange("price", e.target.value)}
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 30,000"
+            value={formatNumber(formData.price)}
+            onChange={e => handleInputChange("price", e.target.value)}
           />
         </div>
-        <div>
-          <Label htmlFor="security-deposit">Security Deposit ($)</Label>
+        <div className="mb-6">
+          <label htmlFor="security-deposit" className="block mb-2 text-sm font-medium">
+            Security Deposit
+          </label>
           <Input
             id="security-deposit"
-            type="number"
-            placeholder="e.g. 1200"
-            value={formData.deposit}
-            onChange={(e) => handleInputChange("deposit", e.target.value)}
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 100,000"
+            value={formatNumber(formData.deposit)}
+            onChange={e => handleInputChange("deposit", e.target.value)}
           />
         </div>
       </div>
@@ -104,7 +117,10 @@ export default function PricingTab({
           Back
         </Button>
         <Button 
-          onClick={handleSubmit} 
+          onClick={async () => {
+            await onSubmit();
+            if (!isSubmitting && onSuccess) onSuccess();
+          }} 
           disabled={isSubmitting || isUploading}
         >
           {isSubmitting ? "Saving..." : isUploading ? "Uploading..." : "Save Property"}

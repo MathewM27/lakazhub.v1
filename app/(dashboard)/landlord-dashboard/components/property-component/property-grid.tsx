@@ -20,18 +20,20 @@ interface PropertyGridProps {
   onRefreshNeeded?: (refreshFunction: () => Promise<Property[] | void>) => void;
   refreshNeeded?: boolean;
   onRefreshClear?: () => void;
+  surveyStatus?: "checking" | "show" | "hide"; // Add surveyStatus prop
 }
 
 const PAGE_SIZE = 9;
 const SLIDER_THRESHOLD = 5; // If more than 5 properties, use slider on mobile
 
-export default function PropertyGrid({ 
-  onPropertyDetailsAction, 
-  onAvailabilityAction, 
+export default function PropertyGrid({
+  onPropertyDetailsAction,
+  onAvailabilityAction,
   onAddNewPropertyAction,
   onRefreshNeeded,
   refreshNeeded = false,
-  onRefreshClear
+  onRefreshClear,
+  surveyStatus // Add surveyStatus
 }: PropertyGridProps) {
   const { properties, loading, refreshProperties } = useProperties();
   const [deletingPropertyId, setDeletingPropertyId] = useState<string | null>(null);
@@ -259,7 +261,9 @@ export default function PropertyGrid({
                   <div className="min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start opacity-0 animate-fade-in-up animation-delay-300">
                     <button
                       onClick={onAddNewPropertyAction}
-                      className="flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm"
+                      disabled={surveyStatus !== "hide"}
+                      className={`flex flex-col items-center justify-center w-full h-full py-14 px-6 text-white/80 hover:text-white transition-all group border-dashed border-2 border-white/30 rounded-xl bg-white/5 backdrop-blur-sm
+                        ${surveyStatus !== "hide" ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
                       <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:bg-white/20 transition-all">
                         <Plus className="w-7 h-7" />

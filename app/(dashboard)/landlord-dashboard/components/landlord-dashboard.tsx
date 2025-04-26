@@ -142,6 +142,7 @@ export default function LandlordDashboard() {
         onAvailabilityAction={handleAvailability}
         onAddNewPropertyAction={handleAddNewProperty}
         onRefreshNeeded={handleRefreshNeeded}
+        surveyStatus={surveyStatus} // Pass surveyStatus down
       />
 
       {/* Only render modals when needed */}
