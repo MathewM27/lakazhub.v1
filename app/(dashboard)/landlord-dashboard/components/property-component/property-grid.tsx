@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
-import { Plus, Home, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Home, RefreshCw } from "lucide-react";
 import { useProperties } from "../../hooks/useProperties";
 import { supabase } from "../../lib/utils/supabase/client";
 import { PropertyCache } from "../../lib/utils/cache/propertyCache";
@@ -165,7 +165,7 @@ export default function PropertyGrid({
             {propertyList.slice(0, visibleCount).map((property, index) => (
               <div
                 key={property.id}
-                className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start mx-auto ${
+                className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start ${
                   deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
                 } opacity-0 animate-fade-in-up`}
                 style={{ animationDelay: `${index * 100}ms` }}
