@@ -5,20 +5,15 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://lakazhub.com/about</loc>
-    <priority>0.8</priority>
+    <loc>https://lakazhub.com/deletion</loc>
+    <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://lakazhub.com/contact</loc>
-    <priority>0.8</priority>
+    <loc>https://lakazhub.com/privacy</loc>
+    <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://lakazhub.com/landlord-dashboard</loc>
-    <priority>0.7</priority>
+    <loc>https://lakazhub.com/terms</loc>
+    <priority>0.5</priority>
   </url>
-  <url>
-    <loc>https://lakazhub.com/tenant-dashboard</loc>
-    <priority>0.7</priority>
-  </url>
-  <!-- Add more URLs as needed -->
 </urlset>
