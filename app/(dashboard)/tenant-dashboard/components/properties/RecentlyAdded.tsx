@@ -46,8 +46,9 @@ const RecentlyAdded: React.FC<RecentlyAddedProps> = ({ allProperties, loading })
       <PropertyCarousel
         title="Recently Added"
         properties={paginatedProperties}
-        onLoadMore={() => setPage(p => p + 1)}
-        hasMore={hasMore}
+        // Only show load more if there are more than 5 recently added properties
+        onLoadMore={recentlyAddedProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
+        hasMore={recentlyAddedProperties.length > 5 ? hasMore : false}
         isLoadingMore={false}
       />
     </div>

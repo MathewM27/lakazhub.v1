@@ -43,8 +43,9 @@ const AvailableProperties: React.FC<AvailablePropertiesProps> = ({ allProperties
       <PropertyCarousel
         title="Available Properties"
         properties={paginatedProperties}
-        onLoadMore={() => setPage(p => p + 1)}
-        hasMore={hasMore}
+        // Only show load more if there are more than 5 available properties
+        onLoadMore={availableProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
+        hasMore={availableProperties.length > 5 ? hasMore : false}
         isLoadingMore={false}
       />
     </div>

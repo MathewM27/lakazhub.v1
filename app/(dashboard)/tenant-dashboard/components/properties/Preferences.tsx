@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { PropertyCarousel, type Property } from './property-layout/PropertyCard';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -38,13 +38,25 @@ const Preferences: React.FC<PreferencesProps> = ({ preferredProperties, hasActiv
   }
   
   // Now we know we have active filters
+  // Pagination state for preferences
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const paginatedProperties = useMemo(
+    () => preferredProperties.slice(0, page * PAGE_SIZE),
+    [preferredProperties, page]
+  );
+  const hasMore = paginatedProperties.length < preferredProperties.length;
+
   return (
     <>
       {preferredProperties.length > 0 ? (
         <div className="property-section mb-16 relative">
           <PropertyCarousel 
             title="Your Preferences" 
-            properties={preferredProperties}
+            properties={paginatedProperties}
+            // Only show load more if there are more than 5 preferred properties
+            onLoadMore={preferredProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
+            hasMore={preferredProperties.length > 5 ? hasMore : false}
           />
           {/* Add debug property count in development */}
           {/* {process.env.NODE_ENV === 'development' && (
