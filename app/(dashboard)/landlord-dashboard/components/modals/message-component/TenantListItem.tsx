@@ -41,7 +41,8 @@ const TenantListItem: React.FC<TenantListItemProps> = ({
       "group flex items-center gap-3 p-3 cursor-pointer transition-colors",
       "rounded-xl mb-1 shadow-sm",
       isSelected
-        ? "bg-gradient-to-r from-indigo-900/80 to-black border border-indigo-700"
+        // Remove gradient, use amber border for selected
+        ? "bg-black border border-amber-400"
         : "hover:bg-zinc-900/80"
     )}
     style={{ minHeight: 60 }}

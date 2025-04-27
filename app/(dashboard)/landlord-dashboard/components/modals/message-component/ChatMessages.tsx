@@ -101,7 +101,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                 ? noGradient
                   ? "bg-zinc-800 text-zinc-100 rounded-br-md"
                   : "bg-zinc-800 text-zinc-100 rounded-br-md"
-                : "bg-zinc-800 text-zinc-100 rounded-bl-md"
+                // Tenant message: blue background
+                : "bg-amber-400 text-white rounded-bl-md"
             )}
             style={{
               borderTopLeftRadius: message.sender === "landlord" ? 18 : 8,
@@ -115,7 +116,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             <div
               className={cn(
                 "text-xs mt-1 flex justify-end items-center gap-1",
-                message.sender === "landlord" ? "text-indigo-200" : "text-zinc-400"
+                message.sender === "landlord" ? "text-indigo-200" : "text-blue-200"
               )}
             >
               <span>{message.time}</span>
