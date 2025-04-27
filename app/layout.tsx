@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     'long term rental Mauritius', 'short term rental Mauritius', 'Mauritius rental platform', 'LakazHub Mauritius', 'LakazHub property',
     'LakazHub apartments', 'LakazHub houses', 'LakazHub rental', 'LakazHub landlord', 'LakazHub tenant', 'LakazHub Mauritius property'
   ],
+  metadataBase: new URL('https://lakazhub.com'),
   openGraph: {
     title: 'LakazHub - Rent Properties in Mauritius',
     description: 'Easily rent and find properties, houses, and apartments across Mauritius. Connect landlords and tenants seamlessly with LakazHub.',
