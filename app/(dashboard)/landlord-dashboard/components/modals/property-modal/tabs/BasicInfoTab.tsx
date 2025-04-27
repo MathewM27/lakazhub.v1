@@ -212,6 +212,13 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
               <SelectItem value="studio">Studio</SelectItem>
               <SelectItem value="villa">Villa</SelectItem>
               <SelectItem value="condo">Condominium</SelectItem>
+              <SelectItem value="duplex">Duplex</SelectItem>
+              <SelectItem value="penthouse">Penthouse</SelectItem>
+              <SelectItem value="bungalow">Bungalow</SelectItem>
+              <SelectItem value="townhouse">Townhouse</SelectItem>
+              <SelectItem value="guesthouse">Guest House</SelectItem>
+              <SelectItem value="farmhouse">Farmhouse</SelectItem>            
+              <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>

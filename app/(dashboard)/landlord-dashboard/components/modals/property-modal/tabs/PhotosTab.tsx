@@ -23,7 +23,7 @@ const ROOM_CATEGORIES = [
   { id: "kitchen", displayName: "Kitchen", limit: 1, description: "Kitchen area" },
   { id: "bedroom", displayName: "Bedroom", limit: 1, description: "Main bedroom" },
   { id: "bathroom", displayName: "Bathroom", limit: 1, description: "Main bathroom" },
-  { id: "other", displayName: "Other Photos", limit: 10, description: "Additional property photos", allowMultiple: true }
+  { id: "other", displayName: "Other Photos", limit: 5, description: "Additional property photos", allowMultiple: true }
 ]
 
 export default function PhotosTab({
@@ -240,7 +240,7 @@ export default function PhotosTab({
       <div>
         <h3 className="text-lg font-medium mb-2">Property Photos</h3>
         <p className="text-sm text-muted-foreground mb-2">
-          Upload high-quality photos of your property to attract potential tenants.
+          Upload quality photos of your property to attract potential tenants.
         </p>
         
         {/* Progress indicator */}

@@ -66,8 +66,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold mb-2 text-white">8. Contact</h2>
             <p>
               If you have any questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:futurexdesigns.info@gmail.com" className="text-blue-400 underline">
-                futurexdesigns.info@gmail.com
+              <a href="mailto:support@lakazhub.com" className="text-blue-400 underline">
+                support@lakazhub.com
               </a>
               .
             </p>

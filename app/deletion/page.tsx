@@ -24,8 +24,8 @@ export default function DataDeletionPage() {
             <h2 className="text-xl font-semibold mb-2 text-white">How to Request Data Deletion</h2>
             <p>
               Send an email to{" "}
-              <a href="mailto:futurexdesigns.info@gmail.com" className="text-blue-400 underline">
-                futurexdesigns.info@gmail.com
+              <a href="mailto:support@lakazhub.com" className="text-blue-400 underline">
+                support@lakazhub.com
               </a>{" "}
               from the email address associated with your LakazHub account. Please include &quot;Data Deletion Request&quot; in the subject line.
             </p>
@@ -40,8 +40,8 @@ export default function DataDeletionPage() {
             <h2 className="text-xl font-semibold mb-2 text-white">Contact</h2>
             <p>
               If you have any questions about data deletion, please contact us at{" "}
-              <a href="mailto:futurexdesigns.info@gmail.com" className="text-blue-400 underline">
-                futurexdesigns.info@gmail.com
+              <a href="mailto:support@lakazhub.com" className="text-blue-400 underline">
+                support@lakazhub.com
               </a>
               .
             </p>

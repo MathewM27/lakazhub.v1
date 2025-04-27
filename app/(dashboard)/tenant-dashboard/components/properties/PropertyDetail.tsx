@@ -6,7 +6,7 @@ import {
   MapPin, Bed, Bath, Home, MessageSquare, Calendar, 
   Clock, X, ChevronLeft, ChevronRight,
   Wifi, Tv, Utensils, Car, Thermometer, ShowerHead, 
-  Droplet, Zap, Trash, Flame, Tv2, DollarSign
+  Droplet, Zap, Trash, Flame, Tv2, Banknote
 } from "lucide-react";
 import {
   Dialog,
@@ -225,7 +225,7 @@ const PropertyDetailModal = ({
               </div>
               <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10">
                 <div className='flex items-center'>
-                  <DollarSign className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
+                  <Banknote className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
                   <div className="text-sm text-white">Rs {enhancedProperty.security_deposit.toLocaleString()}</div>
                 </div>
               </div>

@@ -413,6 +413,38 @@ const PropertiesSection = () => {
               </div>
             </div>
           )}
+          {/* Placeholder for empty state */}
+          {allProperties.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center py-20 sm:py-32">
+              <div className="relative mb-6">
+                <span className="inline-block animate-bounce">
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" className="mx-auto">
+                    <rect x="8" y="28" width="48" height="24" rx="4" fill="#222" className="stroke-white/10" />
+                    <rect x="16" y="36" width="32" height="16" rx="2" fill="#333" />
+                    <path d="M32 16L16 28H48L32 16Z" fill="#2563eb" className="animate-pulse" />
+                    <circle cx="24" cy="52" r="2.5" fill="#2563eb" />
+                    <circle cx="40" cy="52" r="2.5" fill="#2563eb" />
+                  </svg>
+                </span>
+                <span className="absolute -top-4 -right-8 animate-pulse">
+                  <svg width="32" height="32" fill="none">
+                    <circle cx="16" cy="16" r="16" fill="#2563eb" fillOpacity="0.15" />
+                  </svg>
+                </span>
+                <span className="absolute -bottom-4 -left-8 animate-pulse">
+                  <svg width="24" height="24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill="#fff" fillOpacity="0.07" />
+                  </svg>
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 text-center">We're just getting started!</h2>
+              <p className="text-white/80 text-center max-w-md mb-4 text-base sm:text-lg">
+                We just launched <span className="text-blue-400 font-semibold">LakazHub</span> and there are no properties listed yet.<br />
+                New homes and apartments will be available soon.<br />
+                <span className="inline-block mt-2 animate-pulse text-blue-400">Please check back regularly!</span>
+              </p>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-fluid-h2 font-bold text-white">Discover Properties</h2>
             <div className="flex items-center gap-2">
@@ -496,7 +528,7 @@ const PropertiesSection = () => {
               <MessagedProperties messagedProperties={messagedProperties} />
             </div>
             {/* Recently Added */}
-            <div className="space-y-8">
+            <div className="space-y-8" id="recently-added">
               <RecentlyAdded 
                 allProperties={allProperties} 
                 loading={loading} 

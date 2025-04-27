@@ -74,7 +74,7 @@ export default function PricingTab({
             id="monthly-rent"
             type="text"
             inputMode="numeric"
-            placeholder="e.g. 30,000"
+            placeholder="e.g. 25,000"
             value={formatNumber(formData.price)}
             onChange={e => handleInputChange("price", e.target.value)}
           />
@@ -87,7 +87,7 @@ export default function PricingTab({
             id="security-deposit"
             type="text"
             inputMode="numeric"
-            placeholder="e.g. 100,000"
+            placeholder="e.g. 25,000"
             value={formatNumber(formData.deposit)}
             onChange={e => handleInputChange("deposit", e.target.value)}
           />

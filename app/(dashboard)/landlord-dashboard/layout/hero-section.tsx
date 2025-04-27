@@ -133,31 +133,6 @@ const LandlordHeroSection = () => {
               </div>
             </div>
           </div>
-          
-          {/* Mobile view of the geometric design - Only shown on mobile */}
-          <div className="block md:hidden w-full py-4 mt-8">
-            <div className="relative mx-auto max-w-[280px] h-[280px]">
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Concentric diamond borders with fixed positioning */}
-                <div className="absolute w-48 h-48 border border-white/20 rotate-45 transform-gpu"></div>
-                <div className="absolute w-64 h-64 border border-white/15 rotate-45 transform-gpu"></div>
-                <div className="absolute w-80 h-80 border border-white/10 rotate-45 transform-gpu"></div>
-                
-                {/* Center piece */}
-                <div className="relative z-10">
-                  <div className="w-32 h-32 bg-gradient-to-tr from-white via-white to-amber-400 rounded-lg transform rotate-45 shadow-2xl">
-                    <div className="absolute inset-2 bg-black rounded-md flex items-center justify-center">
-                      <div className="text-white text-4xl font-bold transform -rotate-45">LH</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Adding a couple subtle floating elements for mobile too */}
-                <div className="absolute top-4 right-12 w-8 h-8 bg-white/5 rounded-lg rotate-12 animate-float-slow"></div>
-                <div className="absolute bottom-8 left-12 w-6 h-6 bg-amber-400/20 rounded-full animate-float-slow animation-delay-1000"></div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       

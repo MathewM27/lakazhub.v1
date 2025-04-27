@@ -357,7 +357,7 @@ const PropertyCarousel = ({
             properties.map((property, index) => (
               <div 
                 key={`${property.id || property.name}-${index}`} 
-                className="min-w-[280px] md:min-w-[320px] snap-start"
+                className="min-w-[340px] md:min-w-[380px] snap-start"
               >
                 <PropertyCard property={property} disableInteractions={disableInteractions} customBadge={customBadge} />
               </div>
