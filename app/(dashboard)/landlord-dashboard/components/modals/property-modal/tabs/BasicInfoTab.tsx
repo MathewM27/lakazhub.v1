@@ -171,7 +171,7 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
             
             {isOpen && filteredLocations.length > 0 && (
               <div 
-                className="absolute z-10 mt-1 w-full bg-black border border-white/10 rounded-md shadow-lg max-h-60 overflow-auto"
+                className="absolute z-10 mt-1 w-full bg-black border border-white/10 rounded-md shadow-lg max-h-60 overflow-auto text-white"
                 ref={listboxRef}
               >
                 {filteredLocations.map((location, index) => (
@@ -179,7 +179,7 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
                     key={location}
                     onClick={() => handleSelectLocation(location)}
                     className={cn(
-                      "px-3 py-2 cursor-pointer flex items-center justify-between",
+                      "px-3 py-2 cursor-pointer flex items-center justify-between text-white",
                       highlightedIndex === index ? "bg-white/10" : "hover:bg-white/5"
                     )}
                   >
