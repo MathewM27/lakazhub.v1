@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PropertyCard from "./property-card";
 import { Property } from "../../types";
-import { Plus, Home, RefreshCw } from "lucide-react";
+import { Plus, Home, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProperties } from "../../hooks/useProperties";
 import { supabase } from "../../lib/utils/supabase/client";
 import { PropertyCache } from "../../lib/utils/cache/propertyCache";
@@ -48,6 +48,42 @@ export default function PropertyGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [maxScroll, setMaxScroll] = useState(0);
+
+  // Drag-to-scroll state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [scrollStartX, setScrollStartX] = useState(0);
+
+  // Mouse drag handlers for carousel
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!useSlider) return;
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setScrollStartX(containerRef.current?.scrollLeft || 0);
+  };
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !containerRef.current) return;
+    const dx = e.clientX - dragStartX;
+    containerRef.current.scrollLeft = scrollStartX - dx;
+  };
+  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseLeave = () => setIsDragging(false);
+
+  // Touch drag handlers for mobile
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchScrollStartX, setTouchScrollStartX] = useState(0);
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!useSlider) return;
+    setIsDragging(true);
+    setTouchStartX(e.touches[0].clientX);
+    setTouchScrollStartX(containerRef.current?.scrollLeft || 0);
+  };
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDragging || !containerRef.current) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    containerRef.current.scrollLeft = touchScrollStartX - dx;
+  };
+  const handleTouchEnd = () => setIsDragging(false);
 
   // Handler for improved refresh button (clear cache, then refresh)
   const handleRefresh = useCallback(async () => {
@@ -169,10 +205,43 @@ export default function PropertyGrid({
       <h3 className="font-bold text-white text-lg md:text-xl mb-4">{title}</h3>
       {propertyList.length > 0 ? (
         <div className="relative">
+          {/* Left Arrow */}
+          {scrollPosition > 0 && (
+            <button
+              type="button"
+              aria-label="Scroll left"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => handleScroll('left')}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          {/* Right Arrow */}
+          {maxScroll > 0 && scrollPosition < maxScroll - 10 && (
+            <button
+              type="button"
+              aria-label="Scroll right"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
+              style={{ display: 'flex', alignItems: 'center' }}
+              onClick={() => handleScroll('right')}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
           <div
             ref={containerRef}
-            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start"
+            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start cursor-grab active:cursor-grabbing"
             style={{ scrollBehavior: 'smooth' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            // Prevent text selection while dragging
+            draggable={false}
           >
             {propertyList.slice(0, visibleCount).map((property, index) => (
               <div
