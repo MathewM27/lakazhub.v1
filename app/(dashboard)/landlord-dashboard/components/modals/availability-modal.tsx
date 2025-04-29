@@ -14,6 +14,7 @@ import { supabase } from "../../lib/utils/supabase/client";
 import { PropertyCache } from "../../lib/utils/cache/propertyCache";
 import { useToast } from "../../hooks/use-toast";
 import { Property } from "../../types";
+import SuccessModal from "./success-modal"; // Add this import
 
 interface AvailabilityModalProps {
   open: boolean;
@@ -33,6 +34,7 @@ export default function AvailabilityModal({
   const [availabilityStatus, setAvailabilityStatus] = useState<string>("available");
   const [nextAvailableDate, setNextAvailableDate] = useState<Date | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { toast } = useToast();
   
   // Onboarding slides content
@@ -98,7 +100,6 @@ export default function AvailabilityModal({
   // Save availability settings
   const handleSaveAvailability = async () => {
     if (!property?.id) return;
-    
     setSaving(true);
     console.log("[AvailabilityModal] Saving availability for property:", property.id, "Status:", availabilityStatus, "Next date:", nextAvailableDate);
 
@@ -146,7 +147,8 @@ export default function AvailabilityModal({
         title: "Availability updated",
         description: `${property.name || 'Property'} availability has been updated.`,
       });
-      
+      setShowSuccessModal(true); // Show success modal
+
       // Call the update callback if provided
       if (onUpdate) {
         console.log("[AvailabilityModal] Calling onUpdate to refresh properties...");
@@ -171,160 +173,170 @@ export default function AvailabilityModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChangeAction}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>
-            {!onboardingComplete
-              ? "Set Property Availability"
-              : `Set Availability for ${property?.name || "Your Property"}`}
-          </DialogTitle>
-          <DialogDescription>
-            {!onboardingComplete
-              ? "Follow these steps to set your property's availability"
-              : "Configure if your property is available for rent"} 
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChangeAction}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {!onboardingComplete
+                ? "Set Property Availability"
+                : `Set Availability for ${property?.name || "Your Property"}`}
+            </DialogTitle>
+            <DialogDescription>
+              {!onboardingComplete
+                ? "Follow these steps to set your property's availability"
+                : "Configure if your property is available for rent"} 
+            </DialogDescription>
+          </DialogHeader>
 
-        {!onboardingComplete ? (
-          // Onboarding view - your existing code
-          <div className="py-8">
-            {/* Add a fixed minHeight to prevent modal jump, and use mode="wait" */}
-            <div style={{ minHeight: 220 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                {open && (
-                  <motion.div
-                    key={step}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col items-center text-center"
-                  >
-                    {onboardingSlides[step].icon}
-                    <h3 className="text-xl font-semibold mb-2">{onboardingSlides[step].title}</h3>
-                    <p className="text-muted-foreground mb-6">{onboardingSlides[step].description}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          {!onboardingComplete ? (
+            // Onboarding view - your existing code
+            <div className="py-8">
+              {/* Add a fixed minHeight to prevent modal jump, and use mode="wait" */}
+              <div style={{ minHeight: 220 }}>
+                <AnimatePresence mode="wait" initial={false}>
+                  {open && (
+                    <motion.div
+                      key={step}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col items-center text-center"
+                    >
+                      {onboardingSlides[step].icon}
+                      <h3 className="text-xl font-semibold mb-2">{onboardingSlides[step].title}</h3>
+                      <p className="text-muted-foreground mb-6">{onboardingSlides[step].description}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="flex justify-center mt-6">
+                {onboardingSlides.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 w-2 rounded-full mx-1 ${index === step ? "bg-primary" : "bg-gray-200"}`}
+                  />
+                ))}
+              </div>
+              <div className="flex justify-center mt-8">
+                <Button onClick={handleStartForm}>Set Availability</Button>
+              </div>
             </div>
-            <div className="flex justify-center mt-6">
-              {onboardingSlides.map((_, index) => (
+          ) : (
+            // Main form content
+            <div className="grid md:grid-cols-2 gap-6 py-4">
+              <div className="hidden md:block">
                 <div
-                  key={index}
-                  className={`h-2 w-2 rounded-full mx-1 ${index === step ? "bg-primary" : "bg-gray-200"}`}
-                />
-              ))}
-            </div>
-            <div className="flex justify-center mt-8">
-              <Button onClick={handleStartForm}>Set Availability</Button>
-            </div>
-          </div>
-        ) : (
-          // Main form content
-          <div className="grid md:grid-cols-2 gap-6 py-4">
-            <div className="hidden md:block">
-              <div
-                className="h-full rounded-lg bg-cover bg-center flex items-center justify-center"
-                style={{
-                  backgroundImage: `url(${property?.images?.[0] || "/placeholder.svg?height=400&width=300"})`,
-                  backgroundBlendMode: "overlay",
-                  backgroundColor: "rgba(0, 0, 0, 0.4)",
-                }}
-              >
-                <div className="text-center text-white p-6">
-                  <Clock className="h-12 w-12 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Set Property Availability</h3>
-                  <p className="text-sm opacity-80">
-                    {availabilityStatus === "available" 
-                      ? "Your property is set as available for rent" 
-                      : "Your property is currently rented out"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <Label className="text-base">Availability Status</Label>
-                <RadioGroup 
-                  value={availabilityStatus}
-                  onValueChange={setAvailabilityStatus}
-                  className="mt-2"
+                  className="h-full rounded-lg bg-cover bg-center flex items-center justify-center"
+                  style={{
+                    backgroundImage: `url(${property?.images?.[0] || "/placeholder.svg?height=400&width=300"})`,
+                    backgroundBlendMode: "overlay",
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                  }}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="available" id="available" />
-                    <Label htmlFor="available">Available for Rent</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="rented" id="rented" />
-                    <Label htmlFor="rented">Currently Rented</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {/* Show date picker only if property is set to "rented" */}
-              {availabilityStatus === "rented" && (
-                <div>
-                  <Label className="text-base">Next Available Date</Label>
-                  <div className="mt-2 border rounded-md p-4">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {nextAvailableDate 
-                            ? format(nextAvailableDate, "PPP") 
-                            : "Next Available Date?"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar 
-                          mode="single" 
-                          selected={nextAvailableDate} 
-                          onSelect={setNextAvailableDate} 
-                          initialFocus 
-                          disabled={(date) => date < new Date()}
-                          className="rounded-md border"
-                          fromMonth={new Date()}
-                          defaultMonth={nextAvailableDate || new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    
-                    {nextAvailableDate && (
-                      <div className="mt-2 flex items-center justify-between bg-secondary p-2 rounded-md">
-                        <span className="text-sm">
-                          Available from: {format(nextAvailableDate, "PPP")}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => setNextAvailableDate(undefined)}
-                        >
-                          <X className="h-3 w-3" />
-                          <span className="sr-only">Clear date</span>
-                        </Button>
-                      </div>
-                    )}
+                  <div className="text-center text-white p-6">
+                    <Clock className="h-12 w-12 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Set Property Availability</h3>
+                    <p className="text-sm opacity-80">
+                      {availabilityStatus === "available" 
+                        ? "Your property is set as available for rent" 
+                        : "Your property is currently rented out"}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
-              <Button 
-                className="w-full" 
-                onClick={handleSaveAvailability}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Availability"}
-              </Button>
+              <div className="space-y-6">
+                <div>
+                  <Label className="text-base">Availability Status</Label>
+                  <RadioGroup 
+                    value={availabilityStatus}
+                    onValueChange={setAvailabilityStatus}
+                    className="mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="available" id="available" />
+                      <Label htmlFor="available">Available for Rent</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="rented" id="rented" />
+                      <Label htmlFor="rented">Currently Rented</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Show date picker only if property is set to "rented" */}
+                {availabilityStatus === "rented" && (
+                  <div>
+                    <Label className="text-base">Next Available Date</Label>
+                    <div className="mt-2 border rounded-md p-4">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {nextAvailableDate 
+                              ? format(nextAvailableDate, "PPP") 
+                              : "Next Available Date?"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar 
+                            mode="single" 
+                            selected={nextAvailableDate} 
+                            onSelect={setNextAvailableDate} 
+                            initialFocus 
+                            disabled={(date) => date < new Date()}
+                            className="rounded-md border"
+                            fromMonth={new Date()}
+                            defaultMonth={nextAvailableDate || new Date()}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      
+                      {nextAvailableDate && (
+                        <div className="mt-2 flex items-center justify-between bg-secondary p-2 rounded-md">
+                          <span className="text-sm">
+                            Available from: {format(nextAvailableDate, "PPP")}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setNextAvailableDate(undefined)}
+                          >
+                            <X className="h-3 w-3" />
+                            <span className="sr-only">Clear date</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <Button 
+                  className="w-full" 
+                  onClick={handleSaveAvailability}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Availability"}
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+      <SuccessModal
+        open={showSuccessModal}
+        onOpenChangeAction={setShowSuccessModal}
+        title="Success"
+        message="Availability updated"
+        autoClose={true}
+        autoCloseDelay={2000}
+      />
+    </>
   );
 }

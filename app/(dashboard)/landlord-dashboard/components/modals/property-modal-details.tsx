@@ -6,6 +6,7 @@ import { supabase } from "../../lib/utils/supabase/client"
 import { PropertyCache } from "../../lib/utils/cache/propertyCache" // Adjust the path as needed
 import { useToast } from "../../hooks/use-toast"
 import { FormData, PropertyData } from "./property-modal/types" 
+import SuccessModal from "../modals/success-modal"; // Add this import
 
 // Define a proper type for the property object that extends PropertyData
 interface Property extends PropertyData {
@@ -28,7 +29,9 @@ export default function PropertyModal({
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
-  
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("Property created");
+
   // Reset modal state when it closes
   useEffect(() => {
     if (!open) {
@@ -72,6 +75,21 @@ export default function PropertyModal({
   }
 
   const handleSubmit = async (formData: FormData, imageUrls: string[]) => {
+    // --- Validation for required fields ---
+    const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
+    const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
+    if (!formData.price || !formData.location || missingPhotos.length > 0) {
+      toast({
+        title: "Missing Required Fields",
+        description: [
+          !formData.price ? "Price is required." : "",
+          !formData.location ? "Location is required." : "",
+          missingPhotos.length > 0 ? `Missing photo(s) for: ${missingPhotos.join(", ")}` : ""
+        ].filter(Boolean).join(" "),
+        variant: "destructive"
+      });
+      return;
+    }
     try {
       setIsSubmitting(true)
       console.log("[PropertyModal] Submitting property form data...", { formData, imageUrls });
@@ -120,7 +138,7 @@ export default function PropertyModal({
           if (updateError) {
             throw new Error(`Failed to update property: ${updateError.message}`)
           }
-          
+          setSuccessMessage("Property updated");
           // Update cache
           console.log("[PropertyModal] Marking property updated in cache...", property.id);
           PropertyCache.markPropertyUpdated(property.id)
@@ -139,7 +157,7 @@ export default function PropertyModal({
           if (createError) {
             throw new Error(`Failed to create property: ${createError.message}`)
           }
-          
+          setSuccessMessage("Property created");
           // Invalidate properties list cache
           console.log("[PropertyModal] Clearing properties cache after create...");
           PropertyCache.setProperties([], undefined)
@@ -163,6 +181,7 @@ export default function PropertyModal({
         // Only close the modal after refresh is complete
         onOpenChangeAction(false);
         console.log("[PropertyModal] Modal closed after save.");
+        setShowSuccessModal(true); // Show success modal
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown database error'
@@ -188,34 +207,44 @@ export default function PropertyModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChangeAction}>
-      <DialogContent className="w-full max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {!onboardingComplete
-              ? "Welcome to Property Submission"
-              : property
-                ? "Edit Property Details"
-                : "Add New Property"}
-          </DialogTitle>
-          <DialogDescription>
-            {!onboardingComplete
-              ? "Follow these steps to list your property on LakazHub"
-              : "Fill in the details below to list your property"}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChangeAction}>
+        <DialogContent className="w-full max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {!onboardingComplete
+                ? "Welcome to Property Submission"
+                : property
+                  ? "Edit Property Details"
+                  : "Add New Property"}
+            </DialogTitle>
+            <DialogDescription>
+              {!onboardingComplete
+                ? "Follow these steps to list your property on LakazHub"
+                : "Fill in the details below to list your property"}
+            </DialogDescription>
+          </DialogHeader>
 
-        {!onboardingComplete ? (
-          <PropertyOnboarding onComplete={handleStartForm} />
-        ) : (
-          <PropertyFormTabs 
-            property={getPropertyDataForForm()} 
-            onSubmit={handleSubmit} 
-            isSubmitting={isSubmitting} 
-            onSuccess={onSuccess}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+          {!onboardingComplete ? (
+            <PropertyOnboarding onComplete={handleStartForm} />
+          ) : (
+            <PropertyFormTabs 
+              property={getPropertyDataForForm()} 
+              onSubmit={handleSubmit} 
+              isSubmitting={isSubmitting} 
+              onSuccess={onSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      <SuccessModal
+        open={showSuccessModal}
+        onOpenChangeAction={setShowSuccessModal}
+        title="Success"
+        message={successMessage}
+        autoClose={true}
+        autoCloseDelay={2000}
+      />
+    </>
   )
 }

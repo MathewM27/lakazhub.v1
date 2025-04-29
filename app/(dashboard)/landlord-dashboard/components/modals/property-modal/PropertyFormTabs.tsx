@@ -81,6 +81,22 @@ export default function PropertyFormTabs({
   }
   
   const handleSubmitFinal = async () => {
+    // --- Validation for required fields ---
+    const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
+    const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
+    if (!formData.price || !formData.location || missingPhotos.length > 0) {
+      toast({
+        title: "Missing Required Fields",
+        description: [
+          !formData.price ? "Price is required." : "",
+          !formData.location ? "Location is required." : "",
+          missingPhotos.length > 0 ? `Missing photo(s) for: ${missingPhotos.join(", ")}` : ""
+        ].filter(Boolean).join(" "),
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setUploadingImages(true)
       
