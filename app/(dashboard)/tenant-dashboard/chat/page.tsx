@@ -738,7 +738,7 @@ export default function ChatPage() {
                 <div>
                   <div className="p-4 border-b border-white/10 flex justify-between items-center">
                     <h2 className="text-xl font-semibold">Messages</h2>
-                    <Button 
+                    {/* <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={refreshConversations}
@@ -747,7 +747,7 @@ export default function ChatPage() {
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                     
-                    </Button>
+                    </Button> */}
                   </div>
                   
                   {lastRefreshed && (

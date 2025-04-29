@@ -102,7 +102,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                   ? "bg-zinc-800 text-zinc-100 rounded-br-md"
                   : "bg-zinc-800 text-zinc-100 rounded-br-md"
                 // Tenant message: blue background
-                : "bg-amber-400 text-white rounded-bl-md"
+                : "bg-amber-400 text-black rounded-bl-md"
             )}
             style={{
               borderTopLeftRadius: message.sender === "landlord" ? 18 : 8,

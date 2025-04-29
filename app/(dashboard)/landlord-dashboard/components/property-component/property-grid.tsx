@@ -44,47 +44,6 @@ export default function PropertyGrid({
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Slider state
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [maxScroll, setMaxScroll] = useState(0);
-
-  // Drag-to-scroll state
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [scrollStartX, setScrollStartX] = useState(0);
-
-  // Mouse drag handlers for carousel
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!useSlider) return;
-    setIsDragging(true);
-    setDragStartX(e.clientX);
-    setScrollStartX(containerRef.current?.scrollLeft || 0);
-  };
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !containerRef.current) return;
-    const dx = e.clientX - dragStartX;
-    containerRef.current.scrollLeft = scrollStartX - dx;
-  };
-  const handleMouseUp = () => setIsDragging(false);
-  const handleMouseLeave = () => setIsDragging(false);
-
-  // Touch drag handlers for mobile
-  const [touchStartX, setTouchStartX] = useState(0);
-  const [touchScrollStartX, setTouchScrollStartX] = useState(0);
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!useSlider) return;
-    setIsDragging(true);
-    setTouchStartX(e.touches[0].clientX);
-    setTouchScrollStartX(containerRef.current?.scrollLeft || 0);
-  };
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || !containerRef.current) return;
-    const dx = e.touches[0].clientX - touchStartX;
-    containerRef.current.scrollLeft = touchScrollStartX - dx;
-  };
-  const handleTouchEnd = () => setIsDragging(false);
-
   // Handler for improved refresh button (clear cache, then refresh)
   const handleRefresh = useCallback(async () => {
     PropertyCache.clearCache();
@@ -159,30 +118,6 @@ export default function PropertyGrid({
     };
   }, [onRefreshNeeded, refreshProperties, onAddNewPropertyAction, surveyStatus]);
 
-  // Slider scroll logic for mobile
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
-    const handleScrollEvent = () => {
-      setScrollPosition(container.scrollLeft);
-      setMaxScroll(container.scrollWidth - container.clientWidth);
-    };
-    handleScrollEvent();
-    container.addEventListener('scroll', handleScrollEvent);
-    window.addEventListener('resize', handleScrollEvent);
-    return () => {
-      container.removeEventListener('scroll', handleScrollEvent);
-      window.removeEventListener('resize', handleScrollEvent);
-    };
-  }, [properties?.length, visibleCount]);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (!containerRef.current) return;
-    const container = containerRef.current;
-    const scrollAmount = direction === 'left' ? -320 : 320;
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  };
-
   // Determine if slider should be used (mobile, > threshold)
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const useSlider = Array.isArray(properties) && properties.length > SLIDER_THRESHOLD;
@@ -200,73 +135,101 @@ export default function PropertyGrid({
     title: string,
     propertyList: Property[],
     emptyText: string
-  ) => (
-    <div className="mb-12">
-      <h3 className="font-bold text-white text-lg md:text-xl mb-4">{title}</h3>
-      {propertyList.length > 0 ? (
-        <div className="relative">
-          {/* Left Arrow */}
-          {scrollPosition > 0 && (
-            <button
-              type="button"
-              aria-label="Scroll left"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => handleScroll('left')}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          )}
-          {/* Right Arrow */}
-          {maxScroll > 0 && scrollPosition < maxScroll - 10 && (
-            <button
-              type="button"
-              aria-label="Scroll right"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
-              style={{ display: 'flex', alignItems: 'center' }}
-              onClick={() => handleScroll('right')}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          )}
-          <div
-            ref={containerRef}
-            className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start cursor-grab active:cursor-grabbing"
-            style={{ scrollBehavior: 'smooth' }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            // Prevent text selection while dragging
-            draggable={false}
-          >
-            {propertyList.slice(0, visibleCount).map((property, index) => (
-              <div
-                key={property.id}
-                className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start ${
-                  deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
-                } opacity-0 animate-fade-in-up`}
-                style={{ animationDelay: `${index * 100}ms` }}
+  ) => {
+    // Per-row state and refs
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scrollPosition, setScrollPosition] = useState(0);
+    const [maxScroll, setMaxScroll] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStartX, setDragStartX] = useState(0);
+    const [scrollStartX, setScrollStartX] = useState(0);
+    const [touchStartX, setTouchStartX] = useState(0);
+    const [touchScrollStartX, setTouchScrollStartX] = useState(0);
+
+    // Slider scroll logic for this row
+    useEffect(() => {
+      if (!containerRef.current) return;
+      const container = containerRef.current;
+      const handleScrollEvent = () => {
+        setScrollPosition(container.scrollLeft);
+        setMaxScroll(container.scrollWidth - container.clientWidth);
+      };
+      handleScrollEvent();
+      container.addEventListener('scroll', handleScrollEvent);
+      window.addEventListener('resize', handleScrollEvent);
+      return () => {
+        container.removeEventListener('scroll', handleScrollEvent);
+        window.removeEventListener('resize', handleScrollEvent);
+      };
+    }, [propertyList.length, visibleCount]);
+
+    const handleScroll = (direction: 'left' | 'right') => {
+      if (!containerRef.current) return;
+      const container = containerRef.current;
+      const scrollAmount = direction === 'left' ? -320 : 320;
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    };
+
+    return (
+      <div className="mb-12">
+        <h3 className="font-bold text-white text-lg md:text-xl mb-4">{title}</h3>
+        {propertyList.length > 0 ? (
+          <div className="relative">
+            {/* Left Arrow */}
+            {scrollPosition > 0 && (
+              <button
+                type="button"
+                aria-label="Scroll left"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
+                style={{ display: 'flex', alignItems: 'center' }}
+                onClick={() => handleScroll('left')}
               >
-                <PropertyCard
-                  property={property}
-                  onDetailsAction={() => onPropertyDetailsAction(property)}
-                  onAvailabilityAction={() => handleAvailabilityAction(property)}
-                  onNotificationsAction={handleNotificationClick}
-                  onDeleteAction={handleDeleteProperty}
-                />
-              </div>
-            ))}
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+            {/* Right Arrow */}
+            {maxScroll > 0 && scrollPosition < maxScroll - 10 && (
+              <button
+                type="button"
+                aria-label="Scroll right"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 hover:bg-black/90 text-white rounded-full p-2 shadow-lg transition-all"
+                style={{ display: 'flex', alignItems: 'center' }}
+                onClick={() => handleScroll('right')}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+            <div
+              ref={containerRef}
+              className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start cursor-grab active:cursor-grabbing"
+              style={{ scrollBehavior: 'smooth' }}
+              draggable={false}
+            >
+              {propertyList.slice(0, visibleCount).map((property, index) => (
+                <div
+                  key={property.id}
+                  className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start ${
+                    deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
+                  } opacity-0 animate-fade-in-up`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <PropertyCard
+                    property={property}
+                    onDetailsAction={() => onPropertyDetailsAction(property)}
+                    onAvailabilityAction={() => handleAvailabilityAction(property)}
+                    onNotificationsAction={handleNotificationClick}
+                    onDeleteAction={handleDeleteProperty}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="w-full py-8 text-center text-white/60">{emptyText}</div>
-      )}
-    </div>
-  );
+        ) : (
+          <div className="w-full py-8 text-center text-white/60">{emptyText}</div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <section className="py-16 md:py-24 bg-black relative overflow-hidden">

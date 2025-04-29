@@ -8,17 +8,25 @@ interface MessagedPropertiesProps {
 }
 
 const MessagedProperties: React.FC<MessagedPropertiesProps> = ({ messagedProperties, className }) => {
+  // Filter out rented properties
+  const filteredMessagedProperties = useMemo(
+    () => messagedProperties.filter(
+      p => !(p.status === 'rented' || p.available === false)
+    ),
+    [messagedProperties]
+  );
+
   // Pagination state for messaged properties
   const PAGE_SIZE = 10;
   const [page, setPage] = useState(1);
   const paginatedProperties = useMemo(
-    () => messagedProperties.slice(0, page * PAGE_SIZE),
-    [messagedProperties, page]
+    () => filteredMessagedProperties.slice(0, page * PAGE_SIZE),
+    [filteredMessagedProperties, page]
   );
-  const hasMore = paginatedProperties.length < messagedProperties.length;
+  const hasMore = paginatedProperties.length < filteredMessagedProperties.length;
 
   // Debug whether we're returning null or rendering the component
-  if (!messagedProperties || messagedProperties.length === 0) {
+  if (!filteredMessagedProperties || filteredMessagedProperties.length === 0) {
     return null;
   }
 
@@ -30,8 +38,8 @@ const MessagedProperties: React.FC<MessagedPropertiesProps> = ({ messagedPropert
         properties={paginatedProperties}
         customBadge="Conversation"
         // Only show load more if there are more than 5 messaged properties
-        onLoadMore={messagedProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
-        hasMore={messagedProperties.length > 5 ? hasMore : false}
+        onLoadMore={filteredMessagedProperties.length > 5 ? () => setPage(p => p + 1) : undefined}
+        hasMore={filteredMessagedProperties.length > 5 ? hasMore : false}
       />
     </div>
   );
