@@ -130,12 +130,27 @@ export default function PropertyGrid({
     ? properties.filter((p) => !p.available)
     : [];
 
-  // Helper for slider row
-  const renderSliderRow = (
-    title: string,
-    propertyList: Property[],
-    emptyText: string
-  ) => {
+  function SliderRow({
+    title,
+    propertyList,
+    emptyText,
+    visibleCount,
+    deletingPropertyId,
+    onPropertyDetailsAction,
+    handleAvailabilityAction,
+    handleNotificationClick,
+    handleDeleteProperty,
+  }: {
+    title: string;
+    propertyList: Property[];
+    emptyText: string;
+    visibleCount: number;
+    deletingPropertyId: string | null;
+    onPropertyDetailsAction: (property: Property) => void;
+    handleAvailabilityAction: (property: Property) => void;
+    handleNotificationClick: (property: Property) => void;
+    handleDeleteProperty: (propertyId: string) => void;
+  }) {
     // Per-row state and refs
     const containerRef = useRef<HTMLDivElement>(null);
     const [scrollPosition, setScrollPosition] = useState(0);
@@ -229,7 +244,7 @@ export default function PropertyGrid({
         )}
       </div>
     );
-  };
+  }
 
   return (
     <section className="py-16 md:py-24 bg-black relative overflow-hidden">
@@ -287,16 +302,28 @@ export default function PropertyGrid({
           {/* --- SLIDER MODE (if many properties) --- */}
           {Array.isArray(properties) && properties.length > SLIDER_THRESHOLD ? (
             <>
-              {renderSliderRow(
-                "My Available Properties",
-                availableProperties,
-                "No available properties"
-              )}
-              {renderSliderRow(
-                "Rented Properties",
-                rentedProperties,
-                "No rented properties"
-              )}
+              <SliderRow
+                title="My Available Properties"
+                propertyList={availableProperties}
+                emptyText="No available properties"
+                visibleCount={visibleCount}
+                deletingPropertyId={deletingPropertyId}
+                onPropertyDetailsAction={onPropertyDetailsAction}
+                handleAvailabilityAction={handleAvailabilityAction}
+                handleNotificationClick={handleNotificationClick}
+                handleDeleteProperty={handleDeleteProperty}
+              />
+              <SliderRow
+                title="Rented Properties"
+                propertyList={rentedProperties}
+                emptyText="No rented properties"
+                visibleCount={visibleCount}
+                deletingPropertyId={deletingPropertyId}
+                onPropertyDetailsAction={onPropertyDetailsAction}
+                handleAvailabilityAction={handleAvailabilityAction}
+                handleNotificationClick={handleNotificationClick}
+                handleDeleteProperty={handleDeleteProperty}
+              />
               <div className="mb-12">
                 <h3 className="font-bold text-white text-lg md:text-xl mb-4">Add New Property</h3>
                 <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory justify-start">
