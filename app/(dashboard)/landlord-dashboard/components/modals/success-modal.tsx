@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -8,10 +7,10 @@ import { motion } from "framer-motion"
 
 interface SuccessModalProps {
   open: boolean
-  onOpenChangeAction: (open: boolean) => void // Renamed here
+  onOpenChangeAction: (open: boolean) => void
   title: string
   message: string
-  actionCallback?: () => void // Renamed to avoid same issue
+  actionCallback?: () => void
   actionLabel?: string
   autoClose?: boolean
   autoCloseDelay?: number
@@ -19,48 +18,18 @@ interface SuccessModalProps {
 
 export default function SuccessModal({
   open,
-  onOpenChangeAction, // Updated parameter name
+  onOpenChangeAction,
   title,
   message,
-  actionCallback, // Updated parameter name
+  actionCallback,
   actionLabel = "Continue",
-  autoClose = true,
-  autoCloseDelay = 3000,
+  autoClose = false, // Default to false for manual close
+  // autoCloseDelay is ignored if autoClose is false
 }: SuccessModalProps) {
-  const [countdown, setCountdown] = useState(autoCloseDelay / 1000)
-  
-  // Auto close and countdown
-  useEffect(() => {
-    if (!open || !autoClose) return;
-    
-    // Countdown timer
-    const timer = setInterval(() => {
-      setCountdown(prev => Math.max(0, prev - 1));
-    }, 1000);
-    
-    // Auto close timer
-    const closeTimer = setTimeout(() => {
-      onOpenChangeAction(false); // Updated reference here
-    }, autoCloseDelay);
-    
-    // Clean up timers when component unmounts or when modal closes
-    return () => {
-      clearInterval(timer);
-      clearTimeout(closeTimer);
-    };
-  }, [open, autoClose, autoCloseDelay, onOpenChangeAction]); // Updated dependency here
-  
-  // Reset countdown when modal opens
-  useEffect(() => {
-    if (open) {
-      setCountdown(Math.floor(autoCloseDelay / 1000));
-    }
-  }, [open, autoCloseDelay]);
-
   return (
     <Dialog 
       open={open} 
-      onOpenChange={onOpenChangeAction} // Updated here - this is crucial!
+      onOpenChange={onOpenChangeAction}
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -79,20 +48,19 @@ export default function SuccessModal({
           <p className="text-center text-muted-foreground mb-6">{message}</p>
           
           <div className="flex gap-4">
-            {actionCallback && ( // Updated reference here
+            {actionCallback && (
               <Button onClick={() => {
-                onOpenChangeAction(false); // Updated reference here
-                actionCallback(); // Updated reference here
+                onOpenChangeAction(false);
+                actionCallback();
               }}>
                 {actionLabel}
               </Button>
             )}
-            
             <Button 
               variant="outline" 
-              onClick={() => onOpenChangeAction(false)} // Updated reference here
+              onClick={() => onOpenChangeAction(false)}
             >
-              {autoClose && countdown > 0 ? `Close (${countdown})` : "Close"}
+              Close
             </Button>
           </div>
         </div>

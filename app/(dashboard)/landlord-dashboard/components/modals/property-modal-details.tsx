@@ -256,8 +256,8 @@ export default function PropertyModal({
         onOpenChangeAction={handleSuccessModalClose}
         title="Success"
         message={successMessage}
-        autoClose={true}
-        autoCloseDelay={2000}
+        autoClose={false}
+        // autoCloseDelay prop can be omitted or left as default
       />
     </>
   )
