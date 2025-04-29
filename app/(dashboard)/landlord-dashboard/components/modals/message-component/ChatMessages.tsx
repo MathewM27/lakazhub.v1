@@ -116,7 +116,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
             <div
               className={cn(
                 "text-xs mt-1 flex justify-end items-center gap-1",
-                message.sender === "landlord" ? "text-indigo-200" : "text-blue-200"
+                message.sender === "landlord"
+                  ? "text-indigo-200"
+                  : "text-black" // changed from text-blue-200 to text-black for tenant
               )}
             >
               <span>{message.time}</span>
