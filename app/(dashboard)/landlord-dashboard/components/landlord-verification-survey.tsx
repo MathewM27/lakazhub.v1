@@ -105,7 +105,7 @@ export default function LandlordVerificationSurvey({ userId, fullName, email, op
           <form onSubmit={handleSubmit} className="space-y-5">
             <h2 className="text-2xl font-bold mb-2 text-amber-400">Landlord Quick Survey</h2>
             <p className="text-white/70 mb-4 text-sm">
-              Help us keep LakazHub safe for everyone. This will only take a minute. In the future, we may require proof of ownership.
+              Help us keep LakazHub safe for everyone. This will only take a minute. In the future, we may require proof of ownership
             </p>
             <div>
               <label className="block text-sm mb-1">Full Name</label>
