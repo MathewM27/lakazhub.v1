@@ -516,19 +516,14 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
             
             <div className="flex flex-col space-y-2 w-full mt-2">
               <button 
-                onClick={() => router.push('/auth/login?returnUrl=' + encodeURIComponent(window.location.pathname))}
+                onClick={() => {
+                  // Redirect to lakazhub.com after sign in
+                  window.location.href = 'https://lakazhub.com/auth/login?returnUrl=' + encodeURIComponent('https://lakazhub.com');
+                }}
                 className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors"
               >
                 Sign In
               </button>
-              
-              <button 
-                onClick={() => window.location.href = '/'}
-                className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
-              >
-                Return to Home
-              </button>
-              
               {!isSessionMissing && (
                 <button 
                   onClick={() => window.location.reload()}
