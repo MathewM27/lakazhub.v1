@@ -277,7 +277,12 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={onNext}>Next: Upload Photos</Button>
+        <Button 
+          onClick={onNext} 
+          disabled={!formData.location || formData.location.trim() === ""}
+        >
+          Next: Upload Photos
+        </Button>
       </div>
     </div>
   )

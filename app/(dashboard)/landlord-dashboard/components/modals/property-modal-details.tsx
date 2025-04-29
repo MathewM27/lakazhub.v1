@@ -74,11 +74,19 @@ export default function PropertyModal({
     };
   }
 
-  // Helper to show success modal after closing property modal
+  // Helper to show success modal before closing property modal
   const showSuccessAndClose = (msg: string) => {
     setSuccessMessage(msg);
-    onOpenChangeAction(false);
-    setTimeout(() => setShowSuccessModal(true), 200); // Delay to allow modal close animation
+    setShowSuccessModal(true);
+  };
+
+  // When SuccessModal closes, close the property modal and refresh
+  const handleSuccessModalClose = async (open: boolean) => {
+    setShowSuccessModal(open);
+    if (!open) {
+      onOpenChangeAction(false);
+      if (onSuccess) await onSuccess();
+    }
   };
 
   const handleSubmit = async (formData: FormData, imageUrls: string[]) => {
@@ -245,7 +253,7 @@ export default function PropertyModal({
       </Dialog>
       <SuccessModal
         open={showSuccessModal}
-        onOpenChangeAction={setShowSuccessModal}
+        onOpenChangeAction={handleSuccessModalClose}
         title="Success"
         message={successMessage}
         autoClose={true}
