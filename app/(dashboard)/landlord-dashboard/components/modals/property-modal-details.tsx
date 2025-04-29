@@ -74,6 +74,13 @@ export default function PropertyModal({
     };
   }
 
+  // Helper to show success modal after closing property modal
+  const showSuccessAndClose = (msg: string) => {
+    setSuccessMessage(msg);
+    onOpenChangeAction(false);
+    setTimeout(() => setShowSuccessModal(true), 200); // Delay to allow modal close animation
+  };
+
   const handleSubmit = async (formData: FormData, imageUrls: string[]) => {
     // --- Validation for required fields ---
     const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
@@ -138,7 +145,7 @@ export default function PropertyModal({
           if (updateError) {
             throw new Error(`Failed to update property: ${updateError.message}`)
           }
-          setSuccessMessage("Property updated");
+          showSuccessAndClose("Property updated");
           // Update cache
           console.log("[PropertyModal] Marking property updated in cache...", property.id);
           PropertyCache.markPropertyUpdated(property.id)
@@ -157,7 +164,7 @@ export default function PropertyModal({
           if (createError) {
             throw new Error(`Failed to create property: ${createError.message}`)
           }
-          setSuccessMessage("Property created");
+          showSuccessAndClose("Property created");
           // Invalidate properties list cache
           console.log("[PropertyModal] Clearing properties cache after create...");
           PropertyCache.setProperties([], undefined)
@@ -181,7 +188,6 @@ export default function PropertyModal({
         // Only close the modal after refresh is complete
         onOpenChangeAction(false);
         console.log("[PropertyModal] Modal closed after save.");
-        setShowSuccessModal(true); // Show success modal
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown database error'

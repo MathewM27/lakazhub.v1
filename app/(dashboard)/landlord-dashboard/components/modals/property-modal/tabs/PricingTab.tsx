@@ -13,6 +13,7 @@ interface PricingTabProps {
   isSubmitting: boolean
   isUploading: boolean
   onSuccess?: () => void // New prop for handling successful submission
+  canSubmit?: boolean // Add this prop
 }
 
 export default function PricingTab({ 
@@ -22,7 +23,8 @@ export default function PricingTab({
   onSubmit,
   isSubmitting,
   isUploading,
-  onSuccess
+  onSuccess,
+  canSubmit = true // Default to true for backward compatibility
 }: PricingTabProps) {
   // Format number with thousand separators
   const formatNumber = (value: string | number) => {
@@ -121,7 +123,7 @@ export default function PricingTab({
             await onSubmit();
             if (!isSubmitting && onSuccess) onSuccess();
           }} 
-          disabled={isSubmitting || isUploading}
+          disabled={isSubmitting || isUploading || !canSubmit}
         >
           {isSubmitting ? "Saving..." : isUploading ? "Uploading..." : "Save Property"}
         </Button>

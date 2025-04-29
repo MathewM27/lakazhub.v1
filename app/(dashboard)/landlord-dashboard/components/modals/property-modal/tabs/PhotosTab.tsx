@@ -195,6 +195,11 @@ export default function PhotosTab({
     return Math.round((filledCategories / ROOM_CATEGORIES.length) * 100)
   }
 
+  // --- Compute required photos for enabling continue ---
+  const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
+  const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
+  const canContinue = missingPhotos.length === 0;
+
   // Process existing images on component mount
   useEffect(() => {
     // Function to process existing image URLs into the formData.images format
@@ -434,7 +439,7 @@ export default function PhotosTab({
         <Button variant="outline" onClick={onPrev}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={formData.images.length === 0}>
+        <Button onClick={onNext} disabled={!canContinue}>
           Continue
         </Button>
       </div>

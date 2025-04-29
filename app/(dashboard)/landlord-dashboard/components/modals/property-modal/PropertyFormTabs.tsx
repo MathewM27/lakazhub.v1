@@ -243,6 +243,14 @@ export default function PropertyFormTabs({
     }
   }
   
+  // --- Compute required fields for enabling submit ---
+  const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
+  const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
+  const canSubmit =
+    !!formData.price &&
+    !!formData.location &&
+    missingPhotos.length === 0;
+  
   return (
     <Tabs 
       defaultValue="basic-info" 
@@ -282,6 +290,7 @@ export default function PropertyFormTabs({
           isSubmitting={isSubmitting}
           isUploading={uploadingImages}
           onSuccess={onSuccess}
+          canSubmit={canSubmit} // Pass down
         />
         
         {uploadingImages && (
