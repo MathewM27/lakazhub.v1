@@ -134,7 +134,7 @@ export const Footer = () => {
             <p className="text-white/70 mb-4">Stay connected for updates and news</p>
             <div className="flex space-x-4">
               {[
-                { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61565853924765', label: 'Facebook' },
+                { icon: Facebook, href: 'https://www.facebook.com/profile.php?id=61575199515684', label: 'Facebook' },
                 { icon: Instagram, href: 'https://www.instagram.com/futurexdesigns/', label: 'Instagram' },
                 { icon: TiktokIcon, href: 'https://www.tiktok.com/@future_xdesigns?_t=ZM-8vjhmF9nyMQ&_r=1', label: 'TikTok' }
               ].map((social, i) => (
