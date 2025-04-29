@@ -29,6 +29,7 @@ export default function PropertyModal({
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const [pendingSuccess, setPendingSuccess] = useState<null | string>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("Property created");
 
@@ -74,18 +75,12 @@ export default function PropertyModal({
     };
   }
 
-  // Helper to show success modal before closing property modal
-  const showSuccessAndClose = (msg: string) => {
-    setSuccessMessage(msg);
-    setShowSuccessModal(true);
-  };
-
-  // When SuccessModal closes, close the property modal and refresh
-  const handleSuccessModalClose = async (open: boolean) => {
+  // When SuccessModal closes, reset state
+  const handleSuccessModalClose = (open: boolean) => {
     setShowSuccessModal(open);
     if (!open) {
-      onOpenChangeAction(false);
-      if (onSuccess) await onSuccess();
+      setSuccessMessage("");
+      setPendingSuccess(null);
     }
   };
 
@@ -153,7 +148,7 @@ export default function PropertyModal({
           if (updateError) {
             throw new Error(`Failed to update property: ${updateError.message}`)
           }
-          showSuccessAndClose("Property updated");
+          setPendingSuccess("Property updated");
           // Update cache
           console.log("[PropertyModal] Marking property updated in cache...", property.id);
           PropertyCache.markPropertyUpdated(property.id)
@@ -172,7 +167,7 @@ export default function PropertyModal({
           if (createError) {
             throw new Error(`Failed to create property: ${createError.message}`)
           }
-          showSuccessAndClose("Property created");
+          setPendingSuccess("Property created");
           // Invalidate properties list cache
           console.log("[PropertyModal] Clearing properties cache after create...");
           PropertyCache.setProperties([], undefined)
@@ -220,6 +215,22 @@ export default function PropertyModal({
     }
   }
 
+  // Effect: when pendingSuccess is set, close property modal, run refresh, then show SuccessModal
+  useEffect(() => {
+    const runAfterClose = async () => {
+      if (pendingSuccess) {
+        onOpenChangeAction(false); // Close property modal
+        if (onSuccess) await onSuccess(); // Run refresh logic
+        setTimeout(() => {
+          setSuccessMessage(pendingSuccess);
+          setShowSuccessModal(true); // Now show the SuccessModal
+        }, 400); // Wait for modal close/refresh animation
+      }
+    };
+    runAfterClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSuccess]);
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChangeAction}>
@@ -257,7 +268,6 @@ export default function PropertyModal({
         title="Success"
         message={successMessage}
         autoClose={false}
-        // autoCloseDelay prop can be omitted or left as default
       />
     </>
   )
