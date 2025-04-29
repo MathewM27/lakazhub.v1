@@ -39,20 +39,24 @@ export default function LandlordDashboard() {
 
   // New survey status: "checking" | "show" | "hide"
   const [surveyStatus, setSurveyStatus] = useState<"checking" | "show" | "hide">("checking");
+  // Track if we have checked Supabase in the background
+  const [supabaseChecked, setSupabaseChecked] = useState(false);
 
   useEffect(() => {
     // Only check for landlords
     if (profile?.user_role !== "landlord" || !user) {
       setSurveyStatus("hide");
+      setSupabaseChecked(true);
       return;
     }
-    setSurveyStatus("checking");
+    // Optimistic UI: don't block dashboard, just check in background
     if (localStorage.getItem("lh_landlord_surveyed")) {
       setSurveyStatus("hide");
+      setSupabaseChecked(true);
       return;
     }
+    setSurveyStatus("hide"); // Optimistically hide modal, will show if needed after fetch
     async function checkSurvey() {
-      // user is not null here due to the check above
       const { data } = await supabase
         .from("landlord_verification_surveys")
         .select("id")
@@ -65,6 +69,7 @@ export default function LandlordDashboard() {
       } else {
         setSurveyStatus("show");
       }
+      setSupabaseChecked(true);
     }
     checkSurvey();
   }, [profile?.user_role, user]);
@@ -106,30 +111,24 @@ export default function LandlordDashboard() {
     return <LoadingScreen message={message} />;
   };
   
-  // Show a friendly welcome screen while authentication or survey check is being done
-  if (isAuthenticating || surveyStatus === "checking") {
+  // Only block for authentication or role check, not for survey check
+  if (isAuthenticating) {
     return renderWelcomeScreen();
   }
-  
-  // Show login prompt if not authenticated
+
   if (!isAuthenticated || !user) {
     return <LoginPrompt />;
   }
-  
-  // If authenticated but role check is still pending or failed, show welcome screen first
+
   if (isAuthenticated && user && !hasCorrectRole) {
-    // Check if we're still in the process of validating the role
     const isStillValidating = profile === null;
-    
     if (isStillValidating) {
       return renderWelcomeScreen("Verifying your account permissions...");
     }
-    
-    // If we've completed validation and still don't have the correct role, show access denied
     return <AccessDenied onSignOut={signOut} />;
   }
-  
-  // Render dashboard for authenticated users
+
+  // Render dashboard for authenticated users (optimistic UI)
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <RegisterSW />
@@ -142,7 +141,7 @@ export default function LandlordDashboard() {
         onAvailabilityAction={handleAvailability}
         onAddNewPropertyAction={handleAddNewProperty}
         onRefreshNeeded={handleRefreshNeeded}
-        surveyStatus={surveyStatus} // Pass surveyStatus down
+        surveyStatus={surveyStatus}
       />
 
       {/* Only render modals when needed */}
@@ -191,7 +190,10 @@ export default function LandlordDashboard() {
           fullName={profile.full_name}
           email={profile.email_address}
           open={true}
-          onCloseAction={() => setSurveyStatus("hide")}
+          onCloseAction={() => {
+            setSurveyStatus("hide");
+            localStorage.setItem("lh_landlord_surveyed", "1");
+          }}
         />
       )}
     </div>
