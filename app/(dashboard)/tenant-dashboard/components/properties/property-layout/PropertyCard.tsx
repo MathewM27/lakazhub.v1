@@ -97,7 +97,7 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
   return (
     <>
       <div 
-        className={`h-full group bg-black border border-white/10 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+        className={`h-full group bg-black border border-white/10 rounded-lg overflow-hidden shadow-lg transition-all duration-300 ${
           disableInteractions ? 'opacity-80 pointer-events-none select-none' : ''
         }`}
       >
@@ -260,6 +260,40 @@ const PropertyCarousel = ({
   const [maxScroll, setMaxScroll] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Drag state
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  // Mouse/touch drag handlers
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!containerRef.current) return;
+    isDragging.current = true;
+    containerRef.current.classList.add('dragging');
+    startX.current =
+      'touches' in e
+        ? e.touches[0].pageX
+        : (e as React.MouseEvent).pageX;
+    scrollLeft.current = containerRef.current.scrollLeft;
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging.current || !containerRef.current) return;
+    const x =
+      'touches' in e
+        ? e.touches[0].pageX
+        : (e as React.MouseEvent).pageX;
+    const walk = x - startX.current;
+    containerRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+    if (containerRef.current) {
+      containerRef.current.classList.remove('dragging');
+    }
+  };
+
   // Handle scroll navigation
   const handleScroll = (direction: 'left' | 'right') => {
     if (!containerRef.current) return;
@@ -351,7 +385,15 @@ const PropertyCarousel = ({
       <div className="relative">
         <div 
           ref={containerRef}
-          className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
+          className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory select-none"
+          style={{ cursor: isDragging.current ? 'grabbing' : 'grab' }}
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
         >
           {properties.length > 0 ? (
             properties.map((property, index) => (
@@ -428,6 +470,9 @@ const PropertyCarousel = ({
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        .dragging {
+          cursor: grabbing !important;
         }
       `}</style>
     </div>

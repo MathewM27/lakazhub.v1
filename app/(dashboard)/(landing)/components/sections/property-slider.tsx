@@ -50,6 +50,63 @@ export const PropertySlider = () => {
     window.scrollTo({ top: offsetTop + offset, behavior: 'smooth' });
   };
 
+  // Drag state
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+
+  // Mouse/touch drag handlers
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!containerRef.current) return;
+    isDragging.current = true;
+    containerRef.current.classList.add('dragging');
+    startX.current =
+      'touches' in e
+        ? e.touches[0].pageX
+        : (e as React.MouseEvent).pageX;
+    scrollLeft.current = containerRef.current.scrollLeft;
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging.current || !containerRef.current) return;
+    const x =
+      'touches' in e
+        ? e.touches[0].pageX
+        : (e as React.MouseEvent).pageX;
+    const walk = x - startX.current;
+    containerRef.current.scrollLeft = scrollLeft.current - walk;
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+    if (containerRef.current) {
+      containerRef.current.classList.remove('dragging');
+    }
+  };
+
+  // Prevent click events while dragging
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let moved = false;
+    const onClick = (e: MouseEvent) => {
+      if (moved) {
+        e.stopPropagation();
+        e.preventDefault();
+        moved = false;
+      }
+    };
+    const onMouseMove = () => {
+      if (isDragging.current) moved = true;
+    };
+    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener('click', onClick, true);
+    return () => {
+      container.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener('click', onClick, true);
+    };
+  }, []);
+
   return (
     <section id="properties" className="py-16 md:py-24 bg-black relative overflow-hidden">
       {/* ...existing background grid... */}
@@ -102,8 +159,15 @@ export const PropertySlider = () => {
             <div className="relative">
               <div
                 ref={containerRef}
-                className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory"
-                style={{ scrollBehavior: 'smooth' }}
+                className="flex gap-5 overflow-x-auto hide-scrollbar pb-6 snap-x snap-mandatory select-none"
+                style={{ scrollBehavior: 'smooth', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleDragStart}
+                onTouchMove={handleDragMove}
+                onTouchEnd={handleDragEnd}
               >
                 {filteredProperties.length > 0 ? (
                   filteredProperties.map((property, idx) => (
@@ -204,6 +268,9 @@ export const PropertySlider = () => {
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        .dragging {
+          cursor: grabbing !important;
         }
       `}</style>
     </section>
