@@ -137,12 +137,13 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
             placeholder="e.g. Modern Downtown Apartment"
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
+            className="mt-1.5"
           />
         </div>
 
         <div className="relative">
           <Label htmlFor="location">Location</Label>
-          <div className="relative" ref={inputRef}>
+          <div className="relative mt-1.5" ref={inputRef}>
             <div className="flex">
               <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
@@ -197,86 +198,92 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
           </div>
         </div>
 
-        <div>
+        <div className="mb-1">
           <Label htmlFor="property-type">Property Type</Label>
-          <Select 
-            value={formData.type} 
-            onValueChange={(value) => handleInputChange("type", value)}
-          >
-            <SelectTrigger id="property-type">
-              <SelectValue placeholder="Select property type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="house">House</SelectItem>
-              <SelectItem value="apartment">Apartment</SelectItem>
-              <SelectItem value="studio">Studio</SelectItem>
-              <SelectItem value="villa">Villa</SelectItem>
-              <SelectItem value="condo">Condominium</SelectItem>
-              <SelectItem value="duplex">Duplex</SelectItem>
-              <SelectItem value="penthouse">Penthouse</SelectItem>
-              <SelectItem value="bungalow">Bungalow</SelectItem>
-              <SelectItem value="townhouse">Townhouse</SelectItem>
-              <SelectItem value="guesthouse">Guest House</SelectItem>
-              <SelectItem value="farmhouse">Farmhouse</SelectItem>            
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="bedrooms">Bedrooms</Label>
+          <div className="mt-1.5"> {/* Wrap Select in a div with the className */}
             <Select 
-              value={formData.bedrooms} 
-              onValueChange={(value) => handleInputChange("bedrooms", value)}
+              value={formData.type} 
+              onValueChange={(value) => handleInputChange("type", value)}
             >
-              <SelectTrigger id="bedrooms">
-                <SelectValue placeholder="Select" />
+              <SelectTrigger id="property-type">
+                <SelectValue placeholder="Select property type" />
               </SelectTrigger>
               <SelectContent>
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <SelectItem key={num} value={num.toString()}>
-                    {num}
-                  </SelectItem>
-                ))}
-                <SelectItem value="6+">6+</SelectItem>
+                <SelectItem value="house">House</SelectItem>
+                <SelectItem value="apartment">Apartment</SelectItem>
+                <SelectItem value="studio">Studio</SelectItem>
+                <SelectItem value="villa">Villa</SelectItem>
+                <SelectItem value="condo">Condominium</SelectItem>
+                <SelectItem value="duplex">Duplex</SelectItem>
+                <SelectItem value="penthouse">Penthouse</SelectItem>
+                <SelectItem value="bungalow">Bungalow</SelectItem>
+                <SelectItem value="townhouse">Townhouse</SelectItem>
+                <SelectItem value="guesthouse">Guest House</SelectItem>
+                <SelectItem value="farmhouse">Farmhouse</SelectItem>            
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-1">
+          <div>
+            <Label htmlFor="bedrooms">Bedrooms</Label>
+            <div className="mt-1.5"> {/* Wrap Select in a div with the className */}
+              <Select 
+                value={formData.bedrooms} 
+                onValueChange={(value) => handleInputChange("bedrooms", value)}
+              >
+                <SelectTrigger id="bedrooms">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="6+">6+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div>
             <Label htmlFor="bathrooms">Bathrooms</Label>
-            <Select 
-              value={formData.bathrooms} 
-              onValueChange={(value) => handleInputChange("bathrooms", value)}
-            >
-              <SelectTrigger id="bathrooms">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <SelectItem key={num} value={num.toString()}>
-                    {num}
-                  </SelectItem>
-                ))}
-                <SelectItem value="6+">6+</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="mt-1.5"> {/* Wrap Select in a div with the className */}
+              <Select 
+                value={formData.bathrooms} 
+                onValueChange={(value) => handleInputChange("bathrooms", value)}
+              >
+                <SelectTrigger id="bathrooms">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="6+">6+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div>
+        <div className="mb-1">
           <Label htmlFor="description">Property Description</Label>
           <Textarea
             id="description"
             placeholder="Describe your property..."
-            className="min-h-[120px]"
+            className="min-h-[120px] mt-1.5"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
           />
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-4">
         <Button 
           onClick={onNext} 
           disabled={!formData.location || formData.location.trim() === ""}

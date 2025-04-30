@@ -263,8 +263,8 @@ export default function PhotosTab({
         </div>
       </div>
 
-      {/* Category selection grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Category selection grid - improved spacing and fixed height */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {ROOM_CATEGORIES.map((category) => {
           const images = imagesByCategory[category.id] || []
           const hasImage = images.length > 0
@@ -403,7 +403,7 @@ export default function PhotosTab({
       {imagesByCategory["other"] && imagesByCategory["other"].length > 1 && (
         <div className="mt-4">
           <Label className="mb-2 block">Other Photos Gallery</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {imagesByCategory["other"].map((image, index) => (
               <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden group">
                 <Image 

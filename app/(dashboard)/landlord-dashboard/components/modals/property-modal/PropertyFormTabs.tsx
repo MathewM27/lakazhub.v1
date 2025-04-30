@@ -260,7 +260,7 @@ export default function PropertyFormTabs({
       defaultValue="basic-info" 
       value={activeTab}
       onValueChange={handleTabChange}
-      className="space-y-6"
+      className="space-y-4"
     >
       <TabsList className="grid grid-cols-3 w-full">
         <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
@@ -268,7 +268,7 @@ export default function PropertyFormTabs({
         <TabsTrigger value="pricing">Pricing</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="basic-info">
+      <TabsContent value="basic-info" className="max-h-[60vh] overflow-y-auto pr-1">
         <BasicInfoTab 
           formData={formData}
           onChange={handleFormDataChange}
@@ -276,7 +276,7 @@ export default function PropertyFormTabs({
         />
       </TabsContent>
       
-      <TabsContent value="photos">
+      <TabsContent value="photos" className="max-h-[60vh] overflow-y-auto pr-1">
         <PhotosTab 
           formData={formData}
           onChange={handleFormDataChange}
@@ -285,7 +285,7 @@ export default function PropertyFormTabs({
         />
       </TabsContent>
       
-      <TabsContent value="pricing">
+      <TabsContent value="pricing" className="max-h-[60vh] overflow-y-auto pr-1">
         <PricingTab 
           formData={formData}
           onChange={handleFormDataChange}
@@ -293,7 +293,7 @@ export default function PropertyFormTabs({
           onSubmit={handleSubmitFinal}
           isSubmitting={isSubmitting}
           isUploading={uploadingImages}
-          canSubmit={canSubmit} // Remove onSuccess from here
+          canSubmit={canSubmit}
         />
         
         {uploadingImages && (

@@ -24,7 +24,7 @@ export default function PricingTab({
   isSubmitting,
   isUploading,
   onSuccess,
-  canSubmit = true // Default to true for backward compatibility
+  canSubmit = true
 }: PricingTabProps) {
   // Format number with thousand separators
   const formatNumber = (value: string | number) => {
@@ -68,7 +68,7 @@ export default function PricingTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="mb-6">
+        <div className="mb-4">
           <label htmlFor="monthly-rent" className="block mb-2 text-sm font-medium">
             Monthly Rent
           </label>
@@ -81,7 +81,7 @@ export default function PricingTab({
             onChange={e => handleInputChange("price", e.target.value)}
           />
         </div>
-        <div className="mb-6">
+        <div className="mb-4">
           <label htmlFor="security-deposit" className="block mb-2 text-sm font-medium">
             Security Deposit
           </label>
@@ -114,7 +114,7 @@ export default function PricingTab({
         </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-4">
         <Button variant="outline" onClick={onPrev}>
           Back
         </Button>
@@ -122,8 +122,6 @@ export default function PricingTab({
           onClick={async () => {
             try {
               await onSubmit();
-              // Don't call onSuccess here - let the parent component handle it
-              // after the submission is fully complete
             } catch (error) {
               console.error("Error submitting form:", error);
             }

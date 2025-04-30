@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { convertPropertyToFormData, FormData, PropertyData } from "./property-modal/types"
+import { FormData, PropertyData } from "./property-modal/types"
 import PropertyFormTabs from "./property-modal/PropertyFormTabs"
 import { supabase } from "../../lib/utils/supabase/client"
 import { PropertyCache } from "../../lib/utils/cache/propertyCache"
 import { Property } from "../../types"
 import SuccessModal from "./success-modal"
-import { useToast } from "../../hooks/use-toast" // For toast
+import { useToast } from "../../hooks/use-toast"
 
 interface PropertyModalProps {
   open: boolean
@@ -160,14 +160,11 @@ export default function PropertyModal({
     id: property.id,
     name: property.name || "",
     location: property.location || "",
-    // Use property_type instead of type
     property_type: property.property_type || "apartment",
     bedrooms: property.bedrooms || 1,
     bathrooms: property.bathrooms || 1,
     description: property.description || "",
-    // Use monthly_rent instead of price
     monthly_rent: property.monthly_rent || 0,
-    // Use security_deposit instead of deposit
     security_deposit: property.security_deposit || 0,
     images: property.images || [],
     utilities: property.utilities || {
@@ -181,14 +178,14 @@ export default function PropertyModal({
     available: property.available !== undefined ? property.available : true,
     status: property.status || "active",
     created_at: property.created_at,
-    user_id: property.landlord_id, // Map landlord_id to user_id
-    existingImages: property.images || [] // Add this field if needed by your form
+    user_id: property.landlord_id,
+    existingImages: property.images || []
   } : undefined;
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChangeAction}>
-        <DialogContent className="sm:max-w-[900px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {property ? "Edit" : "Add"} Property
