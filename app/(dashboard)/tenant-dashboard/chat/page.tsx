@@ -22,9 +22,31 @@ import {
 
 // Create a simple cache for conversations
 const conversationsCache = new Map<string, { data: ConversationWithExtras[], timestamp: number }>();
-
+// Add a cache for messages per conversation
+const messagesCache = new Map<string, { messages: Message[]; timestamp: number }>();
 // Define TTL for cache (5 minutes)
 const CACHE_TTL = 5 * 60 * 1000;
+const MESSAGE_CACHE_TTL = 5 * 60 * 1000;
+
+function formatMessageTime(timestamp: string) {
+  try {
+    const date = new Date(timestamp);
+    const now = new Date();
+
+    if (date.toDateString() === now.toDateString()) {
+      return format(date, "h:mm a");
+    }
+
+    const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysDiff < 7) {
+      return formatDistanceToNow(date, { addSuffix: true });
+    }
+
+    return format(date, "MMM d");
+  } catch {
+    return "Unknown";
+  }
+}
 
 export default function ChatPage() {
   const [selectedConversation, setSelectedConversation] = useState<ConversationWithExtras | null>(null);
@@ -44,8 +66,6 @@ export default function ChatPage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
-  const [hasMoreMessages, setHasMoreMessages] = useState(false);
-  const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
   const PAGE_SIZE = 10; // Number of messages to load per page
 
   const [loadingConversation, setLoadingConversation] = useState(false);
@@ -440,57 +460,60 @@ export default function ChatPage() {
     setLandlordGroups(groupsArray);
   };
 
-  // Optimize subscription handling
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    // Set up a more efficient subscription
-    const conversationsSubscription = supabase
-      .channel('property-conversations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'property_conversations',
-          filter: `tenant_id=eq.${user.id}`
-        },
-        (_payload: { new: ConversationWithExtras; old: ConversationWithExtras; eventType: string }) => {
-          // Invalidate cache and refetch data on any change
-          const cacheKey = `conversations-${user.id}`;
-          conversationsCache.delete(cacheKey);
-          fetchConversations();
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(conversationsSubscription);
-    };
-  }, [user?.id, fetchConversations]);
+  // Add a function to fetch messages for a conversation, using cache
+  const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
+    const cacheKey = `messages-${conversationId}`;
+    const cached = messagesCache.get(cacheKey);
+    const now = Date.now();
 
-  // Simplify message fetching when a conversation is selected
+    if (cached && now - cached.timestamp < MESSAGE_CACHE_TTL) {
+      setMessages(cached.messages);
+      setLoading(false);
+      return cached.messages;
+    }
+
+    setLoading(true);
+    try {
+      // Prefer messages from conversation object if available
+      const { data, error } = await supabase
+        .from('property_conversations')
+        .select('messages')
+        .eq('id', conversationId)
+        .single();
+
+      if (error) throw error;
+      if (data && Array.isArray(data.messages)) {
+        messagesCache.set(cacheKey, { messages: data.messages, timestamp: now });
+        setMessages(data.messages);
+        setLoading(false);
+        return data.messages;
+      }
+      setMessages([]);
+      setLoading(false);
+      return [];
+    } catch {
+      setMessages([]);
+      setLoading(false);
+      return [];
+    }
+  }, []);
+
+  // Update: Use cache when selecting a conversation
   useEffect(() => {
     if (!selectedConversation) {
       setMessages([]);
       return;
     }
-    
+    fetchMessagesForConversation(selectedConversation.id);
     // Reset pagination when conversation changes
     setCurrentPage(0);
-    setHasMoreMessages(false);
-    setLoading(true);
-    
+
     // Messages are already in the conversation object, so use them directly
     if (selectedConversation.messages && Array.isArray(selectedConversation.messages)) {
       setMessages(selectedConversation.messages);
-      setHasMoreMessages(false);
-      
-      // Mark messages as read
       supabase.rpc('mark_conversation_messages_read', {
         p_conversation_id: selectedConversation.id
       });
-      
       setLoading(false);
     } else {
       // Fallback if messages aren't in the conversation object
@@ -559,111 +582,59 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(messagesSubscription);
     };
-  }, [selectedConversation, user?.id, toast]);
+  }, [selectedConversation, fetchMessagesForConversation, user?.id, toast]);
 
-  // Function to load more messages
-  const loadMoreMessages = async () => {
-    if (!selectedConversation || !hasMoreMessages || loadingMoreMessages) return;
-    
-    setLoadingMoreMessages(true);
-    
-    try {
-      const nextPage = currentPage + 1;
-      const startRange = nextPage * PAGE_SIZE;
-      const endRange = startRange + PAGE_SIZE - 1;
-      
-      const { data, error, count } = await supabase
-        .from('property_messages')
-        .select('*', { count: 'exact' })
-        .eq('conversation_id', selectedConversation.id)
-        .order('created_at', { ascending: false })
-        .range(startRange, endRange);
-        
-      if (error) throw error;
-      
-      // Check if there are more messages to load after this batch
-      setHasMoreMessages(count ? count > endRange + 1 : false);
-      
-      // Add older messages to the beginning of the array (reverse to maintain chronological order)
-      const olderMessages = [...(data || [])].reverse();
-      setMessages(prev => [...olderMessages, ...prev]);
-      
-      // Update current page
-      setCurrentPage(nextPage);
-    } catch (error) {
-      toast({
-        title: "Error loading more messages",
-        description: error instanceof Error ? error.message : "Could not load older messages",
-      });
-    } finally {
-      setLoadingMoreMessages(false);
-    }
-  };
-  
-  // Scroll to bottom of messages when new ones are added
-  useEffect(() => {
-    if (messagesEndRef.current && currentPage === 0) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, currentPage]);
-
-  const formatMessageTime = (timestamp: string) => {
-    try {
-      const date = new Date(timestamp);
-      const now = new Date();
-      
-      // If today, show time
-      if (date.toDateString() === now.toDateString()) {
-        return format(date, 'h:mm a');
-      }
-      
-      // If within last 7 days, show day name
-      const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff < 7) {
-        return formatDistanceToNow(date, { addSuffix: true });
-      }
-      
-      // Otherwise show date
-      return format(date, 'MMM d');
-    } catch {
-      return 'Unknown';
-    }
-  };
-
+  // On message send: Optimistically add to UI, update cache
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation || !user?.id) return;
-    
+
     setSendingMessage(true);
-    
+
+    // Optimistic UI: add temp message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      sender_id: user.id,
+      recipient_id: selectedConversation.landlord_id,
+      message: newMessage.trim(),
+      created_at: new Date().toISOString(),
+      is_read: false
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setNewMessage("");
+
     try {
-      // Send the message using the add_message_to_conversation function
       const { data, error } = await supabase.rpc('add_message_to_conversation', {
         p_conversation_id: selectedConversation.id,
         p_sender_id: user.id,
         p_recipient_id: selectedConversation.landlord_id,
-        p_message: newMessage.trim()
+        p_message: optimisticMsg.message
       });
-      
+
       if (error) throw error;
-      
-      // Add message to UI immediately without waiting for subscription
-      const newMessageObj: Message = {
-        id: data || Date.now().toString(),
-        sender_id: user.id,
-        recipient_id: selectedConversation.landlord_id,
-        message: newMessage.trim(),
-        created_at: new Date().toISOString(),
-        is_read: false
-      };
-      
-      // Update messages state immediately
-      setMessages(prev => [...prev, newMessageObj]);
-      
-      // Clear the input
-      setNewMessage("");
-      
+
+      // Replace temp message with real one
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === tempId
+            ? { ...msg, id: data || Date.now().toString() }
+            : msg
+        )
+      );
+
+      // Update cache
+      const cacheKey = `messages-${selectedConversation.id}`;
+      const cached = messagesCache.get(cacheKey);
+      if (cached) {
+        messagesCache.set(cacheKey, {
+          messages: [...cached.messages, { ...optimisticMsg, id: data || Date.now().toString() }],
+          timestamp: Date.now()
+        });
+      }
+
     } catch (error: unknown) {
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
       toast({
         title: "Error sending message",
         description: error instanceof Error ? error.message : "Could not send your message",
@@ -876,28 +847,6 @@ export default function ChatPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {/* Load More button */}
-                        {hasMoreMessages && (
-                          <div className="flex justify-center my-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={loadMoreMessages}
-                              disabled={loadingMoreMessages}
-                              className="text-xs"
-                            >
-                              {loadingMoreMessages ? (
-                                <>
-                                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                                  Loading...
-                                </>
-                              ) : (
-                                "Load More"
-                              )}
-                            </Button>
-                          </div>
-                        )}
-                        
                         {messages.map((message) => (
                           <div
                             key={message.id}
