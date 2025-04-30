@@ -21,17 +21,18 @@ export interface FormData {
   status: string;
 }
 
-// Define property from database format
+// Add this line to see what fields PropertyData has
 export interface PropertyData {
   id: string;
   name: string;
   location: string;
-  property_type: string;
+  property_type: string; // This is likely the correct field name, not "type"
   bedrooms: number;
   bathrooms: number;
   description: string;
-  monthly_rent: number;
-  security_deposit: number;
+  monthly_rent: number; // This is likely instead of "price"
+  security_deposit: number; // This is likely instead of "deposit"
+  images: string[];
   utilities: {
     water: boolean;
     electricity: boolean;
@@ -40,12 +41,11 @@ export interface PropertyData {
     trash: boolean;
     cable: boolean;
   };
-  images: string[];
   available: boolean;
-  landlord_id: string;
-  created_at: string;
-  updated_at: string;
   status: string;
+  created_at: string;
+  user_id: string;
+  existingImages?: string[];
 }
 
 // Define the ImageItem interface with existingUrl property
