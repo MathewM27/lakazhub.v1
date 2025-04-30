@@ -46,13 +46,14 @@ export default function LandlordDashboard() {
       setSurveyStatus("hide");
       return;
     }
-    setSurveyStatus("checking");
+    // If localStorage says surveyed, hide immediately
     if (localStorage.getItem("lh_landlord_surveyed")) {
       setSurveyStatus("hide");
       return;
     }
+    // Otherwise, set to "checking" (loading) and check Supabase
+    setSurveyStatus("checking");
     async function checkSurvey() {
-      // user is not null here due to the check above
       const { data } = await supabase
         .from("landlord_verification_surveys")
         .select("id")

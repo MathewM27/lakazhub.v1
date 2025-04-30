@@ -29,13 +29,7 @@ export default function LandlordVerificationSurvey({ userId, fullName, email, op
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
   useEffect(() => {
-    // Check localStorage first for quick UX
-    if (localStorage.getItem("lh_landlord_surveyed")) {
-      setAlreadySubmitted(true);
-      setSubmitted(true);
-      return;
-    }
-    // Check Supabase for existing survey for this user
+    // Only check Supabase, do not check localStorage here
     async function checkSurvey() {
       const { data, error } = await supabase
         .from("landlord_verification_surveys")
