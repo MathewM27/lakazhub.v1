@@ -4,6 +4,7 @@ import { CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
+import { useEffect } from "react"
 
 interface SuccessModalProps {
   open: boolean
@@ -23,9 +24,23 @@ export default function SuccessModal({
   message,
   actionCallback,
   actionLabel = "Continue",
-  autoClose = false, // Default to false for manual close
-  // autoCloseDelay is ignored if autoClose is false
+  autoClose = false,
+  autoCloseDelay = 3000, // Default to 3 seconds if not specified
 }: SuccessModalProps) {
+  
+  // Set up auto-close timer when modal opens
+  useEffect(() => {
+    if (open && autoClose) {
+      const timer = setTimeout(() => {
+        onOpenChangeAction(false);
+      }, autoCloseDelay);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [open, autoClose, autoCloseDelay, onOpenChangeAction]);
+  
   return (
     <Dialog 
       open={open} 

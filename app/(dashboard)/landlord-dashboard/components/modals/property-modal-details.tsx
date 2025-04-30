@@ -217,19 +217,32 @@ export default function PropertyModal({
 
   // Effect: when pendingSuccess is set, close property modal, run refresh, then show SuccessModal
   useEffect(() => {
-    const runAfterClose = async () => {
-      if (pendingSuccess) {
-        onOpenChangeAction(false); // Close property modal
-        if (onSuccess) await onSuccess(); // Run refresh logic
-        setTimeout(() => {
+    if (pendingSuccess) {
+      const runSuccessSequence = async () => {
+        try {
+          // Don't close modal and run refresh at the same time
+          // First close the property modal
+          onOpenChangeAction(false);
+          
+          // Wait for animation to complete
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Run refresh if needed
+          if (onSuccess) {
+            await onSuccess();
+          }
+          
+          // Now show the success modal
           setSuccessMessage(pendingSuccess);
-          setShowSuccessModal(true); // Now show the SuccessModal
-        }, 400); // Wait for modal close/refresh animation
-      }
-    };
-    runAfterClose();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingSuccess]);
+          setShowSuccessModal(true);
+        } catch (error) {
+          console.error("Error handling success:", error);
+        }
+      };
+      
+      runSuccessSequence();
+    }
+  }, [pendingSuccess, onOpenChangeAction, onSuccess]);
 
   return (
     <>
@@ -267,7 +280,8 @@ export default function PropertyModal({
         onOpenChangeAction={handleSuccessModalClose}
         title="Success"
         message={successMessage}
-        autoClose={false}
+        autoClose={true}
+        autoCloseDelay={3000}
       />
     </>
   )

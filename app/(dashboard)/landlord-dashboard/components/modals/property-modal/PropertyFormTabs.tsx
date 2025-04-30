@@ -226,17 +226,21 @@ export default function PropertyFormTabs({
       // Submit the form with all image URLs
       await onSubmit(formData, allImageUrls);
       
+      // Do not call onSuccess here - parent component will handle it
+      // after setting pendingSuccess
+      
       // Mark property as updated in cache if we're editing an existing property
       if (property?.id) {
         PropertyCache.markPropertyUpdated(property.id);
       }
       
-    } catch {
+    } catch (error) {
       toast({
         title: "Submission Error",
         description: "Failed to submit property. Please try again.",
         variant: "destructive" 
       });
+      console.error("Error submitting property:", error);
     } finally {
       setUploadingImages(false);
       setUploadProgress(0);
@@ -289,8 +293,7 @@ export default function PropertyFormTabs({
           onSubmit={handleSubmitFinal}
           isSubmitting={isSubmitting}
           isUploading={uploadingImages}
-          onSuccess={onSuccess}
-          canSubmit={canSubmit} // Pass down
+          canSubmit={canSubmit} // Remove onSuccess from here
         />
         
         {uploadingImages && (

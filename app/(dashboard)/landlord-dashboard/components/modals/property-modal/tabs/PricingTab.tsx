@@ -120,8 +120,13 @@ export default function PricingTab({
         </Button>
         <Button 
           onClick={async () => {
-            await onSubmit();
-            if (!isSubmitting && onSuccess) onSuccess();
+            try {
+              await onSubmit();
+              // Don't call onSuccess here - let the parent component handle it
+              // after the submission is fully complete
+            } catch (error) {
+              console.error("Error submitting form:", error);
+            }
           }} 
           disabled={isSubmitting || isUploading || !canSubmit}
         >
