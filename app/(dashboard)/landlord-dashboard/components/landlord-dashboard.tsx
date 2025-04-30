@@ -42,7 +42,7 @@ export default function LandlordDashboard() {
 
   useEffect(() => {
     // Only check for landlords
-    if (profile?.user_role !== "landlord" || !user) {
+    if (profile?.user_role !== "landlord" || !user || !user.id) {
       setSurveyStatus("hide");
       return;
     }
@@ -51,15 +51,22 @@ export default function LandlordDashboard() {
       setSurveyStatus("hide");
       return;
     }
-    // Otherwise, set to "checking" (loading) and check Supabase
     setSurveyStatus("checking");
     async function checkSurvey() {
-      const { data } = await supabase
+      // DEBUG: Log user id
+      console.log("Survey check for user id:", user?.id);
+      if (!user || !user.id) {
+        setSurveyStatus("hide");
+        return;
+      }
+      const { data, error } = await supabase
         .from("landlord_verification_surveys")
         .select("id")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .limit(1)
         .maybeSingle();
+      // DEBUG: Log response
+      console.log("Survey check result:", { data, error });
       if (data && data.id) {
         localStorage.setItem("lh_landlord_surveyed", "1");
         setSurveyStatus("hide");
