@@ -315,7 +315,12 @@ export default function PhotosTab({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          fileInputRefs.current[category.id]?.click();
+                          // Minimal fix: clear file input value before triggering click
+                          const input = fileInputRefs.current[category.id];
+                          if (input) {
+                            input.value = "";
+                            input.click();
+                          }
                         }}
                         className="bg-white text-black rounded-full p-2 hover:bg-gray-200 transition-colors"
                         title="Replace image"
