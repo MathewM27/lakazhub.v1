@@ -77,7 +77,7 @@ export const WhyUsSection = () => {
             </h2>
             <p className="text-lg text-white/70 max-w-2xl mx-auto mt-6">
               We&apos;re redefining the rental experience by creating a seamless connection 
-              between landlords and tenants.
+              between landlords and tenants
             </p>
           </div>
 
