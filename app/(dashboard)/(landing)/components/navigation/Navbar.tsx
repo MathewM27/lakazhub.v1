@@ -8,7 +8,8 @@ import { Menu, X, User, Home, Building, Info } from 'lucide-react';
 const navLinks = [
   { href: '/', label: 'Home', icon: Home, section: 'hero' },
   { href: '/about', label: 'About', icon: Info, section: 'why-us' },
-  { href: '/properties', label: 'Properties', icon: Building, section: 'properties' },
+  // Commented out properties link
+  // { href: '/properties', label: 'Properties', icon: Building, section: 'properties' },
 ];
 
 export const Navbar = () => {
@@ -41,14 +42,16 @@ export const Navbar = () => {
             const sections: {[key: string]: number} = {
               'hero': 0,
               'why-us': document.getElementById('why-us')?.offsetTop || 0,
-              'properties': document.getElementById('properties')?.offsetTop || 0,
+              // Commented out properties section
+              // 'properties': document.getElementById('properties')?.offsetTop || 0,
               'signup': document.getElementById('signup')?.offsetTop || 0,
             };
             const scrollPosition = scrollTop + 100;
             if (scrollPosition >= sections.signup) {
               setActiveLinkSafe('/signup');
-            } else if (scrollPosition >= sections.properties) {
-              setActiveLinkSafe('/properties');
+            // Commented out properties condition
+            // } else if (scrollPosition >= sections.properties) {
+            //   setActiveLinkSafe('/properties');
             } else if (scrollPosition >= sections['why-us']) {
               setActiveLinkSafe('/about');
             } else {
@@ -117,7 +120,8 @@ export const Navbar = () => {
     const newActiveLink = 
       sectionId === 'hero' ? '/' : 
       sectionId === 'why-us' ? '/about' : 
-      sectionId === 'properties' ? '/properties' : 
+      // Commented out properties section
+      // sectionId === 'properties' ? '/properties' : 
       sectionId === 'signup' ? '/signup' : '/';
       
     setActiveLink(newActiveLink);
