@@ -738,6 +738,187 @@ export default function ChatPage() {
     );
   }
 
+  // Add a function to load more messages when scrolling up
+  const loadMoreMessages = async () => {
+    if (!selectedConversation || loading) return;
+    
+    setLoading(true);
+    
+    try {
+      const nextPage = currentPage + 1;
+      
+      // Fetch older messages
+      const { data: olderMessages, error } = await supabase.rpc('get_conversation_messages', {
+        p_conversation_id: selectedConversation.id,
+        p_page: nextPage,
+        p_page_size: PAGE_SIZE
+      });
+      
+      if (error) throw error;
+      
+      if (olderMessages && olderMessages.length > 0) {
+        // Add older messages to the beginning of the array
+        setMessages(prev => [...olderMessages, ...prev]);
+        setCurrentPage(nextPage);
+        
+        // Check if we have more messages to load
+        if (olderMessages.length < PAGE_SIZE) {
+          // No more messages to load
+          setHasMoreMessages(false);
+        } else {
+          setHasMoreMessages(true);
+        }
+      } else {
+        // No more messages
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+      toast({
+        title: "Error loading messages",
+        description: "Could not load older messages",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a state to track if there are more messages to load
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+
+  // Add scroll position tracking 
+  useEffect(() => {
+    if (!messagesContainerRef.current) return;
+    
+    const handleScroll = () => {
+      const container = messagesContainerRef.current;
+      if (!container) return;
+      
+      // If scrolled near the top and we have more messages, load them
+      if (container.scrollTop < 50 && hasMoreMessages && !loading) {
+        loadMoreMessages();
+      }
+    };
+    
+    const container = messagesContainerRef.current;
+    container.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [hasMoreMessages, loading, selectedConversation]);
+
+  // Update: When a new message arrives, scroll to bottom
+  useEffect(() => {
+    if (messages.length > 0 && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
+
+  // When selecting a new conversation, reset pagination and fetch messages
+  useEffect(() => {
+    if (!selectedConversation) {
+      setMessages([]);
+      return;
+    }
+    
+    // Reset pagination when conversation changes
+    setCurrentPage(0);
+    setHasMoreMessages(true);
+    
+    // Mark messages as read
+    supabase.rpc('mark_conversation_messages_read', {
+      p_conversation_id: selectedConversation.id
+    });
+    
+    // Fetch messages for the selected conversation
+    const fetchMessagesForSelectedConversation = async () => {
+      setLoading(true);
+      
+      try {
+        // Try to use the RPC function first
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
+          p_conversation_id: selectedConversation.id,
+          p_page: 0,
+          p_page_size: PAGE_SIZE
+        });
+        
+        if (rpcError) {
+          // Fall back to direct query
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('property_messages')
+            .select('*')
+            .eq('conversation_id', selectedConversation.id)
+            .order('created_at', { ascending: true })
+            .limit(PAGE_SIZE);
+          
+          if (messagesError) throw messagesError;
+          
+          setMessages(messagesData || []);
+          
+          // Check if there are more messages to load
+          const { count } = await supabase
+            .from('property_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', selectedConversation.id);
+          
+          setHasMoreMessages(count > PAGE_SIZE);
+        } else {
+          setMessages(rpcData || []);
+          
+          // Check if there are more messages to load
+          const { count } = await supabase
+            .from('property_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', selectedConversation.id);
+          
+          setHasMoreMessages(count > PAGE_SIZE);
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast({
+          title: "Error loading messages",
+          description: "Could not load conversation messages",
+        });
+        setMessages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMessagesForSelectedConversation();
+    
+    // Subscribe to new messages
+    const messagesSubscription = supabase
+      .channel(`messages-${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'property_messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload: { new: Message }) => {
+          // Add the new message to the message list
+          const newMessage = payload.new;
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Mark message as read if we are the recipient
+          if (newMessage.recipient_id === user?.id) {
+            supabase.rpc('mark_conversation_messages_read', {
+              p_conversation_id: selectedConversation.id
+            });
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(messagesSubscription);
+    };
+  }, [selectedConversation, user?.id, toast]);
+
   return (
     <>
       <Navigation />
@@ -894,6 +1075,27 @@ export default function ChatPage() {
                       </div>
                     ) : (
                       <div className="space-y-4">
+                        {hasMoreMessages && (
+                          <div className="flex justify-center my-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={loadMoreMessages}
+                              disabled={loading}
+                              className="text-xs bg-white/5 hover:bg-white/10"
+                            >
+                              {loading ? (
+                                <>
+                                  <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                                  Loading...
+                                </>
+                              ) : (
+                                "Load older messages"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                        
                         {messages.map((message) => (
                           <div
                             key={message.id}

@@ -76,7 +76,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
       className="space-y-3 flex-1 overflow-y-auto p-4 bg-zinc-950 rounded-b-2xl shadow-inner"
       style={{ minHeight: 0 }}
     >
-      {selectedTenant.hasMoreMessages && (
+      {selectedTenant?.hasMoreMessages && (
         <div className="flex justify-center py-2">
           <button
             onClick={loadMoreMessages}

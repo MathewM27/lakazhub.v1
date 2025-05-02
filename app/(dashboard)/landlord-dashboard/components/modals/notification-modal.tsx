@@ -253,12 +253,12 @@ export default function NotificationsModal({
         return;
       }
       
-      // Add the new messages to the existing ones
+      // Add the new messages to the beginning of existing ones
       setSelectedTenant(prev => {
         if (!prev) return null;
         return {
           ...prev,
-          messages: [...prev.messages, ...moreMessages],
+          messages: [...moreMessages, ...prev.messages], // Add to beginning, not end
           currentPage: nextPage,
           hasMoreMessages: moreMessages.length === 20 // If we got a full page, there might be more
         };
