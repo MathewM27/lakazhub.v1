@@ -474,24 +474,36 @@ export default function ChatPage() {
 
     setLoading(true);
     try {
-      // Prefer messages from conversation object if available
-      const { data, error } = await supabase
-        .from('property_conversations')
-        .select('messages')
-        .eq('id', conversationId)
-        .single();
-
-      if (error) throw error;
-      if (data && Array.isArray(data.messages)) {
-        messagesCache.set(cacheKey, { messages: data.messages, timestamp: now });
-        setMessages(data.messages);
+      // Try using the RPC function first
+      const { data: rpcData, error: rpcError } = await supabase.rpc("get_conversation_messages", {
+        p_conversation_id: conversationId,
+        p_page: 0,
+        p_page_size: 50
+      });
+      
+      if (rpcError) {
+        // Fallback to direct query if RPC fails
+        const { data: directData, error: directError } = await supabase
+          .from('property_messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
+          
+        if (directError) throw directError;
+        
+        messagesCache.set(cacheKey, { messages: directData, timestamp: now });
+        setMessages(directData);
         setLoading(false);
-        return data.messages;
+        return directData;
       }
-      setMessages([]);
+      
+      // RPC query succeeded
+      messagesCache.set(cacheKey, { messages: rpcData, timestamp: now });
+      setMessages(rpcData);
       setLoading(false);
-      return [];
-    } catch {
+      return rpcData;
+    } catch (error) {
+      console.error("Error fetching messages:", error);
       setMessages([]);
       setLoading(false);
       return [];
@@ -504,85 +516,48 @@ export default function ChatPage() {
       setMessages([]);
       return;
     }
+    
+    // Fetch messages for the selected conversation
     fetchMessagesForConversation(selectedConversation.id);
+    
     // Reset pagination when conversation changes
     setCurrentPage(0);
-
-    // Messages are already in the conversation object, so use them directly
-    if (selectedConversation.messages && Array.isArray(selectedConversation.messages)) {
-      setMessages(selectedConversation.messages);
-      supabase.rpc('mark_conversation_messages_read', {
-        p_conversation_id: selectedConversation.id
-      });
-      setLoading(false);
-    } else {
-      // Fallback if messages aren't in the conversation object
-      const fetchMessages = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('property_conversations')
-            .select('messages')
-            .eq('id', selectedConversation.id)
-            .single();
-            
-          if (error) throw error;
-          
-          if (data && data.messages && Array.isArray(data.messages)) {
-            setMessages(data.messages);
-            
-            // Mark messages as read
-            await supabase.rpc('mark_conversation_messages_read', {
-              p_conversation_id: selectedConversation.id
-            });
-          } else {
-            setMessages([]);
-          }
-        } catch (error: unknown) {
-          toast({
-            title: "Error loading messages",
-            description: error instanceof Error ? error.message : "Could not load messages",
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      fetchMessages();
-    }
+    
+    // Mark messages as read
+    supabase.rpc('mark_conversation_messages_read', {
+      p_conversation_id: selectedConversation.id
+    });
     
     // Subscribe to conversation updates
     const messagesSubscription = supabase
-      .channel(`conversation-${selectedConversation.id}`)
+      .channel(`messages-${selectedConversation.id}`)
       .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'property_conversations',
-          filter: `id=eq.${selectedConversation.id}`
-        },
-        (payload: { new: { messages: Message[]; tenant_unread_count: number }; old: unknown; eventType: string }) => {
-          const updatedConversation = payload.new;
-          
-          // Update messages if the messages array has changed
-          if (updatedConversation.messages && Array.isArray(updatedConversation.messages)) {
-            setMessages(updatedConversation.messages);
-            
-            // Mark as read if we are the recipient
-            if (updatedConversation.tenant_unread_count > 0) {
-              supabase.rpc('mark_conversation_messages_read', {
-                p_conversation_id: selectedConversation.id
-              });
-            }
-          }
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'property_messages',
+        filter: `conversation_id=eq.${selectedConversation.id}`
+      },
+      (payload: { new: Message }) => {
+        // Add the new message to the message list
+        const newMessage: Message = payload.new;
+        setMessages((prev: Message[]) => [...prev, newMessage]);
+        
+        // Mark message as read if we are the recipient
+        if (newMessage.recipient_id === user?.id) {
+        supabase.rpc('mark_conversation_messages_read', {
+          p_conversation_id: selectedConversation.id
+        });
         }
+      }
       )
       .subscribe();
       
     return () => {
       supabase.removeChannel(messagesSubscription);
     };
-  }, [selectedConversation, fetchMessagesForConversation, user?.id, toast]);
+  }, [selectedConversation, fetchMessagesForConversation, user?.id]);
 
   // On message send: Optimistically add to UI, update cache
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {

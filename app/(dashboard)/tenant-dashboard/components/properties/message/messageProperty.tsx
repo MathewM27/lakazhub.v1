@@ -144,30 +144,27 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     fetchUser();
   }, [onOpenChangeAction, toast]);
 
-  // Function to manually check for new messages
-  const refreshMessages = async () => {
-    if (!conversation?.id) {
-      return;
-    }
-    
-    setIsRefreshing(true);
-    setRefreshStatus('refreshing');
-    
+  // Fetch messages for a conversation
+  const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('property_conversations')
-        .select('id, messages')
-        .eq('id', conversation.id)
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data && data.messages && Array.isArray(data.messages)) {
-        const existingIds = new Set(messages.map(m => m.id));
+      // First try using the RPC function to get messages
+      const { data: messagesData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
+        p_conversation_id: conversationId,
+        p_page: 0,
+        p_page_size: 50
+      });
+
+      if (rpcError) {
+        // Fallback to direct query if RPC fails
+        const { data: directData, error: directError } = await supabase
+          .from('property_messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
         
-        const allMessages = data.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
+        if (directError) throw directError;
+        
+        return directData.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
           id: msg.id,
           sender_id: msg.sender_id,
           recipient_id: msg.recipient_id,
@@ -178,22 +175,110 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
           text: msg.message,
           time: formatMessageTime(msg.created_at),
         }));
+      }
+      
+      // If RPC succeeds, format the messages
+      return messagesData.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
+        id: msg.id,
+        sender_id: msg.sender_id,
+        recipient_id: msg.recipient_id,
+        message: msg.message,
+        created_at: msg.created_at,
+        is_read: msg.is_read,
+        sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
+        text: msg.message,
+        time: formatMessageTime(msg.created_at),
+      }));
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return [];
+    }
+  };
+
+  // Find or create conversation and fetch messages when opened
+  useEffect(() => {
+    if (!open || !user?.id || !property?.id) return
+    
+    const fetchOrCreateConversation = async () => {
+      setLoading(true)
+      
+      try {
+        // First check if conversation already exists
+        const { data: existingConv, error: convError } = await supabase
+          .from('property_conversations')
+          .select('*')
+          .eq('property_id', property.id)
+          .eq('tenant_id', user.id)
+          .eq('landlord_id', property.landlord_id)
+          .maybeSingle()
+          
+        if (convError) throw convError
         
-        const newMessages = allMessages.filter((msg: Message) => !existingIds.has(msg.id));
+        if (existingConv) {
+          setConversation(existingConv)
+          
+          // Fetch messages from the property_messages table
+          const messagesList = await fetchMessages(existingConv.id);
+          setMessages(messagesList);
+          
+          if (messagesList.some((m: Message) => m.sender === 'landlord' && !m.is_read)) {
+            markMessagesAsRead(existingConv.id);
+          }
+        } else {
+          setMessages([])
+        }
+      } catch (error) {
+        toast({
+          title: "Error loading conversation",
+          description: error instanceof Error ? error.message : "Could not load conversation data",
+          variant: "destructive",
+        } as ToastOptions)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchOrCreateConversation()
+    
+    return () => {
+      setMessages([])
+      setConversation(null)
+      setRefreshStatus('idle')
+      setStaleData(false)
+    }
+  }, [open, user?.id, property?.id, property?.landlord_id, toast])
+
+  // Function to manually check for new messages
+  const refreshMessages = async () => {
+    if (!conversation?.id) {
+      return;
+    }
+    
+    setIsRefreshing(true);
+    setRefreshStatus('refreshing');
+    
+    try {
+      // Get messages from the property_messages table
+      const messagesList = await fetchMessages(conversation.id);
+      
+      if (messagesList.length > 0) {
+        // Compare with current messages to see if there are new ones
+        const existingIds = new Set(messages.map(m => m.id));
+        const newMessages: Message[] = messagesList.filter((msg: Message) => !existingIds.has(msg.id));
+        
+        setMessages(messagesList);
+        
+        const hasUnreadMessagesForUser = messagesList.some(
+          (msg: Message) => msg.sender === 'landlord' && !msg.is_read
+        );
+        
+        if (hasUnreadMessagesForUser) {
+          if (conversation?.id) {
+            markMessagesAsRead(conversation.id);
+          }
+        }
         
         if (newMessages.length > 0) {
-          setMessages(allMessages);
-          
-          const hasUnreadMessagesForUser = allMessages.some(
-            (msg: Message) => msg.sender === 'landlord' && !msg.is_read
-          );
-          
-          if (hasUnreadMessagesForUser) {
-            if (conversation?.id) {
-              markMessagesAsRead(conversation.id);
-            }
-          }
-          
           toast({
             title: `${newMessages.length} new message${newMessages.length > 1 ? 's' : ''}`,
             description: "New messages have been loaded",
@@ -204,17 +289,11 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
             description: "You're all caught up!",
           } as ToastOptions);
         }
-        
-        // Fix: merge previous conversation state, preserving other fields
-        setConversation(prev => prev ? { ...prev, messages: data.messages as Message[] } : prev);
-        
-        const now = new Date();
-        setLastRefreshAt(now);
-        setStaleData(false);
-      } else {
-        throw new Error("Invalid response format from server");
       }
       
+      const now = new Date();
+      setLastRefreshAt(now);
+      setStaleData(false);
       setRefreshStatus('updated');
       
     } catch (error) {
@@ -244,71 +323,6 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [open, conversation?.id, staleData, refreshMessages])
-
-  // Find or create conversation and fetch messages when opened
-  useEffect(() => {
-    if (!open || !user?.id || !property?.id) return
-    
-    const fetchOrCreateConversation = async () => {
-      setLoading(true)
-      
-      try {
-        // First check if conversation already exists
-        const { data: existingConv, error: convError } = await supabase
-          .from('property_conversations')
-          .select('*')
-          .eq('property_id', property.id)
-          .eq('tenant_id', user.id)
-          .eq('landlord_id', property.landlord_id)
-          .maybeSingle()
-          
-        if (convError) throw convError
-        
-        if (existingConv) {
-          setConversation(existingConv)
-          if (existingConv.messages && Array.isArray(existingConv.messages)) {
-            const formattedMessages = existingConv.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
-              id: msg.id,
-              sender_id: msg.sender_id,
-              recipient_id: msg.recipient_id,
-              message: msg.message,
-              created_at: msg.created_at,
-              is_read: msg.is_read,
-              sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
-              text: msg.message,
-              time: formatMessageTime(msg.created_at),
-            }));
-            setMessages(formattedMessages);
-            
-            if (formattedMessages.some((m: Message) => m.sender === 'landlord' && !m.is_read)) {
-              markMessagesAsRead(existingConv.id);
-            }
-          } else {
-            setMessages([]);
-          }
-        } else {
-          setMessages([])
-        }
-      } catch (error) {
-        toast({
-          title: "Error loading conversation",
-          description: error instanceof Error ? error.message : "Could not load conversation data",
-          variant: "destructive",
-        } as ToastOptions)
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    fetchOrCreateConversation()
-    
-    return () => {
-      setMessages([])
-      setConversation(null)
-      setRefreshStatus('idle')
-      setStaleData(false)
-    }
-  }, [open, user?.id, property?.id, property?.landlord_id, toast])
 
   // Function to load more messages
   const loadMoreMessages = async () => {
@@ -391,6 +405,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     
     try {
       if (!conversation) {
+        // Create a new conversation with the first message
         const { data: convId, error: convError } = await supabase.rpc('create_property_inquiry', {
           p_property_id: property.id,
           p_tenant_id: user.id,
@@ -399,6 +414,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         if (convError) throw convError;
         
+        // Fetch the newly created conversation
         const { data: convData, error: fetchError } = await supabase
           .from('property_conversations')
           .select('*')
@@ -409,22 +425,13 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         setConversation(convData);
         
-        if (convData.messages && Array.isArray(convData.messages) && convData.messages.length > 0) {
-          const formattedMessages = convData.messages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
-            id: msg.id,
-            sender_id: msg.sender_id,
-            recipient_id: msg.recipient_id,
-            message: msg.message,
-            created_at: msg.created_at,
-            is_read: msg.is_read,
-            sender: msg.sender_id === user?.id ? 'tenant' as const : 'landlord' as const,
-            text: msg.message,
-            time: formatMessageTime(msg.created_at),
-          }));
-          setMessages(formattedMessages);
-        }
+        // Fetch messages from the property_messages table
+        const messagesList = await fetchMessages(convId);
+        setMessages(messagesList);
+        
       } else {
-        const { data, error } = await supabase.rpc('add_message_to_conversation', {
+        // Add a message to an existing conversation
+        const { data: messageId, error } = await supabase.rpc('add_message_to_conversation', {
           p_conversation_id: conversation.id,
           p_sender_id: user.id,
           p_recipient_id: property.landlord_id,
@@ -433,8 +440,9 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         if (error) throw error;
         
+        // Add the new message to the local state
         const newMessage: Message = {
-          id: data || Date.now().toString(),
+          id: messageId || `temp-${Date.now()}`,
           sender_id: user.id as string,
           recipient_id: property.landlord_id as string,
           message: messageText.trim(),
@@ -447,6 +455,7 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         
         setMessages(prev => [...prev, newMessage]);
         
+        // Refresh messages to ensure we have the latest
         setTimeout(() => {
           refreshMessages();
         }, 500);
@@ -621,6 +630,64 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       </div>
     )
   }
+
+  // Set up real-time subscription for new messages
+  useEffect(() => {
+    if (!open || !conversation?.id) return;
+
+    // Subscribe to messages for this conversation
+    interface NewMessagePayload {
+      id: string;
+      sender_id: string;
+      recipient_id: string;
+      message: string;
+      created_at: string;
+      is_read: boolean;
+    }
+
+    const messagesSubscription = supabase
+      .channel(`messages-${conversation.id}`)
+      .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'property_messages',
+        filter: `conversation_id=eq.${conversation.id}`
+      },
+      (payload: { new: NewMessagePayload }) => {
+        // Handle new message
+        const newMessage = payload.new;
+        
+        // Only add the message if we don't already have it
+        if (!messages.some(m => m.id === newMessage.id)) {
+        const formattedMessage: Message = {
+          id: newMessage.id,
+          sender_id: newMessage.sender_id,
+          recipient_id: newMessage.recipient_id,
+          message: newMessage.message,
+          created_at: newMessage.created_at,
+          is_read: newMessage.is_read,
+          sender: newMessage.sender_id === user?.id ? 'tenant' : 'landlord',
+          text: newMessage.message,
+          time: formatMessageTime(newMessage.created_at),
+        };
+        
+        setMessages(prevMessages => [...prevMessages, formattedMessage]);
+        
+        // If the message is from the landlord, mark it as read
+        if (newMessage.sender_id !== user?.id && !newMessage.is_read) {
+          markMessagesAsRead(conversation.id);
+        }
+        }
+      }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesSubscription);
+    };
+  }, [open, conversation?.id, user?.id, messages]);
 
   return (
     <Dialog 
