@@ -48,6 +48,42 @@ function formatMessageTime(timestamp: string) {
   }
 }
 
+// Define additional interfaces for API responses
+interface ConversationData {
+  id: string;
+  property_id: string;
+  tenant_id: string;
+  landlord_id: string;
+  last_message_text?: string;
+  last_message_at?: string;
+  tenant_unread_count: number;
+  landlord_unread_count: number;
+  properties?: {
+    id: string;
+    name: string;
+    images?: string[] | string;
+    image?: string;
+    location?: string;
+  };
+  messages?: Message[];
+}
+
+interface PropertyData {
+  id: string;
+  name: string;
+  images?: string[] | string;
+  image?: string;
+  location?: string;
+}
+
+interface LandlordData {
+  id: string;
+  full_name: string;
+  profile_photo?: string;
+  user_role?: string;
+  email_address?: string;
+}
+
 export default function ChatPage() {
   const [selectedConversation, setSelectedConversation] = useState<ConversationWithExtras | null>(null);
   const [conversations, setConversations] = useState<ConversationWithExtras[]>([]);
@@ -171,51 +207,131 @@ export default function ChatPage() {
         return;
       }
       
-      // Get current session for auth token
-      const { data: authSession } = await supabase.auth.getSession();
-      if (!authSession.session) {
-        throw new Error('No active session');
-      }
+      // Try to use the RPC function first
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_user_conversations');
       
-      // First check if the property table has column 'image' or 'images'
-      const { data: propertiesColumns, error: columnsError } = await supabase
-        .from('properties')
-        .select('*')
-        .limit(1);
+      if (rpcError) {
+        // If RPC fails, fall back to direct query approach
+        // Get all conversations for the current user
+        const { data: conversationsData, error: convError } = await supabase
+          .from('property_conversations')
+          .select('id, property_id, tenant_id, landlord_id, last_message_text, last_message_at, tenant_unread_count')
+          .eq('tenant_id', user.id)
+          .eq('is_archived', false)
+          .order('last_message_at', { ascending: false });
         
-      if (columnsError) {
-        throw columnsError;
-      }
-      
-      // Determine the image column name from the first property
-      const imageColumnName = propertiesColumns && propertiesColumns.length > 0 && 
-        Object.prototype.hasOwnProperty.call(propertiesColumns[0], 'image') ? 'image' : 'images';
-      
-      // Use a more efficient query approach - get all data in one query
-      // Dynamically construct the query based on the column name
-      const { data, error } = await supabase
-        .from('property_conversations')
-        .select(`
-          id,
-          property_id,
-          tenant_id,
-          landlord_id,
-          last_message_text,
-          last_message_at,
-          tenant_unread_count,
-          messages,
-          properties:property_id (id, name, ${imageColumnName}, location)
-        `)
-        .eq('tenant_id', user.id)
-        .order('last_message_at', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
-        setConversations([]);
-        setLandlordGroups([]);
+        if (convError) throw convError;
+        
+        if (!conversationsData || conversationsData.length === 0) {
+          setConversations([]);
+          setLandlordGroups([]);
+          setLoading(false);
+          setRefreshing(false);
+          setLastRefreshed(new Date());
+          setInitialPageLoad(false);
+          return;
+        }
+        
+        // Get property details
+        const propertyIds: string[] = conversationsData.map((conv: ConversationData) => conv.property_id);
+        const { data: propertiesData, error: propError } = await supabase
+          .from('properties')
+          .select('id, name, images, location')
+          .in('id', propertyIds);
+        
+        if (propError) throw propError;
+        
+        // Map properties by ID for easier lookup
+        const propertiesMap: Record<string, PropertyData> = {};
+        if (propertiesData) {
+          propertiesData.forEach((prop: PropertyData) => {
+            propertiesMap[prop.id] = prop;
+          });
+        }
+        
+        // Get landlord profiles
+        const landlordIds: string[] = conversationsData.map((conv: ConversationData): string => conv.landlord_id);
+        const { data: landlordData, error: landlordError } = await supabase
+          .from('profiles')
+          .select('id, full_name, profile_photo, user_role')
+          .in('id', landlordIds);
+        
+        if (landlordError) throw landlordError;
+        
+        // Map landlords by ID for easier lookup
+        const landlordsMap: Record<string, LandlordData> = {};
+        if (landlordData) {
+          landlordData.forEach((landlord: LandlordData) => {
+            landlordsMap[landlord.id] = landlord;
+          });
+        }
+        
+        // Combine all data into conversation objects
+        const conversationsWithExtras: ConversationWithExtras[] = await Promise.all(
+          conversationsData.map(async (conv: ConversationData) => {
+            const property = propertiesMap[conv.property_id] || { 
+              id: conv.property_id,
+              name: 'Unknown Property',
+              location: 'Unknown Location',
+              images: []
+            };
+            
+            const landlord = landlordsMap[conv.landlord_id] || {
+              id: conv.landlord_id,
+              full_name: 'Unknown Landlord'
+            };
+            
+            // Get the last message from property_messages table
+            const { data: lastMessageData, error: msgError } = await supabase
+              .from('property_messages')
+              .select('id, sender_id, recipient_id, message, created_at, is_read')
+              .eq('conversation_id', conv.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            let lastMessage = null;
+            if (!msgError && lastMessageData) {
+              lastMessage = lastMessageData;
+            }
+            
+            return {
+              id: conv.id,
+              property_id: conv.property_id,
+              tenant_id: conv.tenant_id,
+              landlord_id: conv.landlord_id,
+              last_message_text: conv.last_message_text || '',
+              last_message_at: conv.last_message_at || new Date().toISOString(),
+              tenant_unread_count: conv.tenant_unread_count || 0,
+              landlord_unread_count: 0, // Default value since we don't have this in the query
+              property: {
+                ...property,
+                image: Array.isArray(property.images) && property.images.length > 0 
+                  ? property.images[0] 
+                  : (typeof property.images === 'string' ? property.images : null)
+              },
+              landlord,
+              tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
+              last_message: lastMessage,
+              last_message_time: lastMessage ? formatMessageTime(lastMessage.created_at) : 
+                                conv.last_message_at ? formatMessageTime(conv.last_message_at) : '',
+              unread_count: conv.tenant_unread_count || 0,
+              messages: [],
+              is_archived: false, // Default value
+              created_at: new Date().toISOString(), // Placeholder value
+              updated_at: new Date().toISOString() // Placeholder value
+            };
+          })
+        );
+        
+        // Update cache
+        conversationsCache.set(cacheKey, { 
+          data: conversationsWithExtras, 
+          timestamp: now 
+        });
+        
+        setConversations(conversationsWithExtras);
+        groupConversationsByLandlord(conversationsWithExtras);
         setLoading(false);
         setRefreshing(false);
         setLastRefreshed(new Date());
@@ -223,187 +339,106 @@ export default function ChatPage() {
         return;
       }
       
-      // Get all unique landlord IDs for a single profile query
-      const landlordIds: string[] = [...new Set((data as { landlord_id: string }[]).map((conv) => conv.landlord_id))];
-      
-      // Get landlord profiles in a single query
-      const { data: landlordsData, error: landlordsError } = await supabase
-        .from('profiles')
-        .select('id, full_name, profile_photo, user_role, email_address')
-        .in('id', landlordIds);
-      
-      if (landlordsError) {
-        throw landlordsError;
-      }
-      
-      // Create lookup map for landlords
-      const landlordsMap = landlordsData.reduce((acc: Record<string, Profile>, landlord: Profile) => {
-        acc[landlord.id] = landlord;
-        return acc;
-      }, {});
-      
-      // Structure the conversations with all necessary data
-      const conversationsWithExtras = data.map((conv: {
-        id: string;
-        property_id: string;
-        tenant_id: string;
-        landlord_id: string;
-        last_message_text: string;
-        last_message_at: string;
-        tenant_unread_count: number;
-        messages: Message[];
-        properties?: { id: string; name: string; image?: string; images?: string[]; location?: string };
-      }) => {
-        const property = conv.properties || { 
-          id: conv.property_id,
-          name: 'Unknown Property',
-          location: 'Unknown Location'
-        };
-        
-        // Map the image property correctly based on which column exists
-        if (property) {
-          if (!property.image && Array.isArray(property['images'])) {
-            property.image = property['images'][0] || undefined;
-          } else if (!property.image && typeof property['images'] === 'string') {
-            property.image = property['images'];
-          }
+      // If RPC succeeded, process the data
+      if (rpcData && Array.isArray(rpcData)) {
+        interface RPCConversationData {
+          conversation_id: string;
+          property_id: string;
+          property_name?: string;
+          counterparty_id: string;
+          counterparty_name?: string;
+          counterparty_photo?: string;
+          last_message?: string;
+          last_message_at?: string;
+          unread_count?: number;
+          is_archived?: boolean;
+          created_at?: string;
+          updated_at?: string;
         }
+
+        const conversationsWithExtras: ConversationWithExtras[] = await Promise.all(
+          rpcData.map(async (conv: RPCConversationData) => {
+            // Get the property details
+            const { data: propertyData, error: propertyError } = await supabase
+              .from('properties')
+              .select('id, name, images, location')
+              .eq('id', conv.property_id)
+              .single();
+            
+            // Get the last message if needed
+            let lastMessage = null;
+            if (!conv.last_message || !conv.last_message_at) {
+              const { data: lastMessageData, error: msgError } = await supabase
+                .from('property_messages')
+                .select('id, sender_id, recipient_id, message, created_at, is_read')
+                .eq('conversation_id', conv.conversation_id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+              
+              if (!msgError && lastMessageData) {
+                lastMessage = lastMessageData;
+              }
+            }
+            
+            const property = propertyError ? {
+              id: conv.property_id,
+              name: conv.property_name || 'Unknown Property',
+              location: 'Unknown Location',
+              images: []
+            } : propertyData;
+            
+            return {
+              id: conv.conversation_id,
+              property_id: conv.property_id,
+              tenant_id: user.id,
+              landlord_id: conv.counterparty_id,
+              last_message_text: conv.last_message || '',
+              last_message_at: conv.last_message_at || new Date().toISOString(),
+              tenant_unread_count: conv.unread_count || 0,
+              landlord_unread_count: 0, // Default since we don't have this from RPC
+              is_archived: conv.is_archived || false,
+              created_at: conv.created_at || new Date().toISOString(),
+              updated_at: conv.updated_at || new Date().toISOString(),
+              property: {
+                ...property,
+                image: Array.isArray(property?.images) && property?.images.length > 0 
+                  ? property.images[0] 
+                  : (typeof property?.images === 'string' ? property.images : null)
+              },
+              landlord: {
+                id: conv.counterparty_id,
+                full_name: conv.counterparty_name || 'Unknown Landlord',
+                profile_photo: conv.counterparty_photo,
+                user_role: 'landlord' // Add this line to fix the type error
+              },
+              tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
+              last_message: lastMessage || {
+                message: conv.last_message,
+                created_at: conv.last_message_at
+              },
+              last_message_time: formatMessageTime(lastMessage?.created_at || conv.last_message_at || ''),
+              unread_count: conv.unread_count || 0,
+              messages: []
+            };
+          })
+        );
         
-        const landlord = landlordsMap[conv.landlord_id] || {
-          id: conv.landlord_id,
-          full_name: 'Unknown Landlord'
-        };
-        
-        // Get the last message
-        let lastMessage = null;
-        if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
-          // Sort to get the latest message (may already be sorted, but just in case)
-          const sortedMessages = [...conv.messages].sort((a: Message, b: Message) => {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-          });
-          lastMessage = sortedMessages[0];
-        }
-        
-        return {
-          ...conv,
-          property,
-          landlord,
-          tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
-          last_message: lastMessage,
-          last_message_time: lastMessage ? formatMessageTime(lastMessage.created_at) : 
-                            conv.last_message_at ? formatMessageTime(conv.last_message_at) : '',
-          unread_count: conv.tenant_unread_count || 0,
-          messages: conv.messages || []
-        };
-      });
-      
-      // Update cache
-      conversationsCache.set(cacheKey, { 
-        data: conversationsWithExtras, 
-        timestamp: now 
-      });
-      
-      setConversations(conversationsWithExtras);
-      groupConversationsByLandlord(conversationsWithExtras);
-    } catch (error: unknown) {
-      // Log more detailed error information
-      if (error && typeof error === 'object' && 'message' in error) {
-      }
-      
-      // Try a fallback approach with simpler queries
-      try {
-        // First, get the conversations
-        const { data: conversationsData } = await supabase
-          .from('property_conversations')
-          .select('id, property_id, tenant_id, landlord_id, last_message_text, last_message_at, tenant_unread_count, messages')
-          .eq('tenant_id', user.id)
-          .order('last_message_at', { ascending: false });
-          
-        if (!conversationsData || conversationsData.length === 0) {
-          setConversations([]);
-          setLandlordGroups([]);
-          return;
-        }
-        
-        // Then, get the properties separately
-        const propertyIds: string[] = [...new Set((conversationsData as { property_id: string }[]).map((conv) => conv.property_id))];
-        const { data: propertiesData } = await supabase
-          .from('properties')
-          .select('*')
-          .in('id', propertyIds);
-        
-        // Create properties map
-        const propertiesMap: Record<string, any> = {};
-        if (propertiesData) {
-          propertiesData.forEach((property: any) => {
-            propertiesMap[property.id] = property;
-          });
-        }
-        
-        // Get landlord profiles
-        const landlordIds: string[] = [...new Set((conversationsData as { landlord_id: string }[]).map((conv) => conv.landlord_id))];
-        const { data: landlordsData } = await supabase
-          .from('profiles')
-          .select('id, full_name, profile_photo, user_role')
-          .in('id', landlordIds);
-          
-        // Create landlords map
-        const landlordsMap: Record<string, any> = {};
-        if (landlordsData) {
-          landlordsData.forEach((landlord: any) => {
-            landlordsMap[landlord.id] = landlord;
-          });
-        }
-        
-        // Combine data
-        const conversationsWithExtras = conversationsData.map((conv: any) => {
-          const property = propertiesMap[conv.property_id] || { 
-            id: conv.property_id,
-            name: 'Unknown Property',
-            location: 'Unknown Location'
-          };
-          
-          const landlord = landlordsMap[conv.landlord_id] || {
-            id: conv.landlord_id,
-            full_name: 'Unknown Landlord'
-          };
-          
-          // Handle image property
-          if (property) {
-            property.image = property.image || property.images || null;
-          }
-          
-          // Get the last message
-          let lastMessage = null;
-          if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 0) {
-            const sortedMessages = [...conv.messages].sort((a, b) => {
-              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
-            lastMessage = sortedMessages[0];
-          }
-          
-          return {
-            ...conv,
-            property,
-            landlord,
-            tenant: { id: user.id, full_name: user.user_metadata?.full_name || 'Tenant', user_role: 'tenant' },
-            last_message: lastMessage,
-            last_message_time: lastMessage ? formatMessageTime(lastMessage.created_at) : 
-                              conv.last_message_at ? formatMessageTime(conv.last_message_at) : '',
-            unread_count: conv.tenant_unread_count || 0,
-            messages: conv.messages || []
-          };
+        // Update cache
+        conversationsCache.set(cacheKey, { 
+          data: conversationsWithExtras, 
+          timestamp: now 
         });
         
         setConversations(conversationsWithExtras);
         groupConversationsByLandlord(conversationsWithExtras);
-      } catch (error: unknown) {
-        
-        toast({
-          title: "Error loading conversations",
-          description: error instanceof Error ? error.message : "Could not load your conversations",
-        });
       }
+    } catch (error: unknown) {
+      console.error("Error fetching conversations:", error);
+      toast({
+        title: "Error loading conversations",
+        description: error instanceof Error ? error.message : "Could not load your conversations",
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -517,9 +552,6 @@ export default function ChatPage() {
       return;
     }
     
-    // Fetch messages for the selected conversation
-    fetchMessagesForConversation(selectedConversation.id);
-    
     // Reset pagination when conversation changes
     setCurrentPage(0);
     
@@ -528,36 +560,76 @@ export default function ChatPage() {
       p_conversation_id: selectedConversation.id
     });
     
-    // Subscribe to conversation updates
+    // Fetch messages for the selected conversation
+    const fetchMessagesForSelectedConversation = async () => {
+      setLoading(true);
+      
+      try {
+        // Try to use the RPC function first
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
+          p_conversation_id: selectedConversation.id,
+          p_page: 0,
+          p_page_size: 50
+        });
+        
+        if (rpcError) {
+          // Fall back to direct query
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('property_messages')
+            .select('*')
+            .eq('conversation_id', selectedConversation.id)
+            .order('created_at', { ascending: true });
+          
+          if (messagesError) throw messagesError;
+          
+          setMessages(messagesData || []);
+        } else {
+          setMessages(rpcData || []);
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast({
+          title: "Error loading messages",
+          description: "Could not load conversation messages",
+        });
+        setMessages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMessagesForSelectedConversation();
+    
+    // Subscribe to new messages
     const messagesSubscription = supabase
       .channel(`messages-${selectedConversation.id}`)
       .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'property_messages',
-        filter: `conversation_id=eq.${selectedConversation.id}`
-      },
-      (payload: { new: Message }) => {
-        // Add the new message to the message list
-        const newMessage: Message = payload.new;
-        setMessages((prev: Message[]) => [...prev, newMessage]);
-        
-        // Mark message as read if we are the recipient
-        if (newMessage.recipient_id === user?.id) {
-        supabase.rpc('mark_conversation_messages_read', {
-          p_conversation_id: selectedConversation.id
-        });
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'property_messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload: { new: Message }) => {
+          // Add the new message to the message list
+          const newMessage = payload.new;
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Mark message as read if we are the recipient
+          if (newMessage.recipient_id === user?.id) {
+            supabase.rpc('mark_conversation_messages_read', {
+              p_conversation_id: selectedConversation.id
+            });
+          }
         }
-      }
       )
       .subscribe();
       
     return () => {
       supabase.removeChannel(messagesSubscription);
     };
-  }, [selectedConversation, fetchMessagesForConversation, user?.id]);
+  }, [selectedConversation, user?.id, toast]);
 
   // On message send: Optimistically add to UI, update cache
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
