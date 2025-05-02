@@ -32,11 +32,11 @@ export default function PropertyModal({
     // --- Validation for required fields ---
     const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
     const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
-    if (!formData.price || !formData.location || missingPhotos.length > 0) {
+    if (!formData.monthly_rent || !formData.location || missingPhotos.length > 0) {
       toast({
         title: "Missing Required Fields",
         description: [
-          !formData.price ? "Price is required." : "",
+          !formData.monthly_rent ? "Monthly rent is required." : "",
           !formData.location ? "Location is required." : "",
           missingPhotos.length > 0 ? `Missing photo(s) for: ${missingPhotos.join(", ")}` : ""
         ].filter(Boolean).join(" "),
@@ -53,12 +53,12 @@ export default function PropertyModal({
       const propertyData = {
         name: formData.name,
         location: formData.location,
-        type: formData.type,
+        property_type: formData.property_type,
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseInt(formData.bathrooms) || 1,
         description: formData.description,
-        price: parseFloat(formData.price.toString().replace(/,/g, "")) || 0,
-        deposit: parseFloat(formData.deposit.toString().replace(/,/g, "")) || 0,
+        monthly_rent: parseFloat(formData.monthly_rent.toString().replace(/,/g, "")) || 0,
+        security_deposit: parseFloat(formData.security_deposit.toString().replace(/,/g, "")) || 0,
         images: imageUrls,
         utilities: formData.utilities,
         available: formData.available,

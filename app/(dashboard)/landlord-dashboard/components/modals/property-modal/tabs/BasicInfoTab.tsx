@@ -202,8 +202,8 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
           <Label htmlFor="property-type">Property Type</Label>
           <div className="mt-1.5"> {/* Wrap Select in a div with the className */}
             <Select 
-              value={formData.type} 
-              onValueChange={(value) => handleInputChange("type", value)}
+              value={formData.property_type} 
+              onValueChange={(value) => handleInputChange("property_type", value)}
             >
               <SelectTrigger id="property-type">
                 <SelectValue placeholder="Select property type" />
