@@ -28,6 +28,7 @@ const messagesCache = new Map<string, { messages: Message[]; timestamp: number }
 const CACHE_TTL = 5 * 60 * 1000;
 const MESSAGE_CACHE_TTL = 5 * 60 * 1000;
 
+// Move formatMessageTime outside the component to avoid hooks rule violations
 function formatMessageTime(timestamp: string) {
   try {
     const date = new Date(timestamp);
@@ -103,8 +104,16 @@ export default function ChatPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 10; // Number of messages to load per page
+  // Add state to track if there are more messages to load - moved up here
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
 
   const [loadingConversation, setLoadingConversation] = useState(false);
+  
+  // Add a state to track if we've prefetched data
+  const [hasPrefetched, setHasPrefetched] = useState(false);
+  
+  // Add a new loading state indicator specifically for initial page load
+  const [initialPageLoad, setInitialPageLoad] = useState(true);
 
   const handleConversationClick = async (conversation: ConversationWithExtras) => {
     setLoadingConversation(true); // Start loading
@@ -175,12 +184,6 @@ export default function ChatPage() {
     
     fetchUser();
   }, [toast]);
-
-  // Add a new loading state indicator specifically for initial page load
-  const [initialPageLoad, setInitialPageLoad] = useState(true);
-  
-  // Add a state to track if we've prefetched data
-  const [hasPrefetched, setHasPrefetched] = useState(false);
 
   // Optimize conversation fetching with caching
   const fetchConversations = useCallback(async () => {
@@ -457,7 +460,7 @@ export default function ChatPage() {
   }, [user?.id, hasPrefetched, fetchConversations]);
 
   // Group conversations by landlord
-  const groupConversationsByLandlord = (convs: ConversationWithExtras[]) => {
+  const groupConversationsByLandlord = useCallback((convs: ConversationWithExtras[]) => {
     const groups: Record<string, LandlordGroup> = {};
     
     convs.forEach((conv: ConversationWithExtras) => {
@@ -493,7 +496,7 @@ export default function ChatPage() {
     });
     
     setLandlordGroups(groupsArray);
-  };
+  }, []);
 
   // Add a function to fetch messages for a conversation, using cache
   const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
@@ -545,201 +548,8 @@ export default function ChatPage() {
     }
   }, []);
 
-  // Update: Use cache when selecting a conversation
-  useEffect(() => {
-    if (!selectedConversation) {
-      setMessages([]);
-      return;
-    }
-    
-    // Reset pagination when conversation changes
-    setCurrentPage(0);
-    
-    // Mark messages as read
-    supabase.rpc('mark_conversation_messages_read', {
-      p_conversation_id: selectedConversation.id
-    });
-    
-    // Fetch messages for the selected conversation
-    const fetchMessagesForSelectedConversation = async () => {
-      setLoading(true);
-      
-      try {
-        // Try to use the RPC function first
-        const { data: rpcData, error: rpcError } = await supabase.rpc('get_conversation_messages', {
-          p_conversation_id: selectedConversation.id,
-          p_page: 0,
-          p_page_size: 50
-        });
-        
-        if (rpcError) {
-          // Fall back to direct query
-          const { data: messagesData, error: messagesError } = await supabase
-            .from('property_messages')
-            .select('*')
-            .eq('conversation_id', selectedConversation.id)
-            .order('created_at', { ascending: true });
-          
-          if (messagesError) throw messagesError;
-          
-          setMessages(messagesData || []);
-        } else {
-          setMessages(rpcData || []);
-        }
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        toast({
-          title: "Error loading messages",
-          description: "Could not load conversation messages",
-        });
-        setMessages([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchMessagesForSelectedConversation();
-    
-    // Subscribe to new messages
-    const messagesSubscription = supabase
-      .channel(`messages-${selectedConversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'property_messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload: { new: Message }) => {
-          // Add the new message to the message list
-          const newMessage = payload.new;
-          setMessages(prev => [...prev, newMessage]);
-          
-          // Mark message as read if we are the recipient
-          if (newMessage.recipient_id === user?.id) {
-            supabase.rpc('mark_conversation_messages_read', {
-              p_conversation_id: selectedConversation.id
-            });
-          }
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(messagesSubscription);
-    };
-  }, [selectedConversation, user?.id, toast]);
-
-  // On message send: Optimistically add to UI, update cache
-  const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation || !user?.id) return;
-
-    setSendingMessage(true);
-
-    // Optimistic UI: add temp message
-    const tempId = `temp-${Date.now()}`;
-    const optimisticMsg: Message = {
-      id: tempId,
-      sender_id: user.id,
-      recipient_id: selectedConversation.landlord_id,
-      message: newMessage.trim(),
-      created_at: new Date().toISOString(),
-      is_read: false
-    };
-    setMessages(prev => [...prev, optimisticMsg]);
-    setNewMessage("");
-
-    try {
-      const { data, error } = await supabase.rpc('add_message_to_conversation', {
-        p_conversation_id: selectedConversation.id,
-        p_sender_id: user.id,
-        p_recipient_id: selectedConversation.landlord_id,
-        p_message: optimisticMsg.message
-      });
-
-      if (error) throw error;
-
-      // Replace temp message with real one
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === tempId
-            ? { ...msg, id: data || Date.now().toString() }
-            : msg
-        )
-      );
-
-      // Update cache
-      const cacheKey = `messages-${selectedConversation.id}`;
-      const cached = messagesCache.get(cacheKey);
-      if (cached) {
-        messagesCache.set(cacheKey, {
-          messages: [...cached.messages, { ...optimisticMsg, id: data || Date.now().toString() }],
-          timestamp: Date.now()
-        });
-      }
-
-    } catch (error: unknown) {
-      setMessages(prev => prev.filter(msg => msg.id !== tempId));
-      toast({
-        title: "Error sending message",
-        description: error instanceof Error ? error.message : "Could not send your message",
-      });
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e as unknown as React.FormEvent<HTMLFormElement>);
-    }
-  };
-  
-  const refreshConversations = () => {
-    if (refreshing) return;
-    
-    setRefreshing(true);
-    // The useEffect with user?.id dependency will handle the actual refresh
-  };
-
-  const showChatArea = selectedConversation && (isMobileView || !isMobileView);
-  const showConversationList = !selectedConversation || !isMobileView;
-
-  // Optimize the render with a better loading indicator
-  const renderLoadingUI = () => (
-    <div className="w-full h-full flex flex-col">
-      {/* Conversation list skeleton */}
-      <div className="p-4 border-b border-white/10">
-        <div className="h-6 w-32 bg-white/10 rounded animate-pulse"></div>
-      </div>
-      <div className="p-4 space-y-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse"></div>
-            <div className="space-y-2 flex-1">
-              <div className="h-4 w-24 bg-white/10 rounded animate-pulse"></div>
-              <div className="h-3 w-40 bg-white/5 rounded animate-pulse"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  if (initialPageLoad) {
-    return (
-      <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-[100]">
-        <div className="animate-spin h-12 w-12 border-4 border-white/30 border-t-white rounded-full mb-4"></div>
-        <div className="text-white font-medium text-lg">Loading chat...</div>
-      </div>
-    );
-  }
-
   // Add a function to load more messages when scrolling up
-  const loadMoreMessages = async () => {
+  const loadMoreMessages = useCallback(async () => {
     if (!selectedConversation || loading) return;
     
     setLoading(true);
@@ -781,10 +591,7 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Add a state to track if there are more messages to load
-  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  }, [selectedConversation, loading, currentPage, PAGE_SIZE, toast]);
 
   // Add scroll position tracking 
   useEffect(() => {
@@ -806,7 +613,7 @@ export default function ChatPage() {
     return () => {
       container.removeEventListener('scroll', handleScroll);
     };
-  }, [hasMoreMessages, loading, selectedConversation]);
+  }, [hasMoreMessages, loading, loadMoreMessages]);
 
   // Update: When a new message arrives, scroll to bottom
   useEffect(() => {
@@ -917,7 +724,114 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(messagesSubscription);
     };
-  }, [selectedConversation, user?.id, toast]);
+  }, [selectedConversation, user?.id, toast, PAGE_SIZE]);
+
+  // On message send: Optimistically add to UI, update cache
+  const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation || !user?.id) return;
+
+    setSendingMessage(true);
+
+    // Optimistic UI: add temp message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: tempId,
+      sender_id: user.id,
+      recipient_id: selectedConversation.landlord_id,
+      message: newMessage.trim(),
+      created_at: new Date().toISOString(),
+      is_read: false
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setNewMessage("");
+
+    try {
+      const { data, error } = await supabase.rpc('add_message_to_conversation', {
+        p_conversation_id: selectedConversation.id,
+        p_sender_id: user.id,
+        p_recipient_id: selectedConversation.landlord_id,
+        p_message: optimisticMsg.message
+      });
+
+      if (error) throw error;
+
+      // Replace temp message with real one
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === tempId
+            ? { ...msg, id: data || Date.now().toString() }
+            : msg
+        )
+      );
+
+      // Update cache
+      const cacheKey = `messages-${selectedConversation.id}`;
+      const cached = messagesCache.get(cacheKey);
+      if (cached) {
+        messagesCache.set(cacheKey, {
+          messages: [...cached.messages, { ...optimisticMsg, id: data || Date.now().toString() }],
+          timestamp: Date.now()
+        });
+      }
+
+    } catch (error: unknown) {
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      toast({
+        title: "Error sending message",
+        description: error instanceof Error ? error.message : "Could not send your message",
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e as unknown as React.FormEvent<HTMLFormElement>);
+    }
+  };
+  
+  const refreshConversations = () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
+    fetchConversations();
+  };
+
+  const showChatArea = selectedConversation && (isMobileView || !isMobileView);
+  const showConversationList = !selectedConversation || !isMobileView;
+
+  // Optimize the render with a better loading indicator
+  const renderLoadingUI = () => (
+    <div className="w-full h-full flex flex-col">
+      {/* Conversation list skeleton */}
+      <div className="p-4 border-b border-white/10">
+        <div className="h-6 w-32 bg-white/10 rounded animate-pulse"></div>
+      </div>
+      <div className="p-4 space-y-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse"></div>
+            <div className="space-y-2 flex-1">
+              <div className="h-4 w-24 bg-white/10 rounded animate-pulse"></div>
+              <div className="h-3 w-40 bg-white/5 rounded animate-pulse"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (initialPageLoad) {
+    return (
+      <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center z-[100]">
+        <div className="animate-spin h-12 w-12 border-4 border-white/30 border-t-white rounded-full mb-4"></div>
+        <div className="text-white font-medium text-lg">Loading chat...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -937,7 +851,7 @@ export default function ChatPage() {
                 <div>
                   <div className="p-4 border-b border-white/10 flex justify-between items-center">
                     <h2 className="text-xl font-semibold">Messages</h2>
-                    {/* <Button 
+                    <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={refreshConversations}
@@ -945,8 +859,8 @@ export default function ChatPage() {
                       className="text-white/70 hover:text-white hover:bg-white/10"
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                    
-                    </Button> */}
+                      Refresh
+                    </Button>
                   </div>
                   
                   {lastRefreshed && (
