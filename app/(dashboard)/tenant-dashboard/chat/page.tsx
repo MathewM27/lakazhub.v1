@@ -289,7 +289,7 @@ export default function ChatPage() {
               .from('property_messages')
               .select('id, sender_id, recipient_id, message, created_at, is_read')
               .eq('conversation_id', conv.id)
-              .order('created_at', { ascending: false })
+              .order('created_at', { ascending: true })
               .limit(1)
               .single();
             
@@ -375,7 +375,7 @@ export default function ChatPage() {
                 .from('property_messages')
                 .select('id, sender_id, recipient_id, message, created_at, is_read')
                 .eq('conversation_id', conv.conversation_id)
-                .order('created_at', { ascending: false })
+                .order('created_at', { ascending: true })
                 .limit(1)
                 .single();
               
