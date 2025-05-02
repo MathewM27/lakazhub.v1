@@ -49,11 +49,17 @@ export default function PropertyModal({
       setIsSubmitting(true)
       console.log("[PropertyModal] Submitting property form data...", formData);
 
+      // Get current user session to get the landlord_id
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        throw new Error("No active session. Please log in again.");
+      }
+
       // Process the form data to prepare for database
       const propertyData = {
         name: formData.name,
         location: formData.location,
-        property_type: formData.property_type,
+        property_type: formData.property_type, // Make sure this is property_type, not type
         bedrooms: parseInt(formData.bedrooms) || 1,
         bathrooms: parseInt(formData.bathrooms) || 1,
         description: formData.description,
@@ -62,7 +68,8 @@ export default function PropertyModal({
         images: imageUrls,
         utilities: formData.utilities,
         available: formData.available,
-        status: formData.status
+        status: formData.status,
+        landlord_id: session.user.id // Explicitly set the landlord_id to the current user
       }
 
       // If we're editing an existing property
@@ -105,7 +112,12 @@ export default function PropertyModal({
       
     } catch (error) {
       console.error("[PropertyModal] Error submitting property:", error);
-      // Handle error
+      // Show a more descriptive error message to the user
+      toast({
+        title: "Submission Error",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
     } finally {
       console.log("[PropertyModal] Submission finished.");
       setIsSubmitting(false)
