@@ -339,16 +339,15 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         .from('property_messages')
         .select('*', { count: 'exact' })
         .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true }) // <-- ascending order
         .range(startRange, endRange)
         
       if (error) throw error
       
       setHasMoreMessages(count ? count > endRange + 1 : false)
       
-      const olderMessages = [...(data || [])].reverse()
-      
-      const formattedMessages = olderMessages.map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
+      // Do NOT reverse the array, just prepend
+      const formattedMessages = (data || []).map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
         id: msg.id,
         sender_id: msg.sender_id,
         recipient_id: msg.recipient_id,
