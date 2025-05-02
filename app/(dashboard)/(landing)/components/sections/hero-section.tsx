@@ -17,7 +17,7 @@ export const HeroSection = () => {
             <div className="space-y-4 md:space-y-4 mt-4">
               <h1 className="font-bold text-white leading-tight tracking-tight text-fluid-h1">
                 <span className="block">
-                  Where Homes &
+                  Where &
                 </span>
                 <span className="block relative">
                   <span className="relative z-10">People Connect</span>
