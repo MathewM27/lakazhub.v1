@@ -1,12 +1,12 @@
 export interface FormData {
   name: string;
   location: string;
-  type: string;
+  property_type: string;  // Changed from 'type' to match DB schema
   bedrooms: string;
   bathrooms: string;
   description: string;
-  price: string;
-  deposit: string;
+  monthly_rent: string;   // Changed from 'price' to match DB schema
+  security_deposit: string; // Changed from 'deposit' to match DB schema
   utilities: {
     water: boolean;
     electricity: boolean;
@@ -26,12 +26,12 @@ export interface PropertyData {
   id: string;
   name: string;
   location: string;
-  property_type: string; // This is likely the correct field name, not "type"
+  property_type: string;
   bedrooms: number;
   bathrooms: number;
   description: string;
-  monthly_rent: number; // This is likely instead of "price"
-  security_deposit: number; // This is likely instead of "deposit"
+  monthly_rent: number;
+  security_deposit: number;
   images: string[];
   utilities: {
     water: boolean;
@@ -64,12 +64,12 @@ export function convertPropertyToFormData(property: PropertyData): FormData {
   return {
     name: property.name || '',
     location: property.location || '',
-    type: property.property_type || 'apartment',
+    property_type: property.property_type || 'apartment', // Changed field name
     bedrooms: property.bedrooms?.toString() || '1',
     bathrooms: property.bathrooms?.toString() || '1',
     description: property.description || '',
-    price: property.monthly_rent ? property.monthly_rent.toString() : '',
-    deposit: property.security_deposit ? property.security_deposit.toString() : '',
+    monthly_rent: property.monthly_rent ? property.monthly_rent.toString() : '', // Changed field name
+    security_deposit: property.security_deposit ? property.security_deposit.toString() : '', // Changed field name
     utilities: {
       water: property.utilities?.water || false,
       electricity: property.utilities?.electricity || false,

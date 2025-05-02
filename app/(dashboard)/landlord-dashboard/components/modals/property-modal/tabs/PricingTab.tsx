@@ -37,10 +37,9 @@ export default function PricingTab({
     return dec !== undefined ? `${formatted}.${dec}` : formatted;
   };
 
-  // Unified input change handler
-  const handleInputChange = (field: string, value: string | number | boolean) => {
-    // For price and deposit, remove commas for storage
-    if (field === "price" || field === "deposit") {
+  // Handle input changes - specifically for number fields
+  const handleInputChange = (field: string, value: string) => {
+    if (field === "monthly_rent" || field === "security_deposit") { // Changed field names
       const raw = typeof value === "string" ? value.replace(/,/g, "") : value;
       onChange({ [field]: raw });
     } else {
@@ -77,8 +76,8 @@ export default function PricingTab({
             type="text"
             inputMode="numeric"
             placeholder="e.g. 25,000"
-            value={formatNumber(formData.price)}
-            onChange={e => handleInputChange("price", e.target.value)}
+            value={formatNumber(formData.monthly_rent)} // Changed from 'price' to 'monthly_rent'
+            onChange={e => handleInputChange("monthly_rent", e.target.value)} // Changed from 'price' to 'monthly_rent'
           />
         </div>
         <div className="mb-4">
@@ -90,8 +89,8 @@ export default function PricingTab({
             type="text"
             inputMode="numeric"
             placeholder="e.g. 25,000"
-            value={formatNumber(formData.deposit)}
-            onChange={e => handleInputChange("deposit", e.target.value)}
+            value={formatNumber(formData.security_deposit)} // Changed from 'deposit' to 'security_deposit'
+            onChange={e => handleInputChange("security_deposit", e.target.value)} // Changed from 'deposit' to 'security_deposit'
           />
         </div>
       </div>

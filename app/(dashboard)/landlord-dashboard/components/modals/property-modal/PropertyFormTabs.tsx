@@ -30,12 +30,12 @@ export default function PropertyFormTabs({
   const [formData, setFormData] = useState<FormData>({
     name: "",
     location: "",
-    type: "apartment",
+    property_type: "apartment", // Changed from 'type' to 'property_type'
     bedrooms: "1",
     bathrooms: "1",
     description: "",
-    price: "",
-    deposit: "",
+    monthly_rent: "", // Changed from 'price' to 'monthly_rent'
+    security_deposit: "", // Changed from 'deposit' to 'security_deposit'
     utilities: {
       water: false,
       electricity: false,
@@ -84,11 +84,11 @@ export default function PropertyFormTabs({
     // --- Validation for required fields ---
     const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
     const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
-    if (!formData.price || !formData.location || missingPhotos.length > 0) {
+    if (!formData.monthly_rent || !formData.location || missingPhotos.length > 0) { // Changed from 'price' to 'monthly_rent'
       toast({
         title: "Missing Required Fields",
         description: [
-          !formData.price ? "Price is required." : "",
+          !formData.monthly_rent ? "Monthly rent is required." : "", // Changed from 'price' to 'monthly_rent'
           !formData.location ? "Location is required." : "",
           missingPhotos.length > 0 ? `Missing photo(s) for: ${missingPhotos.join(", ")}` : ""
         ].filter(Boolean).join(" "),
@@ -220,9 +220,8 @@ export default function PropertyFormTabs({
       
       // Combine existing and newly uploaded URLs
       const allImageUrls = [...existingImageUrls, ...uploadedImageUrls];
-      // console.log(`Total image URLs to save to property: ${allImageUrls.length}`);
-      // console.log('URLs:', allImageUrls);
       
+      // No need for field mapping anymore since our field names match the database
       // Submit the form with all image URLs
       await onSubmit(formData, allImageUrls);
       
@@ -251,7 +250,7 @@ export default function PropertyFormTabs({
   const requiredPhotos = ["exterior", "bedroom", "bathroom", "kitchen", "living"];
   const missingPhotos = requiredPhotos.filter(type => !formData.images.some(img => img.type === type));
   const canSubmit =
-    !!formData.price &&
+    !!formData.monthly_rent && // Changed from 'price' to 'monthly_rent'
     !!formData.location &&
     missingPhotos.length === 0;
   
