@@ -6,9 +6,9 @@ import { FiUser, FiHome } from "react-icons/fi";
 import { BsShieldLockFill, BsStars } from "react-icons/bs";
 import { HiOutlineSparkles } from "react-icons/hi2";
 import { AiOutlineCheck } from "react-icons/ai";
-import { signinWithGoogle } from "@/utils/actions";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/navigation';
+// import { signinWithGoogle } from "@/utils/actions"; // Commented out for now
 
 const StaticBackground = () => (
   <div className="absolute inset-0 z-0 opacity-40">
@@ -51,6 +51,7 @@ export const SignupSection = () => {
   const [userType, setUserType] = useState<"tenant" | "landlord">("tenant");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const handleUserTypeChange = useCallback((type: "tenant" | "landlord") => {
     setUserType(type);
@@ -71,19 +72,22 @@ export const SignupSection = () => {
     } catch {}
   }, []);
 
-  const handleGoogleSignIn = useCallback(async () => {
-    try {
-      setIsGoogleLoading(true);
-      clearAuthStorage();
-      
-      // Use production URL for auth loading
-      router.push(`/auth/auth-loading?message=Connecting to Google&user_role=${userType}`);
-      await signinWithGoogle(userType);
-    } catch (error) {
-      setError('Failed to sign in with Google. Please try again.');
-      setIsGoogleLoading(false);
-    }
-  }, [userType, router, clearAuthStorage]);
+  // Disabled: Google sign-in functionality
+  // const handleGoogleSignIn = useCallback(async () => {
+  //   try {
+  //     setIsGoogleLoading(true);
+  //     clearAuthStorage();
+  //     router.push(`/auth/auth-loading?message=Connecting to Google&user_role=${userType}`);
+  //     await signinWithGoogle(userType);
+  //   } catch (error) {
+  //     setError('Failed to sign in with Google. Please try again.');
+  //     setIsGoogleLoading(false);
+  //   }
+  // }, [userType, router, clearAuthStorage]);
+
+  const handleGoogleSignIn = useCallback(() => {
+    setShowComingSoon(true);
+  }, []);
 
   const info = userType === "tenant" ? tenantInfo : landlordInfo;
 
@@ -203,25 +207,13 @@ export const SignupSection = () => {
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  disabled={isGoogleLoading}
-                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all disabled:opacity-70 ${
-                    userType === "tenant" ? "hover:border-blue-400/40" : "hover:border-amber-400/40"
-                  }`}
+                  disabled={true}
+                  className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-white/5 text-white border border-white/10 transition-all opacity-60 cursor-not-allowed`}
+                  style={{ pointerEvents: "auto" }}
                 >
-                  {isGoogleLoading ? (
-                    <>
-                      <div className={`w-4 h-4 border-2 border-t-transparent rounded-full animate-spin ${userType === "tenant" ? "border-blue-400" : "border-amber-400"}`}></div>
-                      <span>Connecting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FcGoogle className="w-5 h-5" />
-                      <span>Continue with Google</span>
-                    </>
-                  )}
+                  <FcGoogle className="w-5 h-5" />
+                  <span>Continue with Google</span>
                 </button>
-                
-                {/* Additional sign in options could go here */}
               </motion.div>
               <motion.p 
                 initial={{ opacity: 0 }}
@@ -235,6 +227,41 @@ export const SignupSection = () => {
           </motion.div>
         </div>
       </div>
+      {/* Coming Soon Modal */}
+      <AnimatePresence>
+        {showComingSoon && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              className="bg-gradient-to-br from-zinc-900 via-black to-zinc-800 border border-white/10 rounded-2xl shadow-2xl max-w-sm w-full p-8 flex flex-col items-center"
+            >
+              <div className="mb-4 flex flex-col items-center">
+                <HiOutlineSparkles className="w-10 h-10 text-amber-400 mb-2 animate-bounce" />
+                <h3 className="text-xl font-bold text-white mb-2 text-center">LakazHub is almost ready!</h3>
+                <p className="text-white/80 text-center text-sm">
+                  We&apos;re putting the final touches on our platform.<br />
+                  Sign up will be available soon.<br />
+                  Stay tuned for our official launch!
+                </p>
+              </div>
+              <button
+                className="mt-6 px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                onClick={() => setShowComingSoon(false)}
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
