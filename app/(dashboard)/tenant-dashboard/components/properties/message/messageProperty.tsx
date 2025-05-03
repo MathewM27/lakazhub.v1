@@ -69,10 +69,10 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
   }
 
   useEffect(() => {
-    if (messages.length > 0 && currentPage === 0) {
+    if (messages.length > 0 && currentPage === 0 && !loadingMoreMessages) {
       scrollToBottom()
     }
-  }, [messages, currentPage])
+  }, [messages, currentPage, loadingMoreMessages])
 
   // Check if data is stale - used to show refresh indicator
   useEffect(() => {
@@ -324,29 +324,37 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     }
   }, [open, conversation?.id, staleData, refreshMessages])
 
-  // Function to load more messages
+  // Ref to track if we are loading more messages (for scroll position restore)
+  const prevScrollHeightRef = useRef<number>(0);
+
+  // Function to load more messages (prepend older messages)
   const loadMoreMessages = async () => {
     if (!conversation?.id || !hasMoreMessages || loadingMoreMessages) return
-    
+
     setLoadingMoreMessages(true)
-    
+
     try {
+      // Save current scroll height before loading more
+      if (messagesContainerRef.current) {
+        prevScrollHeightRef.current = messagesContainerRef.current.scrollHeight;
+      }
+
       const nextPage = currentPage + 1
       const startRange = nextPage * PAGE_SIZE
       const endRange = startRange + PAGE_SIZE - 1
-      
+
       const { data, error, count } = await supabase
         .from('property_messages')
         .select('*', { count: 'exact' })
         .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: true }) // <-- ascending order
+        .order('created_at', { ascending: true })
         .range(startRange, endRange)
-        
+
       if (error) throw error
-      
+
       setHasMoreMessages(count ? count > endRange + 1 : false)
-      
-      // Do NOT reverse the array, just prepend
+
+      // Prepend older messages to the start of the array
       const formattedMessages = (data || []).map((msg: { id: string; sender_id: string; recipient_id: string; message: string; created_at: string; is_read: boolean }) => ({
         id: msg.id,
         sender_id: msg.sender_id,
@@ -358,9 +366,8 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
         text: msg.message,
         time: formatMessageTime(msg.created_at),
       }));
-      
+
       setMessages(prev => [...formattedMessages, ...prev])
-      
       setCurrentPage(nextPage)
     } catch (error) {
       toast({
@@ -372,6 +379,19 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
       setLoadingMoreMessages(false)
     }
   }
+
+  // Restore scroll position after loading more messages
+  useEffect(() => {
+    if (loadingMoreMessages === false && prevScrollHeightRef.current && messagesContainerRef.current) {
+      // Only restore if we just finished loading more
+      const container = messagesContainerRef.current;
+      const newScrollHeight = container.scrollHeight;
+      const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+      container.scrollTop = scrollDiff;
+      prevScrollHeightRef.current = 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingMoreMessages]);
 
   // Mark messages as read - updated to use the new schema
   const markMessagesAsRead = async (conversationId: string) => {
@@ -577,7 +597,8 @@ export default function TenantMessage({ open, onOpenChangeAction, property }: Te
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 flex flex-col-reverse">
+        {/* Load More button at the top */}
         {hasMoreMessages && (
           <div className="flex justify-center my-2">
             <Button

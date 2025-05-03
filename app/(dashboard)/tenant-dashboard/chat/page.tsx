@@ -567,8 +567,8 @@ export default function ChatPage() {
       if (error) throw error;
       
       if (olderMessages && olderMessages.length > 0) {
-        // Add older messages to the beginning of the array
-        setMessages(prev => [...olderMessages, ...prev]);
+        // Append older messages to the end of the array (not the beginning)
+        setMessages(prev => [...prev, ...olderMessages]);
         setCurrentPage(nextPage);
         
         // Check if we have more messages to load
