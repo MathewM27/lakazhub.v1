@@ -212,9 +212,9 @@ export default function NotificationsModal({
           return [];
         }
         
-        // Sort messages by created_at in descending order (newest first)
+        // Sort messages by created_at in ascending order (oldest first)
         const allMessages = [...convData.messages].sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
         
         // Apply pagination
@@ -225,8 +225,11 @@ export default function NotificationsModal({
         return formatMessagesForUI(paginatedMessages);
       }
       
-      // Format the messages for UI display
-      return formatMessagesForUI(data);
+      // Ensure messages are sorted ascending (oldest first)
+      const sortedData = [...(data || [])].sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      return formatMessagesForUI(sortedData);
     } catch {
       toast({
         title: "Error loading messages",
@@ -253,12 +256,12 @@ export default function NotificationsModal({
         return;
       }
       
-      // Add the new messages to the beginning of existing ones
+      // Prepend older messages to the beginning of existing ones
       setSelectedTenant(prev => {
         if (!prev) return null;
         return {
           ...prev,
-          messages: [...moreMessages, ...prev.messages], // Add to beginning, not end
+          messages: [...moreMessages, ...prev.messages], // Prepend, not append
           currentPage: nextPage,
           hasMoreMessages: moreMessages.length === 20 // If we got a full page, there might be more
         };
