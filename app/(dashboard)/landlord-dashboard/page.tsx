@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import LandlordDashboard from "./components/landlord-dashboard"
+import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
 
 export const metadata: Metadata = {
   title: "LakazHub - Landlord Dashboard",
@@ -8,6 +9,11 @@ export const metadata: Metadata = {
 }
 
 export default function LandlordDashboardPage() {
-  return <LandlordDashboard />; 
+  return (
+    <>
+      <IosInstallPrompt />
+      <LandlordDashboard />
+    </>
+  );
 }
 

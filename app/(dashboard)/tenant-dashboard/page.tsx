@@ -8,6 +8,7 @@ import { Footer } from './components/navigation/Footer';
 import Navigation from "./components/navigation/Navbar";
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import IosInstallPrompt from '@/components/pwa/IosInstallPrompt';
 
 // // Dynamically import PremiumFeatures for better FCP/LCP
 // const PremiumFeatures = dynamic(() => import('./components/layouts/Premium'), {
@@ -124,6 +125,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       <RegisterSW />
       <DashboardInstallPrompt userRole="tenant" />
+      <IosInstallPrompt />
       
       <PageWrapper>
         <Navigation />
