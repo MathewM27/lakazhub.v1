@@ -84,12 +84,17 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="LakazHub" />
-        {/* Use existing apple-icon.png for all sizes to avoid missing images */}
+        {/* Apple Touch Icons - use apple-icon.png for all sizes */}
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon.png" />
         <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon.png" />
         <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon.png" />
+        
+        {/* iOS Splash Screens - Using a simplified approach */}
+        <link rel="apple-touch-startup-image" href="/splash/iphone.png" media="(device-width: 375px)" />
+        <link rel="apple-touch-startup-image" href="/splash/ipad.png" media="(device-width: 768px)" />
+        
         {/* Apple Touch Icon - using your existing image */}
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         {/* (Optional) Splash screens for iOS devices */}
