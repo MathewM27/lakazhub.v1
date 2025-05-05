@@ -25,6 +25,7 @@ export interface Property {
   created_at: string;
   updated_at: string;
   next_available_date?: string;
+  phone_number?: string; // Added contact phone number field
 }
 
 // Add interface for image metadata

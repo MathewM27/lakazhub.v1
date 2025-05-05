@@ -69,7 +69,8 @@ export default function PropertyModal({
         utilities: formData.utilities,
         available: formData.available,
         status: formData.status,
-        landlord_id: session.user.id // Explicitly set the landlord_id to the current user
+        landlord_id: session.user.id, // Explicitly set the landlord_id to the current user
+        phone_number: formData.phone_number, // Include phone number in the property data
       }
 
       // If we're editing an existing property
@@ -211,14 +212,16 @@ export default function PropertyModal({
         </DialogContent>
       </Dialog>
 
-      <SuccessModal
-        open={showSuccessModal}
-        onOpenChangeAction={handleSuccessModalClose}
-        title="Success"
-        message={successMessage}
-        autoClose={true}
-        autoCloseDelay={3000}
-      />
+      {showSuccessModal && (
+        <SuccessModal
+          open={showSuccessModal}
+          onOpenChangeAction={setShowSuccessModal} // Changed from onOpenChange to onOpenChangeAction
+          title="Property Posted Successfully"
+          message="Your property has been successfully posted and is now live on LakazHub. You can view and manage it from your dashboard."
+          autoClose={true}
+          autoCloseDelay={5000}
+        />
+      )}
     </>
   )
 }

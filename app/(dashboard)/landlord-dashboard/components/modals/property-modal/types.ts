@@ -19,6 +19,7 @@ export interface FormData {
   existingImages?: string[];
   available: boolean;
   status: string;
+  phone_number: string; // Added contact phone number field
 }
 
 // Add this line to see what fields PropertyData has
@@ -46,6 +47,7 @@ export interface PropertyData {
   created_at: string;
   user_id: string;
   existingImages?: string[];
+  phone_number?: string; // Added phone_number property
 }
 
 // Define the ImageItem interface with existingUrl property
@@ -81,6 +83,7 @@ export function convertPropertyToFormData(property: PropertyData): FormData {
     images: [], // Will be populated with processed image objects
     existingImages: property.images || [], // Store original URLs
     available: property.available ?? true,
-    status: property.status || 'active'
+    status: property.status || 'active',
+    phone_number: property.phone_number || '', // Initialize phone number field
   };
 }

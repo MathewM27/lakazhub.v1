@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare, Building, Calendar
+  MapPin, Bed, Bath, ChevronLeft, ChevronRight, Home, MessageCircle, MessageSquare, 
+  Building, Calendar, Phone // Added Phone icon
 } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import dynamic from "next/dynamic";
@@ -45,6 +46,7 @@ export interface Property {
   rules?: string[];
   next_available_date?: string | null;
   viewings?: { date: string; time: string }[];
+  phone_number?: string; // Added contact phone number field
 }
 
 interface PropertyCardProps {
@@ -93,6 +95,18 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
     if (!location) return "Unknown Location";
     return location.charAt(0).toUpperCase() + location.slice(1);
   }
+
+  // Function to handle the call button click
+  const handleCallLandlord = () => {
+    if (property.phone_number) {
+      // Format the phone number for tel: protocol
+      const formattedNumber = property.phone_number.replace(/\s+/g, '');
+      window.open(`tel:${formattedNumber}`, '_self');
+    } else {
+      // If no phone number available, show message details instead
+      setDetailModalOpen(true);
+    }
+  };
 
   return (
     <>
@@ -202,13 +216,23 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
                 <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
               </button>
               
-              <button 
-                className="w-full py-3 px-2.5 flex justify-center items-center gap-1.5 text-[13px] font-medium text-white bg-white/5 rounded-md hover:bg-white/10 transition-colors"
-                onClick={() => setMessageModalOpen(true)}
-              >
-                <MessageSquare className="w-4 h-4" /> 
-                Message Owner
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  className="flex justify-center items-center gap-1.5 py-3 px-2 text-[13px] font-medium text-white bg-white/5 rounded-md hover:bg-white/10 transition-colors"
+                  onClick={() => setMessageModalOpen(true)}
+                >
+                  <MessageSquare className="w-4 h-4" /> 
+                  Message
+                </button>
+                
+                <button 
+                  className="flex justify-center items-center gap-1.5 py-3 px-2 text-[13px] font-medium text-white bg-green-800/30  rounded-md hover:bg-green-700/30 transition-colors"
+                  onClick={handleCallLandlord}
+                >
+                  <Phone className="w-4 h-4" /> 
+                  Call
+                </button>
+              </div>
             </div>
           )}
 

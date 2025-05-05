@@ -46,7 +46,8 @@ export default function PropertyFormTabs({
     },
     images: [],
     available: true,
-    status: "active"
+    status: "active",
+    phone_number: "", // Initialize phone number field with empty string
   })
   
   // Load property data if editing

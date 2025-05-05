@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FormData } from "../types" // Import the FormData type
 import { useState, useRef, useEffect } from "react"
-import { Check, ChevronsUpDown, MapPin } from "lucide-react"
+import { Check, ChevronsUpDown, MapPin, Phone } from "lucide-react"
 import { cn } from "@/utils/lib/utils"
 
 interface BasicInfoTabProps {
@@ -195,6 +195,30 @@ export default function BasicInfoTab({ formData, onChange, onNext }: BasicInfoTa
                 ))}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Add Phone Number Input Field */}
+        <div className="relative">
+          <Label htmlFor="phone-number" className="flex items-center gap-2">
+            Contact Number
+            <span className="text-xs text-white/60">(For tenants to call)</span>
+          </Label>
+          <div className="relative mt-1.5">
+            <div className="relative flex-1">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+              <Input
+                id="phone-number"
+                type="tel"
+                placeholder="e.g. +230 5123 4567"
+                value={formData.phone_number || ''}
+                onChange={(e) => handleInputChange("phone_number", e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <p className="mt-1 text-xs text-white/50">
+              Enter your phone number so tenants can call you directly about this property
+            </p>
           </div>
         </div>
 

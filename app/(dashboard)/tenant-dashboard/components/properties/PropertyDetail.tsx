@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { 
   MapPin, Bed, Bath, Home, MessageSquare, Calendar, 
-  Clock, X, ChevronLeft, ChevronRight,
+  Clock, X, ChevronLeft, ChevronRight, Phone, // Added Phone icon
   Wifi, Tv, Utensils, Car, Thermometer, ShowerHead, 
   Droplet, Zap, Trash, Flame, Tv2, Banknote
 } from "lucide-react";
@@ -111,6 +111,15 @@ const PropertyDetailModal = ({
       });
     } catch (e) {
       return dateString;
+    }
+  };
+
+  // Handle calling the landlord
+  const handleCallLandlord = () => {
+    if (enhancedProperty.phone_number) {
+      // Format the phone number for tel: protocol
+      const formattedNumber = enhancedProperty.phone_number.replace(/\s+/g, '');
+      window.open(`tel:${formattedNumber}`, '_self');
     }
   };
 
@@ -239,6 +248,13 @@ const PropertyDetailModal = ({
                 </div>
               )}
             </div>
+            {/* Display phone number in property details */}
+            {enhancedProperty.phone_number && (
+              <div className="flex items-center bg-white/5 rounded-lg p-3 border border-white/10 mb-3">
+                <Phone className="h-4.5 w-4.5 text-white/70 mr-2.5 flex-shrink-0" />
+                <div className="text-sm text-white">{enhancedProperty.phone_number}</div>
+              </div>
+            )}
             {/* Amenities */}
             <div className="mb-3">
               <h3 className="text-xs uppercase text-white/70 mb-3">Amenities & Utilities</h3>
@@ -264,13 +280,33 @@ const PropertyDetailModal = ({
         </div>
         {/* Footer Actions */}
         <div className="flex p-4 border-t border-white/10 bg-black/90">
-          <Button 
-            className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto min-h-[44px]"
-            onClick={onMessageLandlord}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Message Landlord
-          </Button>
+          {/* Show Call button only if phone number is available */}
+          {enhancedProperty.phone_number ? (
+            <>
+              <Button 
+                className="flex-1 mr-2 bg-green-700 hover:bg-green-600 text-white text-sm py-2 h-auto min-h-[44px]"
+                onClick={handleCallLandlord}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Call Landlord
+              </Button>
+              <Button 
+                className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto min-h-[44px]"
+                onClick={onMessageLandlord}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Message Landlord
+              </Button>
+            </>
+          ) : (
+            <Button 
+              className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto min-h-[44px]"
+              onClick={onMessageLandlord}
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Message Landlord
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
