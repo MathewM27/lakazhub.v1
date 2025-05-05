@@ -46,7 +46,7 @@ export interface Property {
   rules?: string[];
   next_available_date?: string | null;
   viewings?: { date: string; time: string }[];
-  phone_number?: string; // Added contact phone number field
+  phone_number?: string; 
 }
 
 interface PropertyCardProps {

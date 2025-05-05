@@ -34,11 +34,24 @@ export default function LandlordDashboard() {
     message: "",
   });
   const refreshPropertiesRef = useRef<(() => Promise<Property[] | void>) | null>(null);
-  // Remove old showSurvey state
-  // const [showSurvey, setShowSurvey] = useState(false);
+  // New state to track loading timeout
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // New survey status: "checking" | "show" | "hide"
   const [surveyStatus, setSurveyStatus] = useState<"checking" | "show" | "hide">("checking");
+
+  // Add loading timeout effect to prevent infinite loading
+  useEffect(() => {
+    // If still authenticating after 5 seconds, set loadingTimeout to true
+    const timer = setTimeout(() => {
+      if (isAuthenticating) {
+        setLoadingTimeout(true);
+        console.log("Authentication loading timed out");
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticating]);
 
   useEffect(() => {
     // Only check for landlords
@@ -79,19 +92,25 @@ export default function LandlordDashboard() {
         setSurveyStatus("hide");
         return;
       }
-      const { data, error } = await supabase
-        .from("landlord_verification_surveys")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      // DEBUG: Log response
-      console.log("Survey check result:", { data, error });
-      if (data && data.id) {
-        localStorage.setItem("lh_landlord_surveyed", "1");
-        setSurveyStatus("hide");
-      } else {
-        setSurveyStatus("show");
+      try {
+        const { data, error } = await supabase
+          .from("landlord_verification_surveys")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+          
+        // DEBUG: Log response
+        console.log("Survey check result:", { data, error });
+        if (data && data.id) {
+          localStorage.setItem("lh_landlord_surveyed", "1");
+          setSurveyStatus("hide");
+        } else {
+          setSurveyStatus("show");
+        }
+      } catch (error) {
+        console.error("Survey check error:", error);
+        setSurveyStatus("hide"); // Default to hide on error
       }
     }
     checkSurvey();
@@ -131,12 +150,17 @@ export default function LandlordDashboard() {
   
   // Function to render the welcome screen
   const renderWelcomeScreen = (message = "Your landlord dashboard is loading...") => {
-    return <LoadingScreen message={message} />;
+    return <LoadingScreen message={message} timeout={loadingTimeout} onRetry={() => window.location.reload()} />;
   };
   
   // Show a friendly welcome screen while authentication or survey check is being done
-  if (isAuthenticating || surveyStatus === "checking") {
+  if (isAuthenticating || (surveyStatus === "checking" && !loadingTimeout)) {
     return renderWelcomeScreen();
+  }
+
+  // If we hit the loading timeout, provide a refresh option
+  if (loadingTimeout && isAuthenticating) {
+    return renderWelcomeScreen("Taking longer than expected. You may need to refresh.");
   }
   
   // Show login prompt if not authenticated
@@ -226,9 +250,12 @@ export default function LandlordDashboard() {
   );
 }
 
-// Extract UI components to reduce main component complexity
-
-function LoadingScreen({ message = "Your landlord dashboard is loading..." }) {
+// Updated LoadingScreen component with retry button for timeout case
+function LoadingScreen({ message = "Your landlord dashboard is loading...", timeout = false, onRetry }: { 
+  message: string; 
+  timeout?: boolean;
+  onRetry?: () => void;
+}) {
   return (
     <div className="flex flex-col h-screen bg-black text-white">
       <div className="w-full py-6 px-8 border-b border-zinc-800">
@@ -246,11 +273,26 @@ function LoadingScreen({ message = "Your landlord dashboard is loading..." }) {
           <p className="text-lg mb-8">{message}</p>
           
           <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
-            <div className="absolute top-0 left-0 h-full bg-yellow-500 animate-pulse rounded-full" style={{width: '100%'}}></div>
+            <div className={`absolute top-0 left-0 h-full bg-yellow-500 ${timeout ? '' : 'animate-pulse'} rounded-full`} 
+              style={{width: '100%'}}></div>
           </div>
           
-          <div className="animate-spin mx-auto rounded-full h-12 w-12 border-2 border-b-2 border-yellow-500 mb-4"></div>
-          <p className="text-zinc-400">Preparing your dashboard experience</p>
+          {timeout ? (
+            <div className="flex flex-col items-center">
+              <p className="text-zinc-400 mb-4">Connection seems slow. Please try refreshing.</p>
+              <button
+                onClick={onRetry}
+                className="px-6 py-2 bg-yellow-500 text-black font-medium rounded-md hover:bg-yellow-400 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="animate-spin mx-auto rounded-full h-12 w-12 border-2 border-b-2 border-yellow-500 mb-4"></div>
+              <p className="text-zinc-400">Preparing your dashboard experience</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,9 @@
 import { Metadata, Viewport } from 'next'
 import './globals.css'
+import { cn } from "@/utils/lib/utils";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
   themeColor: '#000000',
@@ -9,8 +13,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'LakazHub | Rent Property in Mauritius',
-  description: 'Find, rent, and manage houses, apartments, and properties in Mauritius easily with LakazHub. The #1 property rental platform for landlords and tenants in Mauritius.',
+  title: 'LakazHub - Rental Property Marketplace',
+  description: 'Find your perfect rental property with LakazHub',
   manifest: '/manifest.json',
   keywords: [
     'LakazHub', 'rent property Mauritius', 'houses for rent Mauritius', 'apartments Mauritius', 'property rental Mauritius',
@@ -53,9 +57,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
       <head>
@@ -71,6 +75,9 @@ export default function RootLayout({
         <meta name="robots" content="index, follow" />
         {/* Add this line for better PWA experience */}
         <meta name="description" content="Connect landlords and tenants seamlessly with LakazHub" />
+        {/* Add both meta tags for maximum compatibility */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         {/* Favicon and PWA icons */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -100,7 +107,9 @@ export default function RootLayout({
         {/* (Optional) Splash screens for iOS devices */}
         {/* <link rel="apple-touch-startup-image" href="/splash/apple-splash-2048-2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" /> */}
       </head>
-      <body>{children}</body>
+      <body className={cn(inter.className, "min-h-screen bg-black")}>
+        {children}
+      </body>
     </html>
   )
 }
