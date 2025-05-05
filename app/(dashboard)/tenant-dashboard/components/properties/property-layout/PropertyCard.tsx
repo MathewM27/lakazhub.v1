@@ -99,11 +99,16 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
   // Function to handle the call button click
   const handleCallLandlord = () => {
     if (property.phone_number) {
-      // Format the phone number for tel: protocol
+      // Format the phone number for tel: protocol by removing spaces
       const formattedNumber = property.phone_number.replace(/\s+/g, '');
-      window.open(`tel:${formattedNumber}`, '_self');
+      
+      // Use an anchor with tel: protocol to initiate a native phone call
+      const link = document.createElement('a');
+      link.href = `tel:${formattedNumber}`;
+      link.setAttribute('target', '_self'); // Ensure it opens in the same window
+      link.click();
     } else {
-      // If no phone number available, show message details instead
+      // If no phone number available, show property details instead
       setDetailModalOpen(true);
     }
   };
@@ -225,13 +230,23 @@ const PropertyCard = React.memo(({ property, disableInteractions = false, custom
                   Message
                 </button>
                 
-                <button 
-                  className="flex justify-center items-center gap-1.5 py-3 px-2 text-[13px] font-medium text-white bg-green-800/30  rounded-md hover:bg-green-700/30 transition-colors"
-                  onClick={handleCallLandlord}
-                >
-                  <Phone className="w-4 h-4" /> 
-                  Call
-                </button>
+                {property.phone_number ? (
+                  <a 
+                    href={`tel:${property.phone_number.replace(/\s+/g, '')}`}
+                    className="flex justify-center items-center gap-1.5 py-3 px-2 text-[13px] font-medium text-white bg-white/5 rounded-md hover:bg-white/10 transition-colors"
+                  >
+                    <Phone className="w-4 h-4" /> 
+                    Call
+                  </a>
+                ) : (
+                  <button 
+                    className="flex justify-center items-center gap-1.5 py-3 px-2 text-[13px] font-medium text-white bg-white/5 rounded-md hover:bg-white/10 transition-colors"
+                    onClick={() => setDetailModalOpen(true)}
+                  >
+                    <Phone className="w-4 h-4" /> 
+                    Call
+                  </button>
+                )}
               </div>
             </div>
           )}

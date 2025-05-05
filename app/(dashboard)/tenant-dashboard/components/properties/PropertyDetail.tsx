@@ -119,7 +119,7 @@ const PropertyDetailModal = ({
     if (enhancedProperty.phone_number) {
       // Format the phone number for tel: protocol
       const formattedNumber = enhancedProperty.phone_number.replace(/\s+/g, '');
-      window.open(`tel:${formattedNumber}`, '_self');
+      window.location.href = `tel:${formattedNumber}`;
     }
   };
 
@@ -283,13 +283,13 @@ const PropertyDetailModal = ({
           {/* Show Call button only if phone number is available */}
           {enhancedProperty.phone_number ? (
             <>
-              <Button 
-                className="flex-1 mr-2 bg-green-700 hover:bg-green-600 text-white text-sm py-2 h-auto min-h-[44px]"
-                onClick={handleCallLandlord}
+              <a 
+                href={`tel:${enhancedProperty.phone_number.replace(/\s+/g, '')}`}
+                className="flex-1 mr-2 bg-green-700 hover:bg-green-600 text-white text-sm py-2 h-auto min-h-[44px] flex items-center justify-center rounded-md"
               >
                 <Phone className="w-4 h-4 mr-2" />
                 Call Landlord
-              </Button>
+              </a>
               <Button 
                 className="flex-1 bg-white text-black hover:bg-white/90 text-sm py-2 h-auto min-h-[44px]"
                 onClick={onMessageLandlord}
