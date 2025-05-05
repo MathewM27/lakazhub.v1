@@ -12,36 +12,48 @@ export default function DashboardInstallPrompt({ userRole }: DashboardInstallPro
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // Check if already installed or recently dismissed
-    const isInstalled = localStorage.getItem('lakazHubInstalled') === 'true';
-    const lastDismissed = localStorage.getItem('lakazHubPromptDismissed');
-    const dismissedTime = lastDismissed ? parseInt(lastDismissed) : 0;
-    const isDismissedRecently = Date.now() - dismissedTime < 3 * 24 * 60 * 60 * 1000; // 3 days
-    
-    if (isInstalled || isDismissedRecently) return;
-    
-    const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later
-      setDeferredPrompt(e);
-      // Update UI to show install button
-      setShowPrompt(true);
-    };
+    // Improved detection for already installed PWA
+    if (typeof window !== 'undefined') {
+      // Method 1: Check display mode
+      if (window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: fullscreen)').matches ||
+          window.matchMedia('(display-mode: minimal-ui)').matches) {
+        // Already installed as PWA
+        localStorage.setItem('lakazHubInstalled', 'true');
+        return;
+      }
+      
+      // Method 2: Check localStorage flag
+      const isInstalled = localStorage.getItem('lakazHubInstalled') === 'true';
+      const lastDismissed = localStorage.getItem('lakazHubPromptDismissed');
+      const dismissedTime = lastDismissed ? parseInt(lastDismissed) : 0;
+      const isDismissedRecently = Date.now() - dismissedTime < 3 * 24 * 60 * 60 * 1000; // 3 days
+      
+      if (isInstalled || isDismissedRecently) return;
+      
+      const handleBeforeInstallPrompt = (e: Event) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        setDeferredPrompt(e);
+        // Update UI to show install button
+        setShowPrompt(true);
+      };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
-    
-    // Check if app was installed
-    window.addEventListener('appinstalled', () => {
-      localStorage.setItem('lakazHubInstalled', 'true');
-      setShowPrompt(false);
-      setDeferredPrompt(null);
-    });
-    
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
-      window.removeEventListener('appinstalled', () => {});
-    };
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+      
+      // Check if app was installed
+      window.addEventListener('appinstalled', () => {
+        localStorage.setItem('lakazHubInstalled', 'true');
+        setShowPrompt(false);
+        setDeferredPrompt(null);
+      });
+      
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
+        window.removeEventListener('appinstalled', () => {});
+      };
+    }
   }, []);
 
   const handleInstall = async () => {

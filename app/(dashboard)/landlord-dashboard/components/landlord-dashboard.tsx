@@ -46,6 +46,26 @@ export default function LandlordDashboard() {
       setSurveyStatus("hide");
       return;
     }
+    
+    // Track when app is installed
+    if (typeof window !== 'undefined') {
+      const handleAppInstalled = () => {
+        localStorage.setItem('lakazHubInstalled', 'true');
+        console.log('LakazHub was installed!');
+      };
+      
+      window.addEventListener('appinstalled', handleAppInstalled);
+      
+      // Check if already in standalone mode
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        localStorage.setItem('lakazHubInstalled', 'true');
+      }
+      
+      return () => {
+        window.removeEventListener('appinstalled', handleAppInstalled);
+      };
+    }
+    
     // If localStorage says surveyed, hide immediately
     if (localStorage.getItem("lh_landlord_surveyed")) {
       setSurveyStatus("hide");

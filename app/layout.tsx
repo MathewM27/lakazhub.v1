@@ -92,8 +92,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon.png" />
         
         {/* iOS Splash Screens - Using a simplified approach */}
-        <link rel="apple-touch-startup-image" href="/splash/iphone.png" media="(device-width: 375px)" />
-        <link rel="apple-touch-startup-image" href="/splash/ipad.png" media="(device-width: 768px)" />
+        <link rel="apple-touch-startup-image" href="/apple-icon.png" media="(device-width: 375px)" />
+        <link rel="apple-touch-startup-image" href="/apple-icon.png" media="(device-width: 768px)" />
         
         {/* Apple Touch Icon - using your existing image */}
         <link rel="apple-touch-icon" href="/apple-icon.png" />
