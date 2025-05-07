@@ -113,11 +113,14 @@ export class ImageStorage {
           }
         }
         
-        // Generate unique filename
+        // Generate unique filename - for "other" category, add an index to keep them distinct
         const timestamp = Date.now();
         const randomId = Math.random().toString(36).substring(2, 10);
         const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `${timestamp}-${randomId}.${fileExt}`;
+        
+        // For "other" category, add an index to each filename to differentiate
+        const filePrefix = roomType === 'other' ? `${i+1}-` : '';
+        const fileName = `${filePrefix}${timestamp}-${randomId}.${fileExt}`;
         const filePath = `${folderPath}/${fileName}`;
         
         try {
@@ -138,7 +141,7 @@ export class ImageStorage {
           if (error) {
             // If file already exists, try with a different name
             if (error.message?.includes('already exists')) {
-              const newFileName = `${timestamp}-${randomId}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
+              const newFileName = `${filePrefix}${timestamp}-${randomId}-${Math.random().toString(36).substring(2, 6)}.${fileExt}`;
               const newFilePath = `${folderPath}/${newFileName}`;
               
               console.log(`File collision, retrying with new name: ${newFilePath}`);

@@ -129,23 +129,21 @@ export default function PropertyFormTabs({
       // If we have new images to upload
       let uploadedImageUrls: string[] = [];
       if (imagesToUpload.length > 0) {
-        // Comment out console logs
-        // console.log('Preparing to upload new images');
-        
         // Fix: Create a proper mapping of image types to files
         const imagesByType: Record<string, File[]> = {};
         
-        // Initialize image categories
-        formData.images.forEach(img => {
-          const type = img.type;
-          if (!imagesByType[type]) {
-            imagesByType[type] = [];
-          }
+        // Initialize all recognized room types
+        ["exterior", "bedroom", "bathroom", "kitchen", "living", "other"].forEach(type => {
+          imagesByType[type] = [];
         });
         
         // Add files to their respective categories
         imagesToUpload.forEach(img => {
           if (img.file instanceof File) {
+            // Ensure the category exists in our map
+            if (!imagesByType[img.type]) {
+              imagesByType[img.type] = [];
+            }
             imagesByType[img.type].push(img.file);
           }
         });
@@ -191,16 +189,11 @@ export default function PropertyFormTabs({
               // Comment out console logs
               // console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
               uploadedImageUrls = [...uploadedImageUrls, ...urls];
-            } catch {
-              // Show more specific error message
-              let errorMessage = "Failed to upload some images. Please try again.";
-              if (errorMessage) {
-                errorMessage = errorMessage || errorMessage;
-              }
-              
+            } catch (error) {
+              console.error(`Error uploading ${roomType} images:`, error);
               toast({
                 title: `${roomType} Upload Error`,
-                description: errorMessage,
+                description: "Failed to upload some images. Please try again with smaller files.",
                 variant: "destructive"
               });
             }

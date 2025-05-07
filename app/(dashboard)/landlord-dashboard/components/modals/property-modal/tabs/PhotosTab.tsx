@@ -62,13 +62,13 @@ export default function PhotosTab({
     const limit = categoryConfig.limit
     const remaining = limit - currentImages.length
     
-    if (remaining <= 0) return;
+    if (remaining <= 0 && !categoryConfig.allowMultiple) return;
     
     // Add new images (limiting to available slots)
     let newImagesToAdd: File[] = []
 
     // Handle primary images differently (replace instead of add)
-    if (categoryConfig.primary) {
+    if (categoryConfig.primary || !categoryConfig.allowMultiple) {
       // For primary categories, replace the existing image
       if (currentImages.length > 0) {
         // Remove the existing image
@@ -90,8 +90,8 @@ export default function PhotosTab({
       // Limit to remaining slots
       newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
     } else {
-      // For multiple categories, limit to remaining slots
-      newImagesToAdd = imageFiles.slice(0, limit - currentImages.length)
+      // For multiple categories like "other", respect the remaining slots
+      newImagesToAdd = imageFiles.slice(0, Math.min(remaining, imageFiles.length))
     }
 
     // Create new images to add
@@ -315,7 +315,7 @@ export default function PhotosTab({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Minimal fix: clear file input value before triggering click
+                          // Fix: properly handle the replacement flow for the "other" category
                           const input = fileInputRefs.current[category.id];
                           if (input) {
                             input.value = "";
@@ -330,6 +330,7 @@ export default function PhotosTab({
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
+                          // Fix for deleting other photos properly
                           const imageIndex = formData.images.findIndex(img => 
                             img.type === category.id && img.url === images[0].url
                           );
