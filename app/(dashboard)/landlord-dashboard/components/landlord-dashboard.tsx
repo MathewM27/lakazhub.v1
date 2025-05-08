@@ -12,7 +12,7 @@ import { Property } from "../types";
 import LandlordVerificationSurvey from "./landlord-verification-survey";
 // Import PWA components
 import RegisterSW from '../../(landing)/components/pwa/RegisterSW';
-import DashboardInstallPrompt from '../../../components/pwa/DashboardInstallPrompt';
+import DashboardInstallPrompt from '@/components/pwa/DashboardInstallPrompt';
 import HeroSection from '../layout/hero-section';
 import { supabase } from "../lib/utils/supabase/client";
 
@@ -40,7 +40,6 @@ export default function LandlordDashboard() {
   // New survey status: "checking" | "show" | "hide"
   const [surveyStatus, setSurveyStatus] = useState<"checking" | "show" | "hide">("checking");
 
-  // Add loading timeout effect to prevent infinite loading
   useEffect(() => {
     // If still authenticating after 5 seconds, set loadingTimeout to true
     const timer = setTimeout(() => {
