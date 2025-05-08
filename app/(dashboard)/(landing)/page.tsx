@@ -3,7 +3,7 @@
 import Head from 'next/head'
 import { HeroSection } from "./components/sections/hero-section";
 import { PageWrapper } from "./components/layout/PageWrapper";
-import InstallPrompt from "../../components/pwa/InstallPrompt";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 import RegisterSW from "./components/pwa/RegisterSW";
 import dynamic from 'next/dynamic';
 
