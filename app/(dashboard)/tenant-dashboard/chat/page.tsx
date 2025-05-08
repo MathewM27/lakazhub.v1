@@ -585,7 +585,7 @@ export default function ChatPage() {
     } catch (error) {
       console.error("Error loading more messages:", error);
       toast({
-        title: "Error loading messages",
+        title: "Error loading messages.",
         description: "Could not load older messages",
       });
     } finally {
