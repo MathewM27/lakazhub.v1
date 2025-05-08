@@ -101,10 +101,6 @@ export default function PropertyFormTabs({
     try {
       setUploadingImages(true)
       
-      // Comment out console logs
-      // console.log('Starting property submission process');
-      // console.log('Form data:', JSON.stringify(formData, null, 2));
-      
       // Fix: We need to treat the images differently since JSON.stringify doesn't handle File objects properly
       // The images are showing up as empty objects in the logs but they are valid File objects
       const imagesToUpload = formData.images
@@ -114,17 +110,10 @@ export default function PropertyFormTabs({
           type: img.type
         }));
       
-      // Comment out console logs
-      // console.log(`Found ${imagesToUpload.length} images to upload`, 
-      //   imagesToUpload.map(img => `${img.type}: ${(img.file as File).name}`));
-      
       // Get existing image URLs that don't need uploading
       const existingImageUrls = formData.images
         .filter(img => img.url && typeof img.url === 'string' && img.url.startsWith('http'))
         .map(img => img.url as string);
-      
-      // Comment out console logs
-      // console.log(`Existing image URLs: ${existingImageUrls.length}`);
       
       // If we have new images to upload
       let uploadedImageUrls: string[] = [];
@@ -148,16 +137,11 @@ export default function PropertyFormTabs({
           }
         });
         
-        // Comment out console logs
-        // console.log('Images grouped by room type:', 
-        //   Object.entries(imagesByType).map(([type, files]) => 
-        //     `${type}: ${files.length} files ${files.length > 0 ? `(${files[0]?.name || 'unnamed'})` : ''}`
-        //   )
-        // );
-        
         // Generate a property ID for storage
         const propertyId = property?.id || `new-property-${Date.now()}`;
-        // console.log(`Using property ID for storage: ${propertyId}`);
+        
+        // Import ImageStorage here to ensure it's available
+        const { ImageStorage } = await import('../../../lib/utils/imageStorage');
         
         // Upload each group of images
         for (const [roomType, files] of Object.entries(imagesByType)) {
@@ -166,28 +150,19 @@ export default function PropertyFormTabs({
               // Update progress
               setUploadProgress(prev => prev + 10);
               
-              // Comment out console logs
-              // console.log(`Uploading ${files.length} files for room type: ${roomType}`);
-              // console.log('File objects:', files.map(f => `${f.name} (${f.size} bytes)`));
-              
-              // Import ImageStorage here to ensure it's available
-              const { ImageStorage } = await import('../../../lib/utils/imageStorage');
-              
-              // Upload files without compression
+              // Upload files
               const urls = await ImageStorage.uploadImages(
                 propertyId, 
                 files,
                 { 
                   roomType: roomType,
-                  compress: false, // Disable compression completely
+                  compress: false, // Disable compression
                   onProgress: (progress: number) => {
                     setUploadProgress(Math.floor(progress));
                   }
                 }
               );
               
-              // Comment out console logs
-              // console.log(`Upload complete for ${roomType}. Received URLs:`, urls);
               uploadedImageUrls = [...uploadedImageUrls, ...urls];
             } catch (error) {
               console.error(`Error uploading ${roomType} images:`, error);

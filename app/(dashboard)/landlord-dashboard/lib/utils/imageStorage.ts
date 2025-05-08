@@ -81,10 +81,14 @@ export class ImageStorage {
     const { compress = true, onProgress, roomType = 'unknown' } = options;
     
     try {
-      // Create folder path with property ID and room type
+      // Create folder path with property ID and room type - FIXED: ensure 'other' uses the same path structure
       const sanitizedPropertyId = propertyId.replace(/[^\w-]/g, ''); // Only allow safe characters
       const sanitizedRoomType = roomType.toLowerCase().replace(/[^\w-]/g, '-');
+      
+      // IMPORTANT FIX: Always use the same folder structure for ALL room types including "other"
       const folderPath = `${sanitizedPropertyId}/${sanitizedRoomType}`;
+      
+      console.log(`Using folder path: ${folderPath}`);
       
       // Upload each file with progress tracking
       const totalSize = files.reduce((sum, file) => sum + file.size, 0);
@@ -129,6 +133,7 @@ export class ImageStorage {
           const fileBuffer = new Uint8Array(arrayBuffer);
           
           console.log(`Converting file to binary buffer: ${file.name} (${fileBuffer.length} bytes)`);
+          console.log(`Uploading to path: ${filePath}`);
           
           let { data, error } = await supabase.storage
             .from(this.BUCKET_NAME)
