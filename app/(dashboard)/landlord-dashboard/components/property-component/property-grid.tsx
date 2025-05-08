@@ -223,7 +223,7 @@ export default function PropertyGrid({
               {propertyList.slice(0, visibleCount).map((property, index) => (
                 <div
                   key={property.id}
-                  className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm snap-start ${
+                  className={`min-w-[280px] md:min-w-[320px] max-w-xs md:max-w-sm h-auto snap-start ${
                     deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
                   } opacity-0 animate-fade-in-up`}
                   style={{ animationDelay: `${index * 100}ms` }}
@@ -371,7 +371,7 @@ export default function PropertyGrid({
                   {properties.slice(0, visibleCount).map((property, index) => (
                     <div
                       key={property.id}
-                      className={`mx-auto w-full max-w-xs md:max-w-sm transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
+                      className={`mx-auto w-full max-w-xs md:max-w-sm h-auto transform transition-all duration-300 hover:-translate-y-2.5 opacity-0 animate-fade-in-up ${
                         deletingPropertyId === property.id ? 'opacity-50 pointer-events-none' : ''
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}

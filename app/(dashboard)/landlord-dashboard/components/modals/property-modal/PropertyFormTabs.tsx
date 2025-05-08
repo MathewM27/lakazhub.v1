@@ -249,60 +249,83 @@ export default function PropertyFormTabs({
     missingPhotos.length === 0;
   
   return (
-    <Tabs 
-      defaultValue="basic-info" 
-      value={activeTab}
-      onValueChange={handleTabChange}
-      className="space-y-4"
-    >
-      <TabsList className="grid grid-cols-3 w-full">
-        <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-        <TabsTrigger value="photos">Photos</TabsTrigger>
-        <TabsTrigger value="pricing">Pricing</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="basic-info" className="max-h-[60vh] overflow-y-auto pr-1">
-        <BasicInfoTab 
-          formData={formData}
-          onChange={handleFormDataChange}
-          onNext={handleNext}
-        />
-      </TabsContent>
-      
-      <TabsContent value="photos" className="max-h-[60vh] overflow-y-auto pr-1">
-        <PhotosTab 
-          formData={formData}
-          onChange={handleFormDataChange}
-          onNext={handleNext}
-          onPrev={handlePrev}
-        />
-      </TabsContent>
-      
-      <TabsContent value="pricing" className="max-h-[60vh] overflow-y-auto pr-1">
-        <PricingTab 
-          formData={formData}
-          onChange={handleFormDataChange}
-          onPrev={handlePrev}
-          onSubmit={handleSubmitFinal}
-          isSubmitting={isSubmitting}
-          isUploading={uploadingImages}
-          canSubmit={canSubmit}
-        />
+    <>
+      {/* Add a style element for global image sizing fixes */}
+      <style jsx global>{`
+        .aspect-video {
+          aspect-ratio: 16 / 9;
+          position: relative;
+          overflow: hidden;
+        }
         
-        {uploadingImages && (
-          <div className="mt-4">
-            <div className="text-sm text-muted-foreground mb-2">
-              Uploading images: {uploadProgress}%
+        .aspect-square {
+          aspect-ratio: 1;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        /* Ensure Next.js Image components maintain aspect ratios */
+        [class*="aspect-"] img {
+          object-fit: cover;
+          object-position: center;
+        }
+      `}</style>
+      
+      <Tabs 
+        defaultValue="basic-info" 
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="space-y-4"
+      >
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+          <TabsTrigger value="photos">Photos</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="basic-info" className="max-h-[60vh] overflow-y-auto pr-1">
+          <BasicInfoTab 
+            formData={formData}
+            onChange={handleFormDataChange}
+            onNext={handleNext}
+          />
+        </TabsContent>
+        
+        <TabsContent value="photos" className="max-h-[60vh] overflow-y-auto pr-1">
+          <PhotosTab 
+            formData={formData}
+            onChange={handleFormDataChange}
+            onNext={handleNext}
+            onPrev={handlePrev}
+          />
+        </TabsContent>
+        
+        <TabsContent value="pricing" className="max-h-[60vh] overflow-y-auto pr-1">
+          <PricingTab 
+            formData={formData}
+            onChange={handleFormDataChange}
+            onPrev={handlePrev}
+            onSubmit={handleSubmitFinal}
+            isSubmitting={isSubmitting}
+            isUploading={uploadingImages}
+            canSubmit={canSubmit}
+          />
+          
+          {uploadingImages && (
+            <div className="mt-4">
+              <div className="text-sm text-muted-foreground mb-2">
+                Uploading images: {uploadProgress}%
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-primary h-2.5 rounded-full" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-primary h-2.5 rounded-full" 
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+          )}
+        </TabsContent>
+      </Tabs>
+    </>
   )
 }

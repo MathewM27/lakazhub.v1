@@ -301,6 +301,7 @@ export default function PhotosTab({
                       width={400}
                       height={300}
                       className="w-full h-full object-cover"
+                      style={{ objectPosition: 'center' }}
                     />
                     
                     {/* Image count badge for Other category only */}
@@ -412,13 +413,16 @@ export default function PhotosTab({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {imagesByCategory["other"].map((image, index) => (
               <div key={index} className="relative aspect-square border border-gray-800 rounded-md overflow-hidden group">
-                <Image 
-                  src={image.url || "/placeholder.jpg"} 
-                  alt={`Other ${index + 1}`} 
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                />
+                <div className="w-full h-full relative">
+                  <Image 
+                    src={image.url || "/placeholder.jpg"} 
+                    alt={`Other ${index + 1}`} 
+                    width={200}
+                    height={200}
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: 'center' }}
+                  />
+                </div>
                 {/* Enhanced controls */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button 

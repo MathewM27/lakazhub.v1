@@ -219,7 +219,12 @@ export default function PropertyCard({
       <div className="relative aspect-[16/9] overflow-hidden">
         <div 
           className="w-full h-full bg-cover bg-center transition-all duration-500" 
-          style={{ backgroundImage: `url(${propertyImage})` }}
+          style={{ 
+            backgroundImage: `url(${propertyImage})`,
+            backgroundSize: 'cover', 
+            backgroundPosition: 'center',
+            minHeight: '100%'
+          }}
         ></div>
 
         {/* Status Badge - Slightly larger */}
