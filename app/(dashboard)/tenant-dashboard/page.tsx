@@ -32,7 +32,7 @@ const renderWelcomeScreen = (message = "Your tenant dashboard is loading...") =>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub</h2>
+          <h2 className="text-3xl font-bold mb-6">Welcome to LakazHub.</h2>
           <p className="text-lg mb-8">{message}</p>
           
           <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mb-8">
