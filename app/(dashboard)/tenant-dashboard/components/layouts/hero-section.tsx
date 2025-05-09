@@ -55,7 +55,7 @@ const HeroSection = () => {
                   Find Your
                 </span>
                 <span className="block">
-                  <span className="text-blue-400">Dream Home</span>
+                  <span className="text-blue-400">Ideal Home</span>
                 </span>
               </h1>
               
