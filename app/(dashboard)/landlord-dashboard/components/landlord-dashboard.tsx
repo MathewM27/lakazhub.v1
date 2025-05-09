@@ -53,66 +53,46 @@ export default function LandlordDashboard() {
   }, [isAuthenticating]);
 
   useEffect(() => {
-    // Only check for landlords
-    if (profile?.user_role !== "landlord" || !user || !user.id) {
-      setSurveyStatus("hide");
-      return;
-    }
-    
-    // Track when app is installed
-    if (typeof window !== 'undefined') {
-      const handleAppInstalled = () => {
-        localStorage.setItem('lakazHubInstalled', 'true');
-        console.log('LakazHub was installed!');
-      };
-      
-      window.addEventListener('appinstalled', handleAppInstalled);
-      
-      // Check if already in standalone mode
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        localStorage.setItem('lakazHubInstalled', 'true');
-      }
-      
-      return () => {
-        window.removeEventListener('appinstalled', handleAppInstalled);
-      };
-    }
-    
-    // If localStorage says surveyed, hide immediately
-    if (localStorage.getItem("lh_landlord_surveyed")) {
-      setSurveyStatus("hide");
-      return;
-    }
-    setSurveyStatus("checking");
+    let cancelled = false;
+
     async function checkSurvey() {
-      // DEBUG: Log user id
-      console.log("Survey check for user id:", user?.id);
-      if (!user || !user.id) {
-        setSurveyStatus("hide");
-        return;
-      }
       try {
+        // Only check for landlords
+        if (profile?.user_role !== "landlord" || !user || !user.id) {
+          setSurveyStatus("hide");
+          return;
+        }
+        setSurveyStatus("checking");
         const { data, error } = await supabase
           .from("landlord_verification_surveys")
           .select("id")
           .eq("user_id", user.id)
           .limit(1)
           .maybeSingle();
-          
-        // DEBUG: Log response
-        console.log("Survey check result:", { data, error });
-        if (data && data.id) {
-          localStorage.setItem("lh_landlord_surveyed", "1");
-          setSurveyStatus("hide");
-        } else {
-          setSurveyStatus("show");
+
+        if (cancelled) return;
+
+        if (error) {
+          console.error("Survey check error:", error);
+          setSurveyStatus("hide"); // Allow dashboard to load even if error
+          return;
         }
-      } catch (error) {
-        console.error("Survey check error:", error);
-        setSurveyStatus("hide"); // Default to hide on error
+        if (data && data.id) {
+          setSurveyStatus("hide"); // Survey completed, proceed
+        } else {
+          setSurveyStatus("show"); // Survey not completed, show survey
+        }
+      } catch (err) {
+        console.error("Survey check exception:", err);
+        setSurveyStatus("hide"); // On exception, proceed to dashboard
       }
     }
+
     checkSurvey();
+
+    return () => {
+      cancelled = true;
+    };
   }, [profile?.user_role, user]);
 
   // Handler functions for property actions
