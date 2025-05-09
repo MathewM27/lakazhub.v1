@@ -86,7 +86,7 @@ export default function InstallPrompt() {
       <div className="flex items-center">
         <div className="w-16 h-16 relative mr-4 flex-shrink-0 rounded-xl overflow-hidden border border-white/10">
           <Image 
-            src="/icons/icon-192x192.png" 
+            src="/icon0.svg" 
             alt="LakazHub" 
             fill
             className="object-cover"
