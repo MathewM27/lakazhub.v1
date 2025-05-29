@@ -213,7 +213,7 @@ export default function AuthHandler({ children }: { children: React.ReactNode })
     return () => {
       subscription.unsubscribe();
     };
-  }, [profile]);
+  }, []);
 
   // Loading UI Component to show while authentication is in progress
   const LoadingUI = (
