@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
+      { // Add this new pattern for your older image URLs
+        protocol: 'https',
+        hostname: 'api.lakazhub.com',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   productionBrowserSourceMaps: true,
