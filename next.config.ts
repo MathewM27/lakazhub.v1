@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'api.lakazhub.com',
+        hostname: 'dtfjgotmshpzwixxpwhe.supabase.co',
         pathname: '/**',
       },
       {
