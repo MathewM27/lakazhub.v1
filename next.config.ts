@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
         hostname: 'qqqes0fuio.ufs.sh',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'dtfjgotmshpzwixxpwhe.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   productionBrowserSourceMaps: true,
