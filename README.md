@@ -16,29 +16,28 @@ Lakazhub connects landlords and tenants in a market where no centralised rental 
 
 ## Preview
 
-### Homepage
-
-![Homepage](docs/screenshots/homepage.png)
-
-*Landing page — role selection before authentication. User picks landlord or tenant before OAuth flow, which determines role assignment at signup.*
-
-### Property Listings
-
-![Property Listings](docs/screenshots/listings.png)
-
-*Tenant-facing property browser — search by location, price range, and bedroom count. Results filtered client-side from a cached dataset.*
-
-### Property View
-
-![Property Detail](docs/screenshots/property-view.png)
-
-*Full property detail — categorised room photos, amenities, utilities breakdown, monthly rent, security deposit, and direct message CTA.*
-
-### In-app Messaging
-
-![Messaging](docs/screenshots/messaging.png)
-
-*Privacy-first conversation interface — landlord and tenant communicate entirely within the platform. No phone numbers or personal contact details exchanged.*
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/homepage.png" alt="Homepage" /><br/>
+      <sub><b>Homepage</b> — role selection before authentication. User picks landlord or tenant before OAuth flow, which determines role assignment at signup.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/listings.png" alt="Property Listings" /><br/>
+      <sub><b>Property Listings</b> — tenant-facing property browser. Search by location, price range, and bedroom count. Results filtered client-side from a cached dataset.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/property-view.png" alt="Property View" /><br/>
+      <sub><b>Property View</b> — full property detail with categorised room photos, amenities, utilities breakdown, monthly rent, security deposit, and direct message CTA.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/messaging.png" alt="In-app Messaging" /><br/>
+      <sub><b>In-app Messaging</b> — landlord and tenant communicate entirely within the platform. No phone numbers or personal contact details exchanged.</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
